@@ -6,8 +6,8 @@ const
   useGE   = False;    //Buy/Sell in Grand Exchange?
   lag     = 0;     //use 0 for faster speeds
 
-  P_USERNAME = "";
-  P_PASSWORD = "";
+  P_USERNAME = "Rsacc4@franher.com";
+  P_PASSWORD = "Rsacc123";
 
   flourPotID =  1933;
   coinsID = 995;
@@ -1607,7 +1607,13 @@ Function LoginPlayer:Boolean;
 var
   widget: RSWidget;
 begin
+  writeln("["+P_USERNAME+"]Logging in: " + P_USERNAME);
   if (RSCLient.LoginState = 2) and (RSClient.GameState > 10) then Exit(True);
+  if RSClient.LoginState = 24 then
+  begin
+    Mouse.Click(400, 310, MOUSE_LEFT);
+    wait(500 + random(100,200));
+  end;
   while (RSClient.GameState > 10) or (RSClient.LoginState > 0) do
   begin
     PressKey(VK_ESCAPE);
