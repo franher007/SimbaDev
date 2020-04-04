@@ -235,18 +235,14 @@ begin
     for Index := High(Path) downto 0 do
       if TileOnMM(Path[Index]) then
         Break;
-    writeln('wpA');
     if (Index = -1) then
       Break;
-    writeln('wpB');
     Wait(800 + Random(100));
     if WalkToTileMM(Path[Index]) then
     begin
       Timer := (GetTickCount() + 5000);
       while Distance(Path[Index], self.Tile) > FlagDist do
       begin
-
-        writeln('wpC');
         Wait(500 + Random(100));
         if Distance(Path[High(Path)], self.Tile) <= (FlagDist + Randomness + 1) then Break;
         if (GetTickCount() > Timer) or ((Index <> High(Path)) and (TileOnMM(Path[Index+1]))) then
@@ -255,8 +251,7 @@ begin
       if (GetTickCount() > Timer) then Inc(Tries);
 
       if (not (Distance(Path[Index], self.Tile) <= 5)) and ((Index <> High(Path)) and (not TileOnMM(Path[Index+1]))) then
-      begin 
-        writeln('wpD');
+      begin
         Inc(Tries);
       end;
     end else
@@ -267,7 +262,6 @@ begin
     end;
     if Tries >= 10 then Break;
   end;
-  writeln('wpE');
   FFlag(FlagDist);
   Result := Distance(Path[High(Path)], self.Tile) <= (FlagDist + Randomness + 1);
 end;
@@ -1893,21 +1887,15 @@ begin
   end
   player.walkto("cookToBank");
   sleep(random(700, 1000));
-  writeln('b');
-  withdrawWildItems;     
-  writeln('c');
+  withdrawWildItems;
   player.WalkTo("bankToGe");
-  writeln('d');
   sleep(random(700, 1000));
   sellPizzaBases;
-  writeln('sold');
   depositGrains;
   writeln('deposited');
   player.WalkTo("geToBank");
-  writeln('sold2');
   sleep(random(700, 1000));
-  player.WalkTo("bankToWild"); 
-  writeln('sold3');
+  player.WalkTo("bankToWild");
   sleep(random(700, 1000));
   TerminateScript;
 end;
