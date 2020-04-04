@@ -293,7 +293,6 @@ var
 begin
   if not R_GrandExchangeScreen then
     Exit(False);
-
   if R_GrandExchange_EmptySlots = 0 then
   begin
     writeln('Not enough slots');

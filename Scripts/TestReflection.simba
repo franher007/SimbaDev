@@ -257,6 +257,13 @@ begin
   //writeln(RSPlayer.Me.Tile);
   //writeln(BoolToStr(srl.IsClientState(csLogin)));
   //sleep(100);
+  getInv;
+  TerminateScript;
+  while true do
+  begin
+    getme;
+    wait(2000);
+  end;
   writeln(booltostr(R_IsEquipped(1949)));
   writeln('log: '+inttostr(RSCLient.LoginState));  //24 = disconnected   Point(3212, 3206),    Point(3232, 3226),
   writeln('gst: '+inttostr(RSCLient.GameState));

@@ -2,7 +2,7 @@
 
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
-  action = "hybrid"; //hybrid,doFlour, doFlourToPizza, doPizza, doCooking, keepAlive
+  action = "hybrid"; //hybrid, doWild, doFlour, doFlourToPizza, doPizza, doCooking, keepAlive
   useGE   = False;    //Buy/Sell in Grand Exchange?
   lag     = 0;     //use 0 for faster speeds
 
@@ -235,31 +235,39 @@ begin
     for Index := High(Path) downto 0 do
       if TileOnMM(Path[Index]) then
         Break;
-
+    writeln('wpA');
     if (Index = -1) then
       Break;
+    writeln('wpB');
     Wait(800 + Random(100));
     if WalkToTileMM(Path[Index]) then
     begin
-      Timer := (GetTickCount() + 20000);
+      Timer := (GetTickCount() + 5000);
       while Distance(Path[Index], self.Tile) > FlagDist do
       begin
+
+        writeln('wpC');
         Wait(500 + Random(100));
+        if Distance(Path[High(Path)], self.Tile) <= (FlagDist + Randomness + 1) then Break;
         if (GetTickCount() > Timer) or ((Index <> High(Path)) and (TileOnMM(Path[Index+1]))) then
           Break;
       end;
+      if (GetTickCount() > Timer) then Inc(Tries);
 
       if (not (Distance(Path[Index], self.Tile) <= 5)) and ((Index <> High(Path)) and (not TileOnMM(Path[Index+1]))) then
-      begin
+      begin 
+        writeln('wpD');
         Inc(Tries);
       end;
     end else
     begin
       Inc(Tries);
+      writeln('Tries: '+ inttostr(tries));
       wait(800+Random(600));
     end;
     if Tries >= 10 then Break;
   end;
+  writeln('wpE');
   FFlag(FlagDist);
   Result := Distance(Path[High(Path)], self.Tile) <= (FlagDist + Randomness + 1);
 end;
@@ -352,7 +360,7 @@ function RSPlayer.WalkTo(destination: String; precise: Boolean = False): Boolean
 var
   geToBankTiles, bankToCookTiles, cookToBankTiles, bankToGETiles, cookWaterSpot, cookExitSpot,
   bankToJuliet, secondDoorOutside, julietRange, secondDoorInside, firstDoorInside, julietExitSpot,
-  julietToBank, lumbyToVarrock, choosenTile: Array of RSTile;
+  julietToBank, lumbyToVarrock, bankToWild, wildToBank, choosenTile: Array of RSTile;
 begin
   geToBankTiles   := [Point(3165, 3486), Point(3166, 3471),
                       Point(3170, 3457), Point(3182, 3449),
@@ -378,6 +386,42 @@ begin
 
   bankToJuliet    := [Point(3185, 3436), Point(3177, 3434),
                       Point(3166, 3433)];
+
+  bankToWild      := [Point(3183, 3444), Point(3183, 3448),
+                      Point(3189, 3448), Point(3196, 3448),
+                      {Point(3202, 3442),} Point(3207, 3438),
+                      Point(3213, 3435), Point(3220, 3430),
+                      Point(3226, 3430), Point(3233, 3430),
+                      Point(3239, 3430), Point(3246, 3430),
+                      Point(3253, 3430), Point(3260, 3430),
+                      Point(3266, 3430), Point(3274, 3431),
+                      Point(3275, 3437), Point(3279, 3440),
+                      Point(3282, 3447), Point(3286, 3453),
+                      Point(3288, 3461), Point(3293, 3467),
+                      Point(3295, 3473), Point(3299, 3479),
+                      Point(3304, 3485), Point(3310, 3488),
+                      Point(3315, 3491), Point(3320, 3498),
+                      Point(3325, 3502), Point(3326, 3508),
+                      Point(3326, 3516), Point(3323, 3520)];
+
+  wildToBank      := [Point(3325, 3520),
+                      Point(3325, 3517), Point(3326, 3511),
+                      Point(3326, 3505), Point(3326, 3498),
+                      Point(3321, 3494), Point(3317, 3492),
+                      Point(3310, 3488), Point(3307, 3483),
+                      Point(3301, 3479), Point(3297, 3473),
+                      Point(3297, 3467), Point(3293, 3460),
+                      Point(3286, 3453), Point(3286, 3447),
+                      Point(3286, 3440), Point(3286, 3434),
+                      Point(3280, 3429), Point(3275, 3428),
+                      Point(3269, 3428), Point(3263, 3428),
+                      Point(3256, 3428), Point(3250, 3428),
+                      Point(3243, 3428), Point(3236, 3428),
+                      Point(3230, 3428), Point(3222, 3428),
+                      Point(3215, 3432), Point(3210, 3432),
+                      Point(3205, 3438), Point(3199, 3438),
+                      Point(3194, 3442), Point(3191, 3448),
+                      Point(3184, 3448), Point(3183, 3445)];
 
   secondDoorOutside := [Point(3160, 3432)];
 
@@ -429,10 +473,12 @@ begin
     "julietExitSpot": begin choosenTile := julietExitSpot end;
     "julietToBank": begin choosenTile := julietToBank end;
     "lumbyToVarrock": begin choosenTile := lumbyToVarrock end;
+    "bankToWild": begin choosenTile := bankToWild end;
+    "wildToBank": begin choosenTile := wildToBank end;
    end;
 
   self.WalkPathMM(choosenTile, 0, 1, False);
-  //writelnex(self.Tile.);
+  writelnex("endwalk");
   sleep(random(1200, 1600));
   if not precise then Exit(True);
   while self.Tile <> choosenTile[high(choosenTile)] do
@@ -682,6 +728,89 @@ procedure buyFlourToPizzaItems;
 begin
 end;
 
+procedure withdrawWildItems;
+var
+  bankBooth: RSObject;
+  pizzaBase: TRSBankItem;
+begin
+  writelnex("Opening bank");
+  bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3186, 3444);
+  if (bankBooth.ref = nil) then
+  begin
+    writelnex("Bank not found");
+    TerminateScript;
+  end;
+  while not R_BankScreen do
+  begin
+    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
+    sleep(random(2000,2500));
+  end;
+
+  R_DepositAll_Items;
+  sleep(random(50,150));
+  R_DepositAll_Equipment;
+  sleep(random(50,150));
+  R_WithdrawItem(coinsID);
+  sleep(random(50,150));
+  R_SetBankWithdrawMode(True);
+  sleep(random(50,150));
+  R_WithdrawItem(pizzaBaseID);
+  sleep(random(50,150));
+  R_SetBankWithdrawMode(False); 
+  R_BankScreen_Close;
+end;
+
+procedure depositGrains;
+var
+  bankBooth: RSObject;
+  grains: TRSBankItem;
+begin
+  writelnex("Opening bank");
+  bankBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3162, 3489);
+  if (bankBooth.ref = nil) then
+  begin
+    writelnex("Bank not found");
+    TerminateScript;
+  end;
+  while not R_BankScreen do
+  begin
+    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
+    sleep(random(2000,2500));
+  end;
+
+  R_DepositAll_Items;
+  sleep(random(1050,1350));
+  R_WithdrawItem(coinsID);
+  R_BankScreen_Close;
+end;
+
+procedure sellPizzaBases;
+var
+  exchangeBooth: RSObject;
+begin
+  writelnex('Doing GE');
+  exchangeBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3164, 3487);
+  if (exchangeBooth.ref = nil) then
+  begin
+    writelnex("Exchange not found");
+    TerminateScript;
+  end
+  while not R_GrandExchangeScreen do
+  begin
+    Mouse.Click(exchangeBooth.MidPoint, 2, MOUSE_LEFT);
+    sleep(random(2000,2500));
+  end
+  if R_GrandExchange_EmptyAllSlots then sleep(random(700,100));;
+  if R_GrandExchangeCollectAll then sleep(random(700,1000));
+  //SELL STUFF
+  R_GrandExchange_Sell(notedPizzaBaseID, TRSOfferQuantity.ALL);
+  sleep(random(2500,3500));
+  if R_GrandExchangeCollectAll then sleep(random(700,1000));
+  if R_GrandExchange_Buy("Grain", TRSOfferQuantity.X, 1000, TRSOfferPrice.PLUSFIVE, 2) then sleep(random(1000,1500));
+  if R_GrandExchangeCollectAll then sleep(random(700,1000));
+  R_GrandExchangeScreen_Close;
+end;
+
 procedure withdrawFlourToPizzaItems;
 var
   bankBooth: RSObject;
@@ -698,12 +827,12 @@ begin
   begin
     writelnex("Bank not found");
     TerminateScript;
-  end
+  end;
   while not R_BankScreen do
   begin
     Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
     sleep(random(2000,2500));
-  end
+  end;
 
   R_DepositAll_Items;
   writelnex('Deposited all items');
@@ -1039,7 +1168,7 @@ end;
 
 Function RSPlayer.inGuild: boolean;
 begin
-  Result := self.Tile.InBox(Box(3139, 3444, 3146, 3453));
+  Result := self.Tile.InBox(Box(3138, 3444, 3147, 3453));
 end;
 
 Function RSPlayer.inLumby: boolean;
@@ -1754,6 +1883,35 @@ begin
   wait(60000 + random(5000, 30000));
 end;
 
+procedure wildProcedure;
+begin
+  if player.InGuild then
+  begin
+    writelnEx("InGuild");
+    climbToFloor(0);
+    cookGuildDoor(False);
+  end
+  player.walkto("cookToBank");
+  sleep(random(700, 1000));
+  writeln('b');
+  withdrawWildItems;     
+  writeln('c');
+  player.WalkTo("bankToGe");
+  writeln('d');
+  sleep(random(700, 1000));
+  sellPizzaBases;
+  writeln('sold');
+  depositGrains;
+  writeln('deposited');
+  player.WalkTo("geToBank");
+  writeln('sold2');
+  sleep(random(700, 1000));
+  player.WalkTo("bankToWild"); 
+  writeln('sold3');
+  sleep(random(700, 1000));
+  TerminateScript;
+end;
+
 procedure hybridProcedure;
 begin
   if player.InLumby then
@@ -1767,6 +1925,11 @@ begin
     cookingProcedure;
   end;
   flourToPizzaProcedure;
+end;
+
+procedure testProcedure;
+begin
+ depositGrains;
 end;
 
 begin
@@ -1794,7 +1957,8 @@ begin
         "doFlourToPizza": begin flourToPizzaProcedure end;
         "doCooking": begin cookingProcedure end;
         "keepAlive": begin keepAliveProcedure end;
-        "doTest":   begin climbToFloor(2) end;
+        "doTest":   begin testProcedure; end;
+        "doWild":   begin wildProcedure; end;
         "hybrid":   begin hybridProcedure end;
       end;
     Except
