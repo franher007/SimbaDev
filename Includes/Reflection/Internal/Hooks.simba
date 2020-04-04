@@ -1,0 +1,439 @@
+{$IFNDEF REMOTEINPUT}
+{$DEFINE REMOTEINPUT}
+
+{$ifdef WINDOWS}
+{$loadlib RemoteInput}
+{$else}
+{$loadlib LibRemoteInput}
+{$endif}
+
+type
+  PRIField = ^RIField;
+
+  THook = packed record(RIField)
+    multiplier: Int64;
+  end;
+
+const
+    ReflectionRevision = '189';
+
+{Node: ga}
+Node_UID: THook =                                 ['ga', 'ct', 'J', 1];
+Node_Prev: THook =                                ['ga', 'ca', 'Lga;', 1];
+Node_Next: THook =                                ['ga', 'cf', 'Lga;', 1];
+
+{NodeDeque: jh}
+NodeDeque_Head: THook =                           ['jh', 'x', 'Lga;', 1];
+NodeDeque_Current: THook =                        ['jh', 'm', 'Lga;', 1];
+
+{Cacheable: ge}
+Cacheable_Next: THook =                           ['ge', 'cy', 'Lge;', 1];
+Cacheable_Prev: THook =                           ['ge', 'cb', 'Lge;', 1];
+
+{LinkedList: jm}
+LinkedList_Head: THook =                          ['jm', 'x', 'Lga;', 1];
+LinkedList_Current: THook =                       ['jm', 'm', 'Lga;', 1];
+
+{HashTable: lv}
+HashTable_Head: THook =                           ['lv', 'k', 'Lga;', 1];
+HashTable_Tail: THook =                           ['lv', 'd', 'Lga;', 1];
+HashTable_Buckets: THook =                        ['lv', 'm', '[Lga;', 1];
+HashTable_Index: THook =                          ['lv', 'w', 'I', 1];
+HashTable_Size: THook =                           ['lv', 'x', 'I', 1];
+
+{IterableHashTable: ln}
+IterableHashTable_Head: THook =                   ['ln', 'k', 'Lga;', 1];
+IterableHashTable_Tail: THook =                   ['ln', 'd', 'Lga;', 1];
+IterableHashTable_Buckets: THook =                ['ln', 'm', '[Lga;', 1];
+IterableHashTable_Index: THook =                  ['ln', 'w', 'I', 1];
+IterableHashTable_Size: THook =                   ['ln', 'x', 'I', 1];
+
+{Queue: jz}
+Queue_Head: THook =                               ['jz', 'x', 'Lge;', 1];
+
+{Cache: eg}
+Cache_HashTable: THook =                          ['eg', 'd', 'Lln;', 1];
+Cache_Queue: THook =                              ['eg', 'w', 'Ljz;', 1];
+Cache_Remaining: THook =                          ['eg', 'k', 'I', 1];
+Cache_Capacity: THook =                           ['eg', 'm', 'I', 1];
+
+{ClassData: du}
+ClassData_Bytes: THook =                          ['du', 'm', '[[[B', 1];
+ClassData_Methods: THook =                        ['du', 'z', '[Ljava/lang/reflect/Method;', 1];
+ClassData_Fields: THook =                         ['du', 'v', '[Ljava/lang/reflect/Field;', 1];
+
+{Rasteriser: li}
+Rasteriser_Pixels: THook =                        ['li', 'an', '[I', 1];
+Rasteriser_Width: THook =                         ['li', 'ai', 'I', 1];
+Rasteriser_Height: THook =                        ['li', 'ap', 'I', 1];
+
+{Rasteriser3D: ec}
+Rasteriser3D_ShadowDecay: THook =                 ['ec', 'j', '[I', 1];
+Rasteriser3D_SineTable: THook =                   ['ec', 'f', '[I', 1];
+Rasteriser3D_CosineTable: THook =                 ['ec', 'ae', '[I', 1];
+
+{Typeface: kh}
+Typeface_CharacterPixels: THook =                 ['kh', 'x', '[[B', 1];
+
+{IndexedRGB: le}
+IndexedRGB_Pixels: THook =                        ['le', 'm', '[I', 1];
+IndexedRGB_Palette: THook =                       ['le', 'x', '[B', 1];
+
+{ImageRGB: la}
+ImageRGB_Pixels: THook =                          ['la', 'x', '[I', 1];
+ImageRGB_Width: THook =                           ['la', 'm', 'I', 1];
+ImageRGB_Height: THook =                          ['la', 'k', 'I', 1];
+ImageRGB_MaxWidth: THook =                        ['la', 'v', 'I', 1];
+ImageRGB_MaxHeight: THook =                       ['la', 'q', 'I', 1];
+
+{Keyboard: bo}
+
+{GameShell: br}
+
+{Buffer: kb}
+Buffer_Payload: THook =                           ['kb', 'v', '[B', 1];
+Buffer_CRC: THook =                               ['kb', 'z', '[I', 1];
+
+{BufferedConnection: fa}
+BufferedConnection_InputStream: THook =           ['fa', 'x', 'Ljava/io/InputStream;', 1];
+BufferedConnection_OutputStream: THook =          ['fa', 'm', 'Ljava/io/OutputStream;', 1];
+BufferedConnection_Socket: THook =                ['fa', 'k', 'Ljava/net/Socket;', 1];
+BufferedConnection_Payload: THook =               ['fa', 'q', '[B', 1];
+BufferedConnection_IsClosed: THook =              ['fa', 'd', 'Z', 1];
+
+{CollisionMap: fm}
+CollisionMap_Width: THook =                       ['fm', 'as', 'I', 402451445];
+CollisionMap_Height: THook =                      ['fm', 'am', 'I', -1713243447];
+CollisionMap_Adjacency: THook =                   ['fm', 'au', '[[I', 1];
+
+{NameInfo: ku}
+NameInfo_Name: THook =                            ['ku', 'x', 'Ljava/lang/String;', 1];
+NameInfo_DecodedName: THook =                     ['ku', 'm', 'Ljava/lang/String;', 1];
+
+{Renderable: ee}
+Renderable_ModelHeight: THook =                   ['ee', 'ci', 'I', 566997565];
+
+{Region: ej}
+Region_SceneTiles: THook =                        ['ej', 'v', '[[[Leq;', 1];
+Region_InteractableObjects: THook =               ['ej', 't', '[Lek;', 1];
+
+{AnimableNode: cv}
+AnimableNode_ID: THook =                          ['cv', 'x', 'I', -778595855];
+AnimableNode_AnimationSequence: THook =           ['cv', 'q', 'Ljc;', 1];
+AnimableNode_Flags: THook =                       ['cv', 'm', 'I', 1719688801];
+AnimableNode_Orientation: THook =                 ['cv', 'k', 'I', 1645761999];
+AnimableNode_Plane: THook =                       ['cv', 'd', 'I', -1021480433];
+AnimableNode_X: THook =                           ['cv', 'w', 'I', 1939594765];
+AnimableNode_Y: THook =                           ['cv', 'v', 'I', 456415143];
+
+{BoundaryObject: ep}
+BoundaryObject_ID: THook =                        ['ep', 'z', 'J', 8712969699368096229];
+BoundaryObject_Flags: THook =                     ['ep', 't', 'I', 1289122601];
+BoundaryObject_Plane: THook =                     ['ep', 'm', 'I', 1191949217];
+BoundaryObject_Height: THook =                    ['ep', 'w', 'I', -1637656997];
+BoundaryObject_LocalX: THook =                    ['ep', 'k', 'I', -935099037];
+BoundaryObject_LocalY: THook =                    ['ep', 'x', 'I', 2013637089];
+BoundaryObject_Orientation: THook =               ['ep', 'd', 'I', 2050214703];
+BoundaryObject_Renderable: THook =                ['ep', 'v', 'Lee;', 1];
+BoundaryObject_Renderable2: THook =               ['ep', 'q', 'Lee;', 1];
+
+{WallDecoration: ez}
+WallDecoration_ID: THook =                        ['ez', 'e', 'J', -7258048285485333861];
+WallDecoration_Flags: THook =                     ['ez', 's', 'I', 1418566089];
+WallDecoration_Plane: THook =                     ['ez', 'm', 'I', -166681381];
+WallDecoration_Height: THook =                    ['ez', 'w', 'I', 817578233];
+WallDecoration_LocalX: THook =                    ['ez', 'k', 'I', -1454515853];
+WallDecoration_LocalY: THook =                    ['ez', 'x', 'I', -1214014955];
+WallDecoration_RelativeX: THook =                 ['ez', 'v', 'I', 1515780955];
+WallDecoration_RelativeY: THook =                 ['ez', 'q', 'I', -102361683];
+WallDecoration_Orientation: THook =               ['ez', 'd', 'I', -985506123];
+WallDecoration_Renderable: THook =                ['ez', 'z', 'Lee;', 1];
+WallDecoration_Renderable2: THook =               ['ez', 't', 'Lee;', 1];
+
+{FloorDecoration: eo}
+FloorDecoration_ID: THook =                       ['eo', 'm', 'J', -6831837537966124847];
+FloorDecoration_Flags: THook =                    ['eo', 'v', 'I', 1370776167];
+FloorDecoration_LocalX: THook =                   ['eo', 'd', 'I', 1743466221];
+FloorDecoration_LocalY: THook =                   ['eo', 'x', 'I', -1588480469];
+FloorDecoration_Plane: THook =                    ['eo', 'k', 'I', -198900691];
+FloorDecoration_Renderable: THook =               ['eo', 'w', 'Lee;', 1];
+
+{GameObject: ek}
+GameObject_Renderable: THook =                    ['ek', 'v', 'Lee;', 1];
+GameObject_ID: THook =                            ['ek', 'n', 'J', 1416033697273847883];
+GameObject_Flags: THook =                         ['ek', 'u', 'I', 837500395];
+GameObject_Orientation: THook =                   ['ek', 'm', 'I', 1894508257];
+GameObject_Plane: THook =                         ['ek', 'k', 'I', -67995329];
+GameObject_Height: THook =                        ['ek', 'd', 'I', -1055464323];
+GameObject_LocalX: THook =                        ['ek', 'w', 'I', 733420337];
+GameObject_LocalY: THook =                        ['ek', 'x', 'I', -1812382241];
+GameObject_WorldX: THook =                        ['ek', 'q', 'I', 1786771811];
+GameObject_WorldY: THook =                        ['ek', 't', 'I', 364744081];
+GameObject_OffsetX: THook =                       ['ek', 'z', 'I', 983334103];
+GameObject_OffsetY: THook =                       ['ek', 'e', 'I', 1023700223];
+
+{SceneTile: eq}
+SceneTile_BoundaryObject: THook =                 ['eq', 'q', 'Lep;', 1];
+SceneTile_SceneTileObject: THook =                ['eq', 'c', 'Leq;', 1];
+SceneTile_GameObject: THook =                     ['eq', 'p', '[Lek;', 1];
+SceneTile_WallDecoration: THook =                 ['eq', 'z', 'Lez;', 1];
+SceneTile_GroundDecoration: THook =               ['eq', 't', 'Leo;', 1];
+SceneTile_LocalX: THook =                         ['eq', 'k', 'I', 109834917];
+SceneTile_LocalY: THook =                         ['eq', 'x', 'I', 1748623045];
+SceneTile_Plane: THook =                          ['eq', 'd', 'I', 1556991301];
+
+{GrandExchange: b}
+TradingPost_Status: THook =                       ['b', 'x', 'B', 1];
+TradingPost_ItemID: THook =                       ['b', 'm', 'I', -1191314621];
+TradingPost_Price: THook =                        ['b', 'k', 'I', -1373983325];
+TradingPost_Quantity: THook =                     ['b', 'd', 'I', -435168387];
+TradingPost_Transferred: THook =                  ['b', 'w', 'I', 1];
+TradingPost_Spent: THook =                        ['b', 'v', 'I', 1519014469];
+TradingPost_QueryIDs: THook =                     ['b', 'N/A', 'N/A', 1];
+
+{Model: el}
+Model_IndicesX: THook =                           ['el', 'e', '[I', 1];
+Model_IndicesY: THook =                           ['el', 's', '[I', 1];
+Model_IndicesZ: THook =                           ['el', 'p', '[I', 1];
+Model_IndicesLength: THook =                      ['el', 't', 'I', 1];
+Model_VerticesX: THook =                          ['el', 'v', '[I', 1];
+Model_VerticesY: THook =                          ['el', 'q', '[I', 1];
+Model_VerticesZ: THook =                          ['el', 'z', '[I', 1];
+Model_VerticesLength: THook =                     ['el', 'w', 'I', 1];
+Model_TexIndicesX: THook =                        ['el', 'n', '[I', 1];
+Model_TexIndicesY: THook =                        ['el', 'u', '[I', 1];
+Model_TexIndicesZ: THook =                        ['el', 'h', '[I', 1];
+Model_TexVerticesX: THook =                       ['el', 'o', '[I', 1];
+Model_TexVerticesY: THook =                       ['el', 'c', '[I', 1];
+Model_TexVerticesZ: THook =                       ['el', 'j', '[I', 1];
+Model_TexVerticesLength: THook =                  ['el', 'r', 'I', 1];
+Model_Skins: THook =                              ['el', 'y', '[[I', 1];
+Model_ShadowIntensity: THook =                    ['el', 'ap', 'I', 1];
+Model_FitsSingleTile: THook =                     ['el', 'ae', 'Z', 1];
+
+{AnimationSequence: jc}
+AnimationSequence_Frames: THook =                 ['jc', 'v', '[I', 1];
+AnimationSequence_SequenceCache: THook =          ['jc', 'd', 'Leg;', 1];
+AnimationSequence_FrameCache: THook =             ['jc', 'w', 'Leg;', 1];
+
+{AnimationFrames: ef}
+AnimationFrames_Frames: THook =                   ['ef', 'x', '[Leh;', 1];
+
+{AnimationSkeleton: eb}
+AnimationSkeleton_ID: THook =                     ['eb', 'x', 'I', 1395664381];
+AnimationSkeleton_TransformationCount: THook =    ['eb', 'm', 'I', 451193883];
+AnimationSkeleton_TransformationTypes: THook =    ['eb', 'k', '[I', 1];
+AnimationSkeleton_Transformations: THook =        ['eb', 'd', '[[I', 1];
+
+{Animation: eh}
+Animation_FrameCount: THook =                     ['eh', 'v', 'I', 1];
+Animation_Frames: THook =                         ['eh', 'q', '[I', 1];
+Animation_TransformX: THook =                     ['eh', 'z', '[I', 1];
+Animation_TransformY: THook =                     ['eh', 't', '[I', 1];
+Animation_TransformZ: THook =                     ['eh', 'e', '[I', 1];
+Animation_Skeleton: THook =                       ['eh', 'w', 'Leb;', 1];
+
+{CombatInfo1: cc}
+CombatInfo1_Health: THook =                       ['cc', 'k', 'I', -1066019297];
+CombatInfo1_HealthRatio: THook =                  ['cc', 'm', 'I', 134168981];
+
+{CombatInfo2: id}
+CombatInfo2_HealthScale: THook =                  ['id', 'h', 'I', 411601749];
+
+{CombatInfoList: jm}
+CombatInfoList_Head: THook =                      ['jm', 'x', 'Lga;', 1];
+CombatInfoList_Current: THook =                   ['jm', 'm', 'Lga;', 1];
+
+{CombatInfoHolder: cg}
+CombatInfoHolder_CombatInfoList: THook =          ['cg', 'd', 'Ljm;', 1];
+CombatInfoHolder_CombatInfo2: THook =             ['cg', 'k', 'Lid;', 1];
+
+{Actor: cw}
+Actor_Animation: THook =                          ['cw', 'bq', 'I', -20846645];
+Actor_AnimationDelay: THook =                     ['cw', 'bx', 'I', -1532646011];
+Actor_AnimationFrame: THook =                     ['cw', 'ba', 'I', 1620009483];
+Actor_MovementSequence: THook =                   ['cw', 'bt', 'I', 1296285639];
+Actor_MovementFrame: THook =                      ['cw', 'bh', 'I', -1097128947];
+Actor_CurrentSequence: THook =                    ['cw', 'as', 'I', 2092221599];
+Actor_SpokenText: THook =                         ['cw', 'ax', 'Ljava/lang/String;', 1];
+Actor_HitDamages: THook =                         ['cw', 'aw', '[I', 1];
+Actor_HitTypes: THook =                           ['cw', 'bf', '[I', 1];
+Actor_HitCycle: THook =                           ['cw', 'bc', '[I', 1];
+Actor_QueueX: THook =                             ['cw', 'cs', '[I', 1];
+Actor_QueueY: THook =                             ['cw', 'cg', '[I', 1];
+Actor_QueueTraversed: THook =                     ['cw', 'cd', '[B', 1];
+Actor_QueueSize: THook =                          ['cw', 'cu', 'I', -525774551];
+Actor_LocalX: THook =                             ['cw', 'ab', 'I', -1730088457];
+Actor_LocalY: THook =                             ['cw', 'ar', 'I', 58548893];
+Actor_CombatCycle: THook =                        ['cw', 'N/A', 'N/A', 1];
+Actor_InteractingIndex: THook =                   ['cw', 'bu', 'I', 1906218843];
+Actor_Orientation: THook =                        ['cw', 'cq', 'I', 616594567];
+Actor_IsWalking: THook =                          ['cw', 'an', 'Z', 1];
+Actor_TargetIndex: THook =                        ['cw', 'bu', 'I', 1906218843];
+Actor_CombatInfoList: THook =                     ['cw', 'bk', 'Ljm;', 1];
+Actor_Height: THook =                             ['cw', 'cr', 'I', 1881116621];
+
+{NPCDefinition: jj}
+NPCDefinition_ID: THook =                         ['jj', 'w', 'I', -389469873];
+NPCDefinition_Name: THook =                       ['jj', 'v', 'Ljava/lang/String;', 1];
+NPCDefinition_Actions: THook =                    ['jj', 'r', '[Ljava/lang/String;', 1];
+NPCDefinition_ModelIDs: THook =                   ['jj', 'z', '[I', 1];
+NPCDefinition_CombatLevel: THook =                ['jj', 'c', 'I', -1913171313];
+NPCDefinition_Visible: THook =                    ['jj', 'f', 'Z', 1];
+NPCDefinition_ModelCache: THook =                 ['jj', 'd', 'Leg;', 1];
+NPCDefinition_Transformations: THook =            ['jj', 'ab', '[I', 1];
+
+{NPC: cd}
+NPC_Definition: THook =                           ['cd', 'x', 'Ljj;', 1];
+
+{PlayerDefinition: hk}
+PlayerDefinition_NpcTransformID: THook =          ['hk', 'd', 'I', -1293293343];
+PlayerDefinition_IsFemale: THook =                ['hk', 'k', 'Z', 1];
+PlayerDefinition_AnimatedModelID: THook =         ['hk', 'w', 'J', 3080768602890783779];
+PlayerDefinition_ModelID: THook =                 ['hk', 'v', 'J', 1388997665214268647];
+PlayerDefinition_Equipment: THook =               ['hk', 'x', '[I', 1];
+PlayerDefinition_ModelCache: THook =              ['hk', 'p', 'Leg;', 1];
+
+{Player: bi}
+Player_Name: THook =                              ['bi', 'x', 'Lku;', 1];
+Player_Model: THook =                             ['bi', 'h', 'Lel;', 1];
+Player_Visible: THook =                           ['bi', 'l', 'Z', 1];
+Player_Definition: THook =                        ['bi', 'm', 'Lhk;', 1];
+Player_CombatLevel: THook =                       ['bi', 'q', 'I', -1517162387];
+Player_Index: THook =                             ['bi', 'j', 'I', -1532250791];
+Player_IsAnimating: THook =                       ['bi', 'l', 'Z', 1];
+
+{ObjectDefinition: jw}
+ObjectDefinition_ID: THook =                      ['jw', 't', 'I', -1540034327];
+ObjectDefinition_DefinitionCache: THook =         ['jw', 'd', 'Leg;', 1];
+ObjectDefinition_ModelCache: THook =              ['jw', 'q', 'Leg;', 1];
+ObjectDefinition_ModelIDs: THook =                ['jw', 'e', '[I', 1];
+ObjectDefinition_Models: THook =                  ['jw', 's', '[I', 1];
+ObjectDefinition_Name: THook =                    ['jw', 'p', 'Ljava/lang/String;', 1];
+ObjectDefinition_Actions: THook =                 ['jw', 'ai', '[Ljava/lang/String;', 1];
+ObjectDefinition_Transformations: THook =         ['jw', 'aa', '[I', 1];
+ObjectDefinition_TransformationVarbit: THook =    ['jw', 'ax', 'I', 1641253039];
+ObjectDefinition_TransformationVarp: THook =      ['jw', 'az', 'I', -948693409];
+
+{WidgetNode: bm}
+WidgetNode_ID: THook =                            ['bm', 'x', 'I', 1326721365];
+
+{Widget: he}
+Widget_Name: THook =                              ['he', 'dv', 'Ljava/lang/String;', 1];
+Widget_Text: THook =                              ['he', 'cc', 'Ljava/lang/String;', 1];
+Widget_WidgetID: THook =                          ['he', 'b', 'I', -957641141];
+Widget_ParentID: THook =                          ['he', 'au', 'I', 1237608307];
+Widget_Parent: THook =                            ['he', 'du', 'Lhe;', 1];
+Widget_TextureID: THook =                         ['he', 'bo', 'I', -1011748949];
+Widget_ItemID: THook =                            ['he', 'ek', 'I', -1761852993];
+Widget_InvIDs: THook =                            ['he', 'em', '[I', 1];
+Widget_StackSizes: THook =                        ['he', 'ez', '[I', 1];
+Widget_ItemAmount: THook =                        ['he', 'ey', 'I', 612667463];
+Widget_Actions: THook =                           ['he', 'cn', '[Ljava/lang/String;', 1];
+Widget_ActionType: THook =                        ['he', 'o', 'I', -248776571];
+Widget_Type: THook =                              ['he', 'r', 'I', -802488779];
+Widget_IsHidden: THook =                          ['he', 'ao', 'Z', 1];
+Widget_AbsoluteX: THook =                         ['he', 'an', 'I', -1997338621];
+Widget_AbsoluteY: THook =                         ['he', 'ai', 'I', -1586734249];
+Widget_RelativeX: THook =                         ['he', 'ar', 'I', 893339967];
+Widget_RelativeY: THook =                         ['he', 'af', 'I', -426365475];
+Widget_ScrollX: THook =                           ['he', 'aq', 'I', 615773905];
+Widget_ScrollY: THook =                           ['he', 'av', 'I', 1171290753];
+Widget_Width: THook =                             ['he', 'at', 'I', -1065823023];
+Widget_Height: THook =                            ['he', 'al', 'I', 379197055];
+Widget_Children: THook =                          ['he', 'es', '[Lhe;', 1];
+Widget_BoundsIndex: THook =                       ['he', 'fo', 'I', -612332201];
+Widget_WidgetCycle: THook =                       ['he', 'fi', 'I', 847308047];
+
+{ItemDefinition: jx}
+ItemDefinition_ID: THook =                        ['jx', 'u', 'I', -32704117];
+ItemDefinition_Name: THook =                      ['jx', 'g', 'Ljava/lang/String;', 1];
+ItemDefinition_IsMembers: THook =                 ['jx', 'ai', 'Z', 1];
+ItemDefinition_GroundActions: THook =             ['jx', 'ap', '[Ljava/lang/String;', 1];
+ItemDefinition_Actions: THook =                   ['jx', 'ab', '[Ljava/lang/String;', 1];
+ItemDefinition_Cache: THook =                     ['jx', 'e', 'Leg;', 1];
+
+{Item: cf}
+Item_ID: THook =                                  ['cf', 'x', 'I', 809859925];
+Item_StackSizes: THook =                          ['cf', 'm', 'I', -1293976509];
+
+{ItemNode: bs}
+ItemNode_ItemIDs: THook =                         ['bs', 'm', '[I', 1];
+ItemNode_ItemQuantities: THook =                  ['bs', 'k', '[I', 1];
+ItemNode_Cache: THook =                           ['bs', 'x', 'Llv;', 1];
+
+{Varps: ht}
+Varps_Masks: THook =                              ['ht', 'x', '[I', 1];
+Varps_Main: THook =                               ['ht', 'k', '[I', 1];
+
+{VarbitDefinition: iu}
+VarbitDefinition_Cache: THook =                   ['iu', 'm', 'Leg;', 1];
+VarbitDefinition_Base: THook =                    ['iu', 'k', 'I', -927244413];
+VarbitDefinition_StartBit: THook =                ['iu', 'd', 'I', -326860353];
+VarbitDefinition_EndBit: THook =                  ['iu', 'w', 'I', -1659687913];
+
+{Client: client}
+Client_Revision: THook =                          ['client', '189', 'I', 1];
+Client_Client: THook =                            ['client', 'ag', 'Lclient;', 1];
+Client_LocalNPCs: THook =                         ['client', 'ff', '[Lcd;', 1];
+Client_NPCIndices: THook =                        ['client', 'fo', '[I', 1];
+Client_LocalPlayers: THook =                      ['client', 'kw', '[Lbi;', 1];
+Client_PlayerIndices: THook =                     ['cj', 'q', '[I', 1];
+Client_LocalPlayer: THook =                       ['kl', 'kv', 'Lbi;', 1];
+Client_PlayerIndex: THook =                       ['client', 'ke', 'I', -767774261];
+Client_LoopCycle: THook =                         ['client', 'cd', 'I', -2024138363];
+Client_GameState: THook =                         ['client', 'bx', 'I', -734659311];
+Client_LoginState: THook =                        ['cy', 'am', 'I', -1027214845];
+Client_CrossHairColor: THook =                    ['client', 'jl', 'I', -806793857];
+Client_AnimationFrameCache: THook =               ['jc', 'w', 'Leg;', 1];
+Client_GroundItems: THook =                       ['client', 'kh', '[[[Ljh;', 1];
+Client_CollisionMap: THook =                      ['client', 'w', '[Lfm;', 1];
+Client_TradingPostOffers: THook =                 ['client', 'sd', '[Lb;', 1];
+Client_CameraX: THook =                           ['ar', 'hj', 'I', 1285501421];
+Client_CameraY: THook =                           ['gy', 'hm', 'I', 319009619];
+Client_CameraZ: THook =                           ['h', 'hk', 'I', -1477050145];
+Client_CameraPitch: THook =                       ['bj', 'hp', 'I', 363395723];
+Client_CameraYaw: THook =                         ['af', 'he', 'I', -395695129];
+Client_Region: THook =                            ['h', 'gq', 'Lej;', 1];
+Client_Plane: THook =                             ['bb', 'km', 'I', -2032356267];
+Client_BaseX: THook =                             ['bp', 'fm', 'I', 731242929];
+Client_BaseY: THook =                             ['cx', 'gg', 'I', 1825982697];
+Client_DestinationX: THook =                      ['client', 'qa', 'I', -1279257455];
+Client_DestinationY: THook =                      ['client', 'qk', 'I', 1618575593];
+Client_Sine: THook =                              ['ec', 'f', '[I', 1];
+Client_Cosine: THook =                            ['ec', 'ae', '[I', 1];
+Client_TileHeights: THook =                       ['ba', 'x', '[[[I', 1];
+Client_TileSettings: THook =                      ['ba', 'm', '[[[B', 1];
+Client_ItemNodeCache: THook =                     ['bs', 'x', 'Llv;', 1];
+Client_Widgets: THook =                           ['he', 'q', '[[Lhe;', 1];
+Client_GameSettings: THook =                      ['ht', 'k', '[I', 1];
+Client_WidgetNodeCache: THook =                   ['client', 'mn', 'Llv;', 1];
+Client_WidgetPositionX: THook =                   ['client', 'op', '[I', 1];
+Client_WidgetPositionY: THook =                   ['client', 'ob', '[I', 1];
+Client_WidgetWidths: THook =                      ['client', 'oz', '[I', 1];
+Client_WidgetHeights: THook =                     ['client', 'oc', '[I', 1];
+Client_ValidWidgets: THook =                      ['he', 'z', '[Z', 1];
+Client_WidgetRootInterface: THook =               ['client', 'mr', 'I', -1504817189];
+Client_ViewPortWidth: THook =                     ['client', 'sc', 'I', 1112173289];
+Client_ViewPortHeight: THook =                    ['client', 'si', 'I', 2055926497];
+Client_ViewPortScale: THook =                     ['client', 'st', 'I', 1508238603];
+Client_MapAngle: THook =                          ['client', 'hu', 'I', 442725255];
+Client_MapScale: THook =                          ['client', 'N/A', 'N/A', 1];
+Client_MapOffset: THook =                         ['client', 'N/A', 'N/A', 1];
+Client_MenuCount: THook =                         ['client', 'lg', 'I', -637671939];
+Client_MenuActions: THook =                       ['client', 'lh', '[Ljava/lang/String;', 1];
+Client_MenuOptions: THook =                       ['client', 'ln', '[Ljava/lang/String;', 1];
+Client_IsMenuOpen: THook =                        ['client', 'lb', 'Z', 1];
+Client_MenuX: THook =                             ['al', 'lt', 'I', 620715937];
+Client_MenuY: THook =                             ['gq', 'lc', 'I', 1185326295];
+Client_MenuWidth: THook =                         ['ah', 'lo', 'I', 863785417];
+Client_MenuHeight: THook =                        ['ac', 'lq', 'I', -759112177];
+Client_CurrentLevels: THook =                     ['client', 'kb', '[I', 1];
+Client_RealLevels: THook =                        ['client', 'kd', '[I', 1];
+Client_Experiences: THook =                       ['client', 'kl', '[I', 1];
+Client_CurrentWorld: THook =                      ['client', 'bf', 'I', 67970213];
+Client_Energy: THook =                            ['client', 'mo', 'I', 1227039409];
+Client_Weight: THook =                            ['client', 'mz', 'I', 1509251187];
+
+
+{$ENDIF}

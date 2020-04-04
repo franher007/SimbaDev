@@ -1,0 +1,113 @@
+{$include_once Structures.simba}
+{$include_once RSStructures.simba}
+{$include_once RSTile.simba}
+{$include_once RSPlayer.simba}
+{$include_once RSNPC.simba}
+
+procedure TMufasaBitmap._DrawPolygon(points: TPointArray; color: TColor);
+var
+  i, h: Integer;
+begin
+  h := (High(points) - 1);
+
+  if (h = -1) then
+    exit;
+
+  for i := 0 to h do
+    self.LineTo(points[i], points[i + 1], color);
+
+  self.LineTo(points[h + 1], points[0], color);
+end;
+
+Procedure TMufasaBitmap._DrawPolygon(constref poly: T2DTriangle; Colour: TColor); overload;
+begin
+  self.LineTo(Point(poly.A.X, poly.A.Y), Point(poly.B.X, poly.B.Y), Colour);
+  self.LineTo(Point(poly.B.X, poly.B.Y), Point(poly.C.X, poly.C.Y), Colour);
+  self.LineTo(Point(poly.C.X, poly.C.Y), Point(poly.A.X, poly.A.Y), Colour);
+end;
+
+Procedure TMufasaBitmap.DrawModel(constref model: RSModel; tile: RSTile; orientation: Int32; Colour: TColor);
+var
+  i: Int32;
+  triangles: Array of T2DTriangle;
+begin
+  triangles := model.Project(tile.X, tile.Y, tile.GetHeight(), orientation);
+
+  for i := 0 to high(triangles) do
+  begin
+    self._DrawPolygon(triangles[i], Colour);
+  end;
+end;
+
+Procedure TMufasaBitmap.DrawModel(constref model: RSAnimatedModel; tile: RSTile; orientation: Int32; Colour: TColor); overload;
+var
+  i: Int32;
+  triangles: Array of T2DTriangle;
+begin
+  triangles := model.Project(tile.X, tile.Y, tile.GetHeight(), orientation);
+
+  for i := 0 to high(triangles) do
+  begin
+    self._DrawPolygon(triangles[i], Colour);
+  end;
+end;
+
+Procedure TMufasaBitmap.DrawPlayer(constref player: RSPlayer; animated: Boolean; Colour: TColor);
+var
+  model: RSModel;
+  animatedModel: RSAnimatedModel;
+begin
+  if Animated then
+  begin
+    animatedModel := player.AnimatedModel;
+    if animatedModel.ref <> nil then
+    begin
+      self.DrawModel(animatedModel, player.LocalTile, player.Orientation, colour);
+      animatedModel.Free;
+    end;
+  end else
+    begin
+      model := Player.Model;
+      if model.ref <> nil then
+      begin
+        self.DrawModel(model, player.LocalTile, player.Orientation, colour);
+        model.Free;
+      end;
+    end;
+end;
+
+Procedure TMufasaBitmap.DrawNPC(constref npc: RSNPC; animated: Boolean; Colour: TColor);
+var
+  model: RSModel;
+  animatedModel: RSAnimatedModel;
+begin
+  if Animated then
+  begin
+    animatedModel := npc.AnimatedModel;
+    if model.ref <> nil then
+    begin
+      self.DrawModel(animatedModel, npc.LocalTile, npc.Orientation, colour);
+      animatedModel.Free;
+    end;
+  end else
+    begin
+      model := npc.Model;
+      if model.ref <> nil then
+      begin
+        self.DrawModel(model, npc.LocalTile, npc.Orientation, colour);
+        model.Free;
+      end;
+    end;
+  model.Free;
+end;
+
+Procedure TMufasaBitmap.DrawTile(constref tile: RSTile; Colour: TColor);
+var
+  Bounds: T2DRectangle;
+begin
+  Bounds := tile.Project;
+  self.LineTo(Bounds.NW, Bounds.NE, Colour);
+  self.LineTo(Bounds.NE, Bounds.SE, Colour);
+  self.LineTo(Bounds.SE, Bounds.SW, Colour);
+  self.LineTo(Bounds.SW, Bounds.NW, Colour);
+end;

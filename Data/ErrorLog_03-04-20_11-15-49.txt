@@ -1,0 +1,12 @@
+Program exception! 
+Stacktrace:
+
+Exception class: EOutOfMemory
+Message: Out of memory
+  $0045A2BD
+  $0045A39E
+  $0041294E
+  $776862C4
+  $777B0F79
+  $777B0F44
+Simba Version: 1302

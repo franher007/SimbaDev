@@ -1,0 +1,261 @@
+{$i Reflection/Reflection.simba}
+
+
+procedure clickMe;
+var
+  players: Array of RSPlayer;
+  i: Integer;
+begin
+  players := RSPlayer.AllPlayers;
+  for i := 0 to High(players) do
+  begin
+    if players[i].Name <> "" then
+      writeln(players[i].Name);
+      if players[i].Name = "Franher007" then
+      begin
+        writeln("clicky");
+        writeln(players[i].LocalTile.TileToMS);
+        mouse.Click(players[i].LocalTile.TileToMS, MOUSE_RIGHT);
+        TerminateScript;
+      end
+  end
+end
+
+procedure bankMe;
+var
+  items:  Array of TRSBankItem;
+  i: Integer;
+begin
+  R_BankScreen_Close;
+  TerminateScript;
+  items := R_GetAllBankItems;
+  for i := 0 to High(ITEMS) do
+  begin
+    writeln(intToStr(items[i].ID) + " - " + items[i].Name + " - " + intToStr(items[i].Amount));
+    //if players[i].Name <> "" then
+    //  writeln(players[i].Name);
+    //  if players[i].Name = "Franher007" then
+    //  begin
+    //    writeln("clicky");
+    //    writeln(players[i].LocalTile.TileToMS);
+    //    mouse.Click(players[i].LocalTile.TileToMS, MOUSE_RIGHT);
+    //    TerminateScript;
+     // end
+  end
+end
+
+procedure getNpc;
+var
+  npcs : Array of RSNPC;
+  i: Integer;
+begin
+  npcs :=  RSNPC.AllNPCs;
+
+  for i := 0 to High(npcs) do
+  begin
+    if npcs[i].ref <> nil then
+      if npcs[i].Definition.Name = "Banker" then writeln(npcs[i].LocalTile);
+  end
+end
+
+Function RSObject.MidPoint: TPoint;
+var
+  model: RSModel;
+  triangles: Array of T2DTriangle;
+  points: TPointArray;
+  i: Int32;
+begin
+  model := self.Model;
+  triangles := model.Project(localtile.X, localtile.Y, localtile.GetHeight(), -1);
+  model.Free;
+
+  for i := 0 to high(triangles) do
+  begin
+    points += triangles[i].A;
+    points += triangles[i].B;
+    points += triangles[i].C;
+  end;
+
+  Result := MiddleTPA(points);
+end;
+
+procedure getObject(x,y: integer);
+var
+  objects : Array of RSObject;
+  obj : RSObject;
+  i: Integer;
+begin
+  obj := RSObject.Get(RSObjectType.GAME_OBJECT, x, y);
+  writeln('a');
+  if (obj.ref <> nil) then
+  begin
+    writeln(intToStr( obj.Definition.TransformVarbit ));
+    while true do
+    begin
+      writeln(Length(obj.Model.vertices));
+      sleep(5000);
+    end;
+    //Mouse.Click(obj.MidPoint, MOUSE_RIGHT);
+    Exit;
+  end
+end
+
+Procedure getMe;
+var
+  players: Array of RSPlayer;
+  i: Integer;
+begin
+  writeln("Point("+inttostr(RSPlayer.me.Tile.X)+", "+inttostr(RSPlayer.me.Tile.Y)+"),");
+  Exit;
+  players := RSPlayer.AllPlayers;
+  for i := 0 to High(players) do
+  begin
+    if players[i].Name <> "" then
+      //writeln(players[i].Name);
+      if players[i].Name = "Rsacc2fcom" then
+      begin
+        //writeln(players[i].Tile);
+        writeln("Point("+inttostr(players[i].Tile.X)+", "+inttostr(players[i].Tile.Y)+"), ");
+        Exit;
+      end
+  end
+end
+
+Function R_SelectGrandExchangeSlot1(Index: Int32): Boolean;
+var
+  slotWidget: RSWidget;
+  T: Timer;
+begin
+  if (Index < 0) or (Index > 8) then
+    Exit(False);
+
+  if not R_GrandExchangeScreen then
+    Exit;
+
+  if R_CurrentGrandExchangeSlot = Index then
+    Exit(True);
+
+  writeln('a');
+  slotWidget := RSWidget.Get(R_GRAND_EXCHANGE_SLOT_CONTAINER.Group, R_GRAND_EXCHANGE_SLOT_CONTAINER.Child, Index);
+  if slotWidget.ref = nil then
+    Exit(False);
+  writeln('b');
+  Mouse.Click(slotWidget.Bounds, MOUSE_LEFT);
+  slotWidget.Free;
+
+  T.Start;
+  while R_CurrentGrandExchangeSlot <> Index do
+  begin
+    if T.ElapsedTime > 1000 then
+      Exit(False);
+    Wait(50, Random(50));
+  end;
+  Result := R_CurrentGrandExchangeSlot = Index;
+end;
+
+procedure gExMe;
+var
+  widget: RSWidget;
+  i: Integer;
+begin
+  //writeln(BoolToStr(R_GrandExchangeScreen));
+  //writeln(BoolToStr(R_GrandExchangeCanCollect));
+  //R_GrandExchangeCollectAll;
+  //R_SelectGrandExchangeSlot1(1);
+  //sleep(500);
+  widget := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ADD_X.Group, R_GRAND_EXCHANGE_OFFER_ADD_X.Child, R_GRAND_EXCHANGE_OFFER_ADD_X.Index);
+  Mouse.Move(widget.Bounds.Middle);
+  TerminateScript;
+  for i := 0 to High(widget.Children) do
+  begin
+    writeln("widget x: " + inttostr(widget.child(i).Bounds.Middle.X) + " y: " + inttostr(widget.child(i).Bounds.Middle.Y));
+    sleep(200);
+    Mouse.Move(400, 400);
+    writeln('d1');
+  end
+
+end
+
+procedure getInv;
+var
+  invItems: Array of TRSInventoryItem;
+  i: Integer;
+begin
+  invItems := R_GetAllInventoryItems;
+  for i := 0 to high(invItems) do
+    writeln(inttostr(invItems[i].ID));
+end
+
+Function R_GrandExchange_Offer_Add_Quantity1( Mode: TRSOfferQuantity; XAmount: Int32 = -1): Boolean;
+var
+  Button, widgeta: RSWidget;
+begin
+
+  widgeta := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ADD_X.Group, R_GRAND_EXCHANGE_OFFER_ADD_X.Child, R_GRAND_EXCHANGE_OFFER_ADD_X.Index);
+  //Mouse.Move(widget.Bounds.Middle);
+  writeln('xdd');
+  if widgeta.ref = nil then
+    Exit(False);
+  writeln('x2');
+  Mouse.Click(widgeta.Bounds, MOUSE_LEFT);
+  widgeta.Free;
+  sleep(random(1000,1200));
+  Keyboard.send(IntToStr(XAmount), VK_ENTER);
+  Exit(True);
+
+  writeln('Setting offer quantity2');
+  if Button.ref = nil then
+    Exit(False);
+  writeln('Setting offer quantity3');
+  Mouse.Click(Button.Bounds, MOUSE_LEFT);
+  Button.Free;
+
+  Result := True; //TODO: Check if the mode actually changed by checking button spriteId..
+end;
+
+
+procedure qonda;
+var
+  widget: RSWidget;
+begin
+  widget := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ADD_X.Group, R_GRAND_EXCHANGE_OFFER_ADD_X.Child, R_GRAND_EXCHANGE_OFFER_ADD_X.Index);
+  if widget.ref = nil then
+    Exit;
+  writeln('Setting offer quantity33');Mouse.Move(widget.Bounds.Middle);
+end
+
+function qonda2: Boolean;
+var
+  widget: RSWidget;
+begin
+  widget := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ADD_X.Group, R_GRAND_EXCHANGE_OFFER_ADD_X.Child, R_GRAND_EXCHANGE_OFFER_ADD_X.Index);
+  if widget.ref = nil then
+    Exit(False);
+  writeln('Setting offer quantity44');Mouse.Move(widget.Bounds.Middle);
+  Result := True;
+end
+
+procedure tilesProc;
+begin
+  while true do
+  begin
+    sleep(100);
+    getMe;
+    //PauseScript;
+  end;
+end;
+
+var
+  mibool: Boolean;
+  iskey: Boolean;
+begin
+  //writeln(booltostr(R_ChatSkillOption(3)));
+  getObject(RSPlayer.Me.Tile.x+1, RSPlayer.Me.Tile.y);
+  //getObject(3140, 3449);
+  //writeln(RSPlayer.Me.Tile);
+  //writeln(BoolToStr(RSPlayer.Me.Tile.InBox(Box(3139, 3444, 3146, 3453))));
+  //sleep(100);
+  getMe;
+  //tilesProc;
+  //writeln(inttostr(RSPlayer.me.SkillLevel(7)));
+end.

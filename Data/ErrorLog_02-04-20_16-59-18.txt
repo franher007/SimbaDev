@@ -1,0 +1,22 @@
+Program exception! 
+Stacktrace:
+
+Exception class: EThread
+Message: Thread creation error: Not enough storage is available to process this command.
+  $00459E82
+  $0045A0C7
+  $0045A854
+  $0045A91F
+  $007AF5B0
+  $0057BF2E
+  $005076AC
+  $7732D2B3
+  $7730EFD5
+  $7730E2D3
+  $7730DFB0
+  $00508374
+  $00424BDD
+  $0042504F
+  $0044AA42
+  $00425005
+Simba Version: 1302

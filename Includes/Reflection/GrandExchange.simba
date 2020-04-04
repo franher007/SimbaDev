@@ -1,0 +1,392 @@
+{$include_once Internal/Reflection.simba}
+{$include_once Constants.simba}
+{$include_once Menu.simba}
+{$include_once Inventory.simba}
+{$include_once Mouse.simba}
+{$include_once Timing.simba}
+
+const
+  VARBIT_CURRENT_SLOT = 4439;
+  VARBIT_SLOT_REMAINING_1 = 4396;
+
+{$scopedenums on}
+type
+  TRSOfferQuantity = (ONE, TEN, HUNDRED, ALL, X);
+  TRSOfferPrice = (MINUSFIVE, GUIDE, X, PLUSFIVE, PLUSONE, MINUSONE);
+{$scopedenums off}
+
+Function R_GrandExchangeScreen: Boolean;
+begin
+  Result := RSWidget.IsValid(R_INTERFACE_GRAND_EXCHANGE);
+end;
+
+Function R_GrandExchange_Back: Boolean;
+var
+  widget: RSWidget;
+begin
+  widget := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_BACK.Group, R_GRAND_EXCHANGE_OFFER_BACK.Child);
+  if widget.ref = nil then
+    Exit(False);
+
+  if widget.IsHidden then
+    Exit(False);
+
+  Mouse.Click(widget.Bounds.Middle.X, widget.Bounds.Middle.y, MOUSE_LEFT);
+  widget.Free;
+  Result := True;
+end;
+
+Function R_GrandExchangeOfferScreen: Boolean;
+begin
+  Result := not RSWidget.Get(R_GRAND_EXCHANGE_OFFER_CONTAINER.Group, R_GRAND_EXCHANGE_OFFER_CONTAINER.Child).IsHidden;
+end;
+
+Function R_WaitGrandExchangeScreen(timeout: UInt32): Boolean;
+begin
+  Result := R_WaitFunction(timeout, 50, @R_GrandExchangeScreen);
+end;
+
+Function R_GrandExchangeScreen_Close: Boolean;
+var
+  Widget: RSWidget;
+  i: Integer;
+begin
+
+  R_GrandExchange_Back;
+
+  if not R_GrandExchangeScreen then
+    Exit;
+
+  Widget := RSWidget.Get(R_GRAND_EXCHANGE_CLOSE.Group, R_GRAND_EXCHANGE_CLOSE.Child, R_GRAND_EXCHANGE_CLOSE.Index);
+
+  if Widget.ref = nil then
+    Exit(False);
+
+  Mouse.Move(Widget.Bounds);
+  Wait(50 + RandomRange(0, 50));
+  Mouse.Click(MOUSE_LEFT);
+  Widget.Free;
+  Result := True;
+end;
+
+Function R_CurrentGrandExchangeSlot: Int32;
+begin
+  Result := RSClient.getVarbit(VARBIT_CURRENT_SLOT);
+end;
+
+Function R_GrandExchangeCanCollect: Boolean;
+begin
+  Result := not RSWidget.Get(R_GRAND_EXCHANGE_SLOT_CONTAINER_COLLECT.Group, R_GRAND_EXCHANGE_SLOT_CONTAINER_COLLECT.Child, R_GRAND_EXCHANGE_SLOT_CONTAINER_COLLECT.Index).IsHidden;
+end;
+
+Function R_GrandExchangeCollectAll: Boolean;
+var
+  collectWidget: RSWidget;
+begin
+  if not R_GrandExchangeScreen then
+    Exit;
+
+  R_GrandExchange_Back;
+  sleep(random(500, 700));
+
+  collectWidget := RSWidget.Get(R_GRAND_EXCHANGE_SLOT_CONTAINER_COLLECT.Group, R_GRAND_EXCHANGE_SLOT_CONTAINER_COLLECT.Child, R_GRAND_EXCHANGE_SLOT_CONTAINER_COLLECT.Index);
+  if collectWidget.ref = nil then
+    Exit(False);
+
+  if collectWidget.IsHidden then
+    Exit(False);
+
+  Mouse.Move(collectWidget.Bounds.Middle.X, collectWidget.Bounds.Middle.Y);
+  Wait(50 + RandomRange(0, 50));
+  Mouse.Click(MOUSE_LEFT);
+  collectWidget.Free;
+  Result := True;
+end;
+
+Function R_SelectGrandExchangeSlot(Index: Int32): Boolean;
+var
+  slotWidget: RSWidget;
+  T: Timer;
+  i: Integer;
+  slotVars: Array of RWidget;
+begin
+  if (Index < 0) or (Index > 7) then
+    Exit(False);
+
+  if not R_GrandExchangeScreen then
+    Exit(False);
+
+  if R_CurrentGrandExchangeSlot = Index then
+    Exit(True);
+
+  slotVars :=   [R_GRAND_EXCHANGE_SLOT_1, R_GRAND_EXCHANGE_SLOT_2,
+                 R_GRAND_EXCHANGE_SLOT_3, R_GRAND_EXCHANGE_SLOT_4,
+                 R_GRAND_EXCHANGE_SLOT_5, R_GRAND_EXCHANGE_SLOT_6,
+                 R_GRAND_EXCHANGE_SLOT_7, R_GRAND_EXCHANGE_SLOT_8];
+
+  slotWidget := RSWidget.Get(slotVars[Index].Group, slotVars[Index].Child);
+  if slotWidget.ref = nil then
+    Exit(False);
+
+  Mouse.Click(slotWidget.Bounds.Middle, MOUSE_LEFT);
+  slotWidget.Free;
+
+  T.Start;
+  while R_CurrentGrandExchangeSlot <> Index do
+  begin
+    if T.ElapsedTime > 1000 then
+      Exit(False);
+    Wait(50, Random(50));
+  end;
+  Result := R_CurrentGrandExchangeSlot = Index;
+end;
+
+Function R_GrandExchange_EmptySlots(totalSlots: Int32 = 2): Int32;
+var
+  i, j: Integer;
+  abortWidget, buySpriteWidget: RSWidget;
+  spriteVars: Array of RWidget;
+begin
+
+  //if not R_GrandExchangeScreen then
+  //  Exit(0);
+  j := 0;
+  spriteVars :=  [R_GRAND_EXCHANGE_SLOT_TITLE_1, R_GRAND_EXCHANGE_SLOT_TITLE_2,
+                R_GRAND_EXCHANGE_SLOT_TITLE_3, R_GRAND_EXCHANGE_SLOT_TITLE_4,
+                R_GRAND_EXCHANGE_SLOT_TITLE_5, R_GRAND_EXCHANGE_SLOT_TITLE_6,
+                R_GRAND_EXCHANGE_SLOT_TITLE_7, R_GRAND_EXCHANGE_SLOT_TITLE_8];
+
+  for i := 0 to totalSlots do
+  begin
+    buySpriteWidget := RSWidget.Get(spriteVars[i].Group, spriteVars[i].Child, spriteVars[i].Index);
+    if not ((buySpriteWidget.ref = nil) or (buySpriteWidget.text <> "Empty")) then
+    begin
+      j += 1;
+    end;
+    buySpriteWidget.Free;
+  end;
+  Result := j;
+end;
+
+Function R_GrandExchange_EmptyAllSlots(totalSlots: Int32 = 2): Boolean;
+var
+  i: Integer;
+  abortWidget, buySpriteWidget: RSWidget;
+  spriteVars: Array of RWidget;
+begin
+
+  if not R_GrandExchangeScreen then
+    Exit(False);
+
+  R_GrandExchangeCollectAll;
+  sleep(random(700, 900));
+
+  spriteVars :=  [R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_1, R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_2,
+                R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_3, R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_4,
+                R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_5, R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_6,
+                R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_7, R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_8];
+
+  for i := 0 to totalSlots do
+  begin
+    buySpriteWidget := RSWidget.Get(spriteVars[i].Group, spriteVars[i].Child, spriteVars[i].Index);
+    if not ((buySpriteWidget.ref = nil) or buySpriteWidget.IsHidden or (buySpriteWidget.TextureID = 1109)) then
+    begin
+      buySpriteWidget.Free;
+      Continue;
+    end;
+    R_SelectGrandExchangeSlot(i);
+    sleep(random(500, 700));
+    abortWidget := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ABORT.Group, R_GRAND_EXCHANGE_OFFER_ABORT.Child, R_GRAND_EXCHANGE_OFFER_ABORT.Index);
+    if abortWidget.ref = nil then
+      Exit(False);
+    Mouse.Move(abortWidget.Bounds);
+    Wait(50 + RandomRange(0, 50));
+    Mouse.Click(MOUSE_LEFT);
+    abortWidget.Free;
+    Result := True;
+    sleep(random(500,700));
+    R_GrandExchange_Back;
+    sleep(random(500,700));
+    buySpriteWidget.Free;
+  end;
+
+  R_GrandExchangeCollectAll;
+  sleep(random(700, 900));
+end;
+
+Function R_GrandExchange_Offer_Add_Quantity(Mode: TRSOfferQuantity; XAmount: Int32 = -1): Boolean;
+var
+  Button: RSWidget;
+begin
+  //if not R_GrandExchangeOfferScreen then
+  //  Exit(False);
+  writeln('Setting offer quantity');
+  case Mode of
+    TRSOfferQuantity.ONE:  begin Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ADD_1.Group, R_GRAND_EXCHANGE_OFFER_ADD_1.Child, R_GRAND_EXCHANGE_OFFER_ADD_1.Index) end;
+    TRSOfferQuantity.TEN: begin Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ADD_10.Group, R_GRAND_EXCHANGE_OFFER_ADD_10.Child, R_GRAND_EXCHANGE_OFFER_ADD_10.Index) end;
+    TRSOfferQuantity.HUNDRED:  begin Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ADD_100.Group, R_GRAND_EXCHANGE_OFFER_ADD_100.Child, R_GRAND_EXCHANGE_OFFER_ADD_100.Index) end;
+    TRSOfferQuantity.ALL:    begin Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ADD_ALL.Group, R_GRAND_EXCHANGE_OFFER_ADD_ALL.Child, R_GRAND_EXCHANGE_OFFER_ADD_ALL.Index) end;
+    TRSOfferQuantity.X:
+    begin
+      Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_ADD_X.Group, R_GRAND_EXCHANGE_OFFER_ADD_X.Child, R_GRAND_EXCHANGE_OFFER_ADD_X.Index);
+      if Button.ref = nil then
+        Exit(False);
+
+      Mouse.Click(Button.Bounds, MOUSE_LEFT);
+      Button.Free;
+      sleep(random(1000,1200));
+      Keyboard.send(IntToStr(XAmount), VK_ENTER);
+      Exit(True);
+    end;
+  end;
+
+  if Button.ref = nil then
+    Exit(False);
+
+  Mouse.Click(Button.Bounds, MOUSE_LEFT);
+  Button.Free;
+
+  Result := True;
+end;
+
+Function R_GrandExchange_Offer_Set_Price(Mode: TRSOfferPrice; XAmount: Int32 = -1): Boolean;
+var
+  Button: RSWidget;
+begin
+  //if not R_GrandExchangeOfferScreen then
+  //  Exit(False);
+
+  case Mode of
+    TRSOfferPrice.MINUSFIVE:  begin Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_PRICE_DECREASE_5.Group, R_GRAND_EXCHANGE_OFFER_PRICE_DECREASE_5.Child, R_GRAND_EXCHANGE_OFFER_PRICE_DECREASE_5.Index) end;
+    TRSOfferPrice.PLUSFIVE: begin Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_PRICE_INCREASE_5.Group, R_GRAND_EXCHANGE_OFFER_PRICE_INCREASE_5.Child, R_GRAND_EXCHANGE_OFFER_PRICE_INCREASE_5.Index) end;
+    TRSOfferPrice.GUIDE:  begin Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_PRICE_SET_GUIDE.Group, R_GRAND_EXCHANGE_OFFER_PRICE_SET_GUIDE.Child, R_GRAND_EXCHANGE_OFFER_PRICE_SET_GUIDE.Index) end;
+    TRSOfferPrice.PLUSONE:    begin Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_PRICE_ADD_1.Group, R_GRAND_EXCHANGE_OFFER_PRICE_ADD_1.Child, R_GRAND_EXCHANGE_OFFER_PRICE_ADD_1.Index) end;
+    TRSOfferPrice.MINUSONE:    begin Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_PRICE_REMOVE_1.Group, R_GRAND_EXCHANGE_OFFER_PRICE_REMOVE_1.Child, R_GRAND_EXCHANGE_OFFER_PRICE_REMOVE_1.Index) end;
+    TRSOfferPrice.X:
+    begin
+      Button := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_PRICE_X.Group, R_GRAND_EXCHANGE_OFFER_PRICE_X.Child, R_GRAND_EXCHANGE_OFFER_PRICE_X.Index);
+      if Button.ref = nil then
+        Exit(False);
+      Mouse.Click(Button.Bounds, MOUSE_LEFT);
+      Button.Free;
+      sleep(random(1000,1200));
+      Keyboard.send(IntToStr(XAmount), VK_ENTER);
+      Exit(True);
+    end;
+  end;
+
+  if Button.ref = nil then
+    Exit(False);
+
+  Mouse.Click(Button.Bounds, MOUSE_LEFT);
+  Button.Free;
+
+  Result := True; //TODO: Check if the mode actually changed by checking button spriteId..
+end;
+
+Function R_GrandExchange_Sell(itemID: int32; Mode: TRSOfferQuantity = TRSOfferQuantity.ALL; XAmount: Int32 = -1; PriceMode: TRSOfferPrice = TRSOfferPrice.GUIDE; XPrice: Int32 = -1 ): Boolean;
+var
+  i: Integer;
+  confirmWidget: RSWidget;
+  items: Array of TRSInventoryItem;
+
+begin
+  if not R_GrandExchangeScreen then
+    Exit(False);
+
+  if R_GrandExchange_EmptySlots = 0 then
+  begin
+    writeln('Not enough slots');
+    Exit(False);
+  end;
+
+  items := R_GetInventoryItem(itemID);
+  if items = nil then
+    Exit(False);
+
+  Mouse.click(items[random(0,high(items))].Bounds.Middle, MOUSE_LEFT);
+  sleep(random(800,1000));
+  R_GrandExchange_Offer_Add_Quantity(Mode, XAmount);
+  sleep(random(800,1000));
+  R_GrandExchange_Offer_Set_Price(PriceMode, XPrice);
+  sleep(random(800,1000));
+  confirmWidget := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_CONFIRM.Group, R_GRAND_EXCHANGE_OFFER_CONFIRM.Child);
+  if confirmWidget.ref = nil then
+    Exit(False);
+  Mouse.Click(confirmWidget.Bounds, MOUSE_LEFT);
+  confirmWidget.Free;
+  Result := True;
+end;
+
+
+Function R_GrandExchange_Buy(itemName: String; Mode: TRSOfferQuantity = TRSOfferQuantity.ONE; XAmount: Int32 = -1; PriceMode: TRSOfferPrice = TRSOfferPrice.GUIDE; XPrice: Int32 = -1; totalSlots: Int32 = 2 ): Boolean;
+var
+  i: Integer;
+  confirmWidget, buySpriteWidget, titleWidget: RSWidget;
+  items: Array of TRSInventoryItem;
+  spriteVars, buyVars: Array of RWidget;
+
+begin
+  writeln('Attempting to buy: ' + itemName);
+  if not R_GrandExchangeScreen then
+  begin
+    writeln('e');
+    Exit(False);
+  end;
+
+  if R_GrandExchange_EmptySlots = 0 then
+  begin
+    writeln('Not enough slots');
+    Exit(False);
+  end;
+
+  items := R_GetInventoryItem(995);
+  if items = nil then
+  begin
+    Writeln('No coins in inventory');
+    Exit(False);
+  end;
+
+  buyVars :=  [R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_1, R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_2,
+                R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_3, R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_4,
+                R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_5, R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_6,
+                R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_7, R_GRAND_EXCHANGE_SLOT_BUY_SPRITE_8];
+
+  spriteVars :=  [R_GRAND_EXCHANGE_SLOT_TITLE_1, R_GRAND_EXCHANGE_SLOT_TITLE_2,
+                R_GRAND_EXCHANGE_SLOT_TITLE_3, R_GRAND_EXCHANGE_SLOT_TITLE_4,
+                R_GRAND_EXCHANGE_SLOT_TITLE_5, R_GRAND_EXCHANGE_SLOT_TITLE_6,
+                R_GRAND_EXCHANGE_SLOT_TITLE_7, R_GRAND_EXCHANGE_SLOT_TITLE_8];
+
+  for i := 0 to totalSlots do
+  begin
+    titleWidget := RSWidget.Get(spriteVars[i].Group, spriteVars[i].Child, spriteVars[i].Index);
+    if (titleWidget.ref = nil) or (titleWidget.text <> "Empty") then
+    begin
+      titleWidget.Free;
+      Continue;
+    end;
+    buySpriteWidget:= RSWidget.Get(buyVars[i].Group, buyVars[i].Child, buyVars[i].Index);
+    Mouse.Move(buySpriteWidget.Bounds.Middle.X, buySpriteWidget.Bounds.Middle.Y);
+    Wait(50 + RandomRange(0, 50));
+    Mouse.Click(MOUSE_LEFT);
+    buySpriteWidget.Free;
+    sleep(random(1000, 1500));
+    Keyboard.Send(itemName);
+    sleep(random(700, 1000));
+    Keyboard.Send("", VK_ENTER);
+    sleep(random(700, 1000));
+
+    R_GrandExchange_Offer_Add_Quantity(Mode, XAmount);
+    sleep(random(800,1000));
+    R_GrandExchange_Offer_Set_Price(PriceMode, XPrice);
+    sleep(random(800,1000));
+    confirmWidget := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_CONFIRM.Group, R_GRAND_EXCHANGE_OFFER_CONFIRM.Child);
+    if confirmWidget.ref = nil then
+      Exit(False);
+    Mouse.Click(confirmWidget.Bounds, MOUSE_LEFT);
+    confirmWidget.Free;
+    Exit(True);
+
+  end;
+  Result = False;
+end;
