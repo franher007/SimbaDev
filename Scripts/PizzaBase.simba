@@ -3,7 +3,7 @@
 const
   action = "doFlourToPizza"; //doFlour, doFlourToPizza, doPizza, doCooking, keepAlive
   useGE   = False;    //Buy/Sell in Grand Exchange?
-  lag     = 1000;     //use 0 for faster speeds
+  lag     = 0;     //use 0 for faster speeds
 
   flourPotID =  1933;
   coinsID = 995;
