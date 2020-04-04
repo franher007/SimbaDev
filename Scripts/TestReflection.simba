@@ -1,4 +1,6 @@
 {$i Reflection/Reflection.simba}
+{$i SRL/osr.simba}
+
 
 
 procedure clickMe;
@@ -250,12 +252,18 @@ var
   iskey: Boolean;
 begin
   //writeln(booltostr(R_ChatSkillOption(3)));
-  getObject(RSPlayer.Me.Tile.x+1, RSPlayer.Me.Tile.y);
+  //getObject(RSPlayer.Me.Tile.x+1, RSPlayer.Me.Tile.y);
   //getObject(3140, 3449);
   //writeln(RSPlayer.Me.Tile);
-  //writeln(BoolToStr(RSPlayer.Me.Tile.InBox(Box(3139, 3444, 3146, 3453))));
+  //writeln(BoolToStr(srl.IsClientState(csLogin)));
   //sleep(100);
-  getMe;
+  writeln(booltostr(R_IsEquipped(1949)));
+  writeln('log: '+inttostr(RSCLient.LoginState));  //24 = disconnected   Point(3212, 3206),    Point(3232, 3226),
+  writeln('gst: '+inttostr(RSCLient.GameState));
+  writeln('lsc: '+inttostr(RSCLient.loopcycle));
+  //writeln(RSPlayer.me.name);
+  //writeln(inttostr(length(RSClient.AllNPCs)));
+  //presskey(13);
   //tilesProc;
   //writeln(inttostr(RSPlayer.me.SkillLevel(7)));
 end.
