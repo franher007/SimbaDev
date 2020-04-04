@@ -87,7 +87,7 @@ begin
   Result := self.Bounds.Middle;
 end
 
-function TileOnMM(Tile: RSTile): Boolean;
+function TileOnMM(Tile: RSTile; radius: integer = 0): Boolean;
 var
   W, H, MMCX, MMCY: Int32;
   Temp: TPointArray;
@@ -105,7 +105,7 @@ begin
 
   SetLength(Temp, 1);
   Temp[0] := Tile.ToLocal.TileToMM;
-  FilterPointsPie(Temp, 0.0, 360.0, 0.0, 76.0, MMCX, MMCY);
+  FilterPointsPie(Temp, 0.0, 360.0, 0.0, 76.0 - radius, MMCX, MMCY);
   Result := Length(Temp) = 1;
 end;
 
@@ -245,12 +245,12 @@ begin
       begin
         Wait(500 + Random(100));
         if Distance(Path[High(Path)], self.Tile) <= (FlagDist + Randomness + 1) then Break;
-        if (GetTickCount() > Timer) or ((Index <> High(Path)) and (TileOnMM(Path[Index+1]))) then
+        if (GetTickCount() > Timer) or ((Index <> High(Path)) and (TileOnMM(Path[Index+1], 5))) then
           Break;
       end;
       if (GetTickCount() > Timer) then Inc(Tries);
 
-      if (not (Distance(Path[Index], self.Tile) <= 5)) and ((Index <> High(Path)) and (not TileOnMM(Path[Index+1]))) then
+      if (not (Distance(Path[Index], self.Tile) <= 5)) and ((Index <> High(Path)) and (not TileOnMM(Path[Index+1], 5))) then
       begin
         Inc(Tries);
       end;
