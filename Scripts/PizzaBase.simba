@@ -85,7 +85,7 @@ end;
 Function TRSInventoryItem.MidPoint: TPoint;
 begin
   Result := self.Bounds.Middle;
-end
+end;
 
 function TileOnMM(Tile: RSTile; radius: integer = 0): Boolean;
 var
@@ -508,7 +508,6 @@ end;
 procedure grandExchange(needFlour: Boolean; needWater: Boolean);
 var
   exchangeBooth: RSObject;
-  i: Integer;
 
 begin
   writelnex('Doing GE');
@@ -564,7 +563,7 @@ end
 procedure withdrawItems(nFlour: Boolean = False; nWater: Boolean = False);
 var
   bankBooth: RSObject;
-  i, currentBases: Integer;
+  currentBases: Integer;
   coins, flourPot, waterBucket: TRSBankItem;
 begin
   currentBases := R_CountInventoryItem(pizzaBaseID);
@@ -639,8 +638,8 @@ end
 
 procedure makePizzaBase;
 var
-  i, previousFlour: Integer;
-  coins, flourPot, waterBucket: Array of TRSInventoryItem;
+  previousFlour: Integer;
+  flourPot, waterBucket: Array of TRSInventoryItem;
 begin
 
   flourPot := R_GetInventoryItem(flourPotID);
@@ -672,7 +671,7 @@ end;
 procedure withdrawFlourItems;
 var
   bankBooth: RSObject;
-  i, currentFlourPots: Integer;
+  currentFlourPots: Integer;
   emptyPot, grain: TRSBankItem;
 begin
   currentFlourPots := R_CountInventoryItem(flourPotID);
@@ -725,7 +724,6 @@ end;
 procedure withdrawWildItems;
 var
   bankBooth: RSObject;
-  pizzaBase: TRSBankItem;
 begin
   writelnex("Opening bank");
   bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3186, 3444);
@@ -757,7 +755,6 @@ end;
 procedure depositGrains;
 var
   bankBooth: RSObject;
-  grains: TRSBankItem;
 begin
   writelnex("Opening bank");
   bankBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3162, 3489);
@@ -808,7 +805,7 @@ end;
 procedure withdrawFlourToPizzaItems;
 var
   bankBooth: RSObject;
-  i, currentPizzaBases: Integer;
+  currentPizzaBases: Integer;
   emptyPot, emptyBucket, grain, chefHat: TRSBankItem;
   chefHatInv: Array of TRSInventoryItem;
 begin
@@ -880,7 +877,7 @@ end
 procedure cookFish;
 var
   julietRange: RSObject;
-  i, currentFishID, currentCookingLevel, currentFishes: Integer;
+  currentFishID, currentCookingLevel: Integer;
   timer: Timer;
 begin
   julietRange := RSObject.Get(RSObjectType.GAME_OBJECT, 3160, 3427);
@@ -932,7 +929,7 @@ end;
 procedure withdrawCookingItems;
 var
   bankBooth: RSObject;
-  i, currentFishID, currentCookingLevel, currentFishes: Integer;
+  currentFishID, currentCookingLevel, currentFishes: Integer;
   currentFish: TRSBankItem;
 begin
   currentCookingLevel := player.me.SkillLevel(7);
@@ -1368,16 +1365,18 @@ end;
 Function climbStairs(direction:String): Boolean;
 var
   cookStairs: RSobject;
-  startingFloor, tries: Integer;
+  startingFloor: Integer;
 begin
   writelnex('Climbing Stairs ' + direction);
   cookStairs := RSObject.Get(RSObjectType.GAME_OBJECT, 3144, 3447);
   if (cookStairs.ref = nil) then
   begin
     writelnex("cookStairs not found");
-    Exit;
+    Exit(False);
   end;
   startingFloor := RSClient.plane;
+  Mouse.Move(cookStairs.MidPoint.X, cookStairs.MidPoint.y - 15);
+  Wait(50 + RandomRange(50,100));
   Mouse.Click(cookStairs.MidPoint, 2, MOUSE_RIGHT);
   Wait(50 + RandomRange(50, 100));
   R_ChooseOptions(['Climb-' + direction +' Staircase']);
@@ -1392,6 +1391,7 @@ begin
   end;
   if tries > 10 then Result:= False else Result:= True;}
   cookStairs.Free;
+  Result := True;
 end;
 
 Function climbToFloor(floor: Integer): Boolean;
@@ -1727,8 +1727,6 @@ begin
 end;
 
 Function LoginPlayer:Boolean;
-var
-  widget: RSWidget;
 begin
   writeln("["+P_USERNAME+"]Logging in: " + P_USERNAME);
   if (RSCLient.LoginState = 2) and (RSClient.GameState > 10) then Exit(True);

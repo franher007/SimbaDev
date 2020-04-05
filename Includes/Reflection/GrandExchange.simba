@@ -49,7 +49,6 @@ end;
 Function R_GrandExchangeScreen_Close: Boolean;
 var
   Widget: RSWidget;
-  i: Integer;
 begin
 
   R_GrandExchange_Back;
@@ -107,7 +106,6 @@ Function R_SelectGrandExchangeSlot(Index: Int32): Boolean;
 var
   slotWidget: RSWidget;
   T: Timer;
-  i: Integer;
   slotVars: Array of RWidget;
 begin
   if (Index < 0) or (Index > 7) then
@@ -144,7 +142,7 @@ end;
 Function R_GrandExchange_EmptySlots(totalSlots: Int32 = 2): Int32;
 var
   i, j: Integer;
-  abortWidget, buySpriteWidget: RSWidget;
+  buySpriteWidget: RSWidget;
   spriteVars: Array of RWidget;
 begin
 
@@ -286,7 +284,6 @@ end;
 
 Function R_GrandExchange_Sell(itemID: int32; Mode: TRSOfferQuantity = TRSOfferQuantity.ALL; XAmount: Int32 = -1; PriceMode: TRSOfferPrice = TRSOfferPrice.GUIDE; XPrice: Int32 = -1 ): Boolean;
 var
-  i: Integer;
   confirmWidget: RSWidget;
   items: Array of TRSInventoryItem;
 
