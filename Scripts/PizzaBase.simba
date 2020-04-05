@@ -1761,6 +1761,9 @@ begin
     wait(1500 + random(200,500));
     Mouse.Click(400, 340, MOUSE_LEFT);
     wait(1500 + random(200,500));
+    KeyDown(VK_UP);
+    sleep(3000);
+    KeyUp(VK_UP);
     Exit(True);
   end;
 end;
@@ -1927,17 +1930,18 @@ begin
   floursDone := 0;
   runs := 0;
   srl.Setup([]);
-  player := RSPlayer.Me;
-  startPos := player.Tile;
   Mouse.Setup();
   Sleep(50);
   ClearDebug;
   while True do
   begin
     Try
+      player.Free;
       progressReport;
       inc(runs);
       if not loginPlayer then TerminateScript;
+      player := RSPlayer.Me;
+      startPos := player.Tile;
       player.ToggleRun(True);
       case action of
         "doFlour": begin flourProcedure end;
