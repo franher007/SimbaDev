@@ -87,17 +87,17 @@ var
   obj : RSObject;
   i: Integer;
 begin
-  obj := RSObject.Get(RSObjectType.GAME_OBJECT, x, y);
+  obj := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, x, y);
   writeln('a');
   if (obj.ref <> nil) then
   begin
-    writeln(intToStr( obj.Definition.TransformVarbit ));
-    while true do
+    writeln(intToStr( obj.ID ));
+    {while true do
     begin
       writeln(Length(obj.Model.vertices));
       sleep(5000);
-    end;
-    //Mouse.Click(obj.MidPoint, MOUSE_RIGHT);
+    end; }
+    Mouse.Click(obj.MidPoint.X+5, OBJ.MidPoint.Y, MOUSE_LEFT);
     Exit;
   end
 end
@@ -253,12 +253,13 @@ var
 begin
   //writeln(booltostr(R_ChatSkillOption(3)));
   //getObject(RSPlayer.Me.Tile.x+1, RSPlayer.Me.Tile.y);
-  //getObject(3140, 3449);
+
+  //getObject(3242, 3412);
   //writeln(RSPlayer.Me.Tile);
   //writeln(BoolToStr(srl.IsClientState(csLogin)));
   //sleep(100);
-  getInv;
-  TerminateScript;
+  //getInv;
+  //TerminateScript;
   while true do
   begin
     getme;

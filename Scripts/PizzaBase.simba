@@ -354,7 +354,8 @@ function RSPlayer.WalkTo(destination: String; precise: Boolean = False): Boolean
 var
   geToBankTiles, bankToCookTiles, cookToBankTiles, bankToGETiles, cookWaterSpot, cookExitSpot,
   bankToJuliet, secondDoorOutside, julietRange, secondDoorInside, firstDoorInside, julietExitSpot,
-  julietToBank, lumbyToVarrock, bankToWild, wildToBank, choosenTile: Array of RSTile;
+  julietToBank, lumbyToVarrock, bankToWild, wildToBank, bankToEast, eastToHouse, houseRange,
+  houseDoorInside, houseToEast, eastToBank, choosenTile: Array of RSTile;
 begin
   geToBankTiles   := [Point(3165, 3486), Point(3166, 3471),
                       Point(3170, 3457), Point(3182, 3449),
@@ -452,6 +453,35 @@ begin
                       Point(3190, 3428), Point(3183, 3432),
                       Point(3183, 3439), Point(3183, 3441)];
 
+  bankToEast      := [Point(3183, 3442),
+                      Point(3183, 3436), Point(3185, 3432),
+                      Point(3192, 3432), Point(3199, 3431),
+                      Point(3206, 3429), Point(3212, 3429),
+                      Point(3218, 3429), Point(3225, 3429),
+                      Point(3232, 3429), Point(3238, 3429),
+                      Point(3245, 3429), Point(3252, 3427),
+                      Point(3253, 3421), Point(3253, 3420)];
+
+   eastToHouse     := [Point(3253, 3420), Point(3253, 3424),
+                       Point(3248, 3428), Point(3247, 3422),
+                       Point(3245, 3416), Point(3242, 3412)];
+
+   houseRange       := [Point(3238, 3410)];
+
+   houseDoorInside  := [Point(3241, 3412)];
+
+   houseToEast      := [Point(3241, 3412), Point(3242, 3414),
+                        Point(3242, 3420), Point(3247, 3427),
+                        Point(3253, 3426), Point(3254, 3420)];
+
+   eastToBank       := [Point(3253, 3420), Point(3253, 3426),
+                        Point(3247, 3428), Point(3241, 3428),
+                        Point(3235, 3428), Point(3228, 3428),
+                        Point(3221, 3428), Point(3215, 3432),
+                        Point(3208, 3432), Point(3202, 3428),
+                        Point(3196, 3428), Point(3190, 3428),
+                        Point(3183, 3432), Point(3184, 3438)];
+
    case destination of
     "bankToCook": begin choosenTile := bankToCookTiles end;
     "geToBank": begin choosenTile := geToBankTiles end;
@@ -469,6 +499,12 @@ begin
     "lumbyToVarrock": begin choosenTile := lumbyToVarrock end;
     "bankToWild": begin choosenTile := bankToWild end;
     "wildToBank": begin choosenTile := wildToBank end;
+    "bankToEast": begin choosenTile := bankToEast end;
+    "eastToHouse": begin choosenTile := eastToHouse end;
+    "houseRange": begin choosenTile := houseRange end;
+    "houseDoorInside": begin choosenTile := houseDoorInside end;  
+    "houseToEast": begin choosenTile := houseToEast end;
+    "eastToBank": begin choosenTile := eastToBank end;
    end;
 
   self.WalkPathMM(choosenTile, 0, 1, False);
@@ -880,14 +916,14 @@ var
   currentFishID, currentCookingLevel: Integer;
   timer: Timer;
 begin
-  julietRange := RSObject.Get(RSObjectType.GAME_OBJECT, 3160, 3427);
+  julietRange := RSObject.Get(RSObjectType.GAME_OBJECT, 3238, 3409);
   if (julietRange.ref = nil) then
   begin
     writelnex("Range not found");
     julietRange.Free;
     Exit;
   end;
-  player.walkTo("julietRange");
+  player.walkTo("houseRange");
   sleep(random(500, 700));
   currentCookingLevel := player.me.SkillLevel(7);
   if (currentCookingLevel >= 25) then
@@ -944,7 +980,7 @@ begin
   fishesDone += currentFishes;
 
   writelnex("Opening bank");
-  bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3186, 3436);
+  bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3254, 3419);
   if (bankBooth.ref = nil) then
   begin
     writelnex("Bank not found");
@@ -952,7 +988,7 @@ begin
   end;
   while not R_BankScreen do
   begin
-    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
+    Mouse.Click(bankBooth.MidPoint,2, MOUSE_LEFT);
     sleep(random(2000,2500));
   end
 
@@ -1297,37 +1333,37 @@ var
   tries:    Integer;
   rangeBox: TBox;
 begin
-  rangeDoor := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3160, 3432);
+  rangeDoor := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3242, 3412);
   tries := 0;
-  rangeBox := Box(3155, 3426, 3164, 3431);
+  rangeBox := Box(3236, 3409, 3241, 3416);
   //openCookDoor;
   if enter then
   begin
   if player.Tile.InBox(rangeBox) then
     begin
       writelnex('Already inside');
-      player.WalkTo("julietRange");
+      player.WalkTo("houseRange");
       sleep(random(500, 700));
       exit(True);
     end;
     writelnex('Entering Range door');
-    player.WalkTo("secondDoorOutside");
+    player.WalkTo("eastToHouse");
     if (rangeDoor.ref = nil) then
     begin
       writelnex("rangeDoor is Open");
-      player.WalkTo("julietRange");
+      player.WalkTo("houseRange");
       sleep(random(500, 700));
       Exit(True);
     end;
-    while (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3160, 3432).ref <> nil) do
+    while (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3242, 3412).ref <> nil) do
     begin
       if tries > 10 then Exit(False);
-      if (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3160, 3432).ref = nil) then Break;
-      Mouse.Click(rangeDoor.MidPoint, MOUSE_LEFT);
+      if (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3242, 3412).ref = nil) then Break;
+      Mouse.Click(rangeDoor.MidPoint.X + 5, rangedoor.Midpoint.y, MOUSE_LEFT);
       sleep(random(1000,1500));
       inc(tries);
     end;
-    player.WalkTo("julietRange");
+    player.WalkTo("houseRange");
     sleep(random(500, 700));
   end else
   begin
@@ -1335,28 +1371,26 @@ begin
     if not player.Tile.InBox(rangeBox) then
     begin
       writelnex('Already outside');
-      player.WalkTo("firstDoorInside");
+      player.WalkTo("houseToEast");
       sleep(random(1000,1500));
       exit(True);
     end;
-    player.WalkTo("secondDoorInside");
-    sleep(random(500, 700));
     if (rangeDoor.ref = nil) then
     begin
       writelnex("rangeDoor is Open");
-      player.WalkTo("firstDoorInside");
+      player.WalkTo("houseToEast");
       sleep(random(500, 700));
       Exit(True);
     end;
-    while (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3160, 3432).ref <> nil) do
+    while (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3242, 3412).ref <> nil) do
     begin
       if tries > 10 then Exit(False);
-      if (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3160, 3432).ref = nil) then Break;
-      Mouse.Click(rangeDoor.MidPoint, MOUSE_LEFT);
+      if (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3242, 3412).ref = nil) then Break;
+      Mouse.Click(rangeDoor.MidPoint.X + 5, rangedoor.Midpoint.y, MOUSE_LEFT);
       sleep(random(1000, 1500));
       inc(tries);
     end;
-    player.WalkTo("firstDoorInside");
+    player.WalkTo("houseToEast");
   end;
   rangeDoor.Free;
   Result:=True;
@@ -1850,26 +1884,25 @@ procedure cookingProcedure;
 begin
   rangeDoor(False);
   sleep(random(700, 1000));
-  julietDoor(False);
+  player.walkTo("bankToEast");
   sleep(random(700, 1000));
-  player.walkTo("julietToBank");
+  player.walkTo("houseToEast");
   sleep(random(700, 1000));
   withdrawCookingItems;
   progressReport;
-  if player.me.SkillLevel(7) >= 32 then
-  begin
-    writelnex("Already at 32 cooking, bye");
-    progressReport;
-    TerminateScript;
-  end;
   sleep(random(700, 1000));
-  player.walkTo("bankToJuliet");
-  sleep(random(700, 1000));
-  julietDoor(True);
+  player.walkTo("eastToHouse");
   sleep(random(700, 1000));
   rangeDoor(True);
   sleep(random(700, 1000));
   cookFish;
+  if player.me.SkillLevel(7) >= 32 then
+  begin
+    writelnex("Already at 32 cooking, bye");
+    progressReport;
+    player.WalkTo("eastToBank");
+    Exit;
+  end;
 end;
 
 procedure keepAliveProcedure;
@@ -1912,8 +1945,8 @@ begin
   begin
     writelnex("Getting that cooking up");
     cookingProcedure;
-  end;
-  flourToPizzaProcedure;
+  end else
+   flourToPizzaProcedure;
 end;
 
 procedure testProcedure;
