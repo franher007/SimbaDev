@@ -232,7 +232,7 @@ begin
 
       Mouse.Click(Button.Bounds, MOUSE_LEFT);
       Button.Free;
-      sleep(random(1000,1200));
+      sleep(random(1500,2000));
       Keyboard.send(IntToStr(XAmount), VK_ENTER);
       Exit(True);
     end;
@@ -267,7 +267,7 @@ begin
         Exit(False);
       Mouse.Click(Button.Bounds, MOUSE_LEFT);
       Button.Free;
-      sleep(random(1000,1200));
+      sleep(random(1500,2000));
       Keyboard.send(IntToStr(XAmount), VK_ENTER);
       Exit(True);
     end;
@@ -366,9 +366,9 @@ begin
     Wait(50 + RandomRange(0, 50));
     Mouse.Click(MOUSE_LEFT);
     buySpriteWidget.Free;
-    sleep(random(1000, 1500));
+    sleep(random(1500, 2500));
     Keyboard.Send(itemName);
-    sleep(random(700, 1000));
+    sleep(random(1500, 2000));
     Keyboard.Send("", VK_ENTER);
     sleep(random(700, 1000));
 

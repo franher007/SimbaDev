@@ -832,7 +832,7 @@ begin
   //SELL STUFF
   R_GrandExchange_Sell(notedPizzaBaseID, TRSOfferQuantity.ALL);
   sleep(random(2500,3500));
-  if R_GrandExchangeCollectAll then sleep(random(700,1000));
+  if R_GrandExchangeCollectAll then sleep(random(2000,3000));
   if R_GrandExchange_Buy("Grain", TRSOfferQuantity.X, 1000, TRSOfferPrice.PLUSFIVE, 2) then sleep(random(1000,1500));
   if R_GrandExchangeCollectAll then sleep(random(700,1000));
   R_GrandExchangeScreen_Close;
