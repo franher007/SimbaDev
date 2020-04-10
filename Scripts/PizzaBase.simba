@@ -6,8 +6,8 @@ const
   useGE   = False;    //Buy/Sell in Grand Exchange?
   lag     = 0;     //use 0 for faster speeds
 
-  P_USERNAME = "Rsacc31@franher.com";
-  P_PASSWORD = "Rsacc123";
+  P_USERNAME = "";
+  P_PASSWORD = "";
 
   flourPotID =  1933;
   coinsID = 995;
