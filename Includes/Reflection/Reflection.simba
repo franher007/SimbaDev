@@ -10,6 +10,8 @@
 {$include_once Model.simba}
 {$include_once Mouse.simba}
 {$include_once GrandExchange.simba}
+{$include_once Tutorial.simba}
+{$include_once NPC.simba}
 
 begin
   RSetup;

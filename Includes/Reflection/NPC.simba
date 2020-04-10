@@ -1,0 +1,80 @@
+{$include_once Internal/Reflection.simba}
+{$include_once Constants.simba}
+{$include_once Menu.simba}
+{$include_once Inventory.simba}
+{$include_once Mouse.simba}
+{$include_once Timing.simba}
+
+Function R_NPC_Get(id: Integer): Array of RSNPC;
+var
+  allNpcs: Array of RSNPC;
+  i, j: Integer;
+begin
+  allNpcs := RSNPC.AllNPCs;
+  for I := 0 to High(allNpcs) do
+  begin
+    if allNpcs[i].Definition.ID = id then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[j] := allNpcs[I];
+      inc(j);
+    end;
+  end;
+  RSTypeArray(allNpcs).Free;
+end;
+
+Function R_NPC_GetFirst(id: Integer): RSNPC;
+var
+  allNpcs: Array of RSNPC;
+  i: Integer;
+begin
+  allNpcs := RSNPC.AllNPCs;
+  for I := 0 to High(allNpcs) do
+  begin
+    if allNpcs[i].Definition.ID = id then
+    begin
+      Result := allNpcs[I];
+      Break;
+    end;
+  end;
+  RSTypeArray(allNpcs).Free;
+end;
+
+Function R_NPC_GetClosest(id: Integer; max: Integer = 32): RSNPC;
+var
+  allNpcs, ourNPCs: Array of RSNPC;
+  i,j: Integer;
+  currentDist: integer;
+  closestNPC: RSNPC;
+  highNpcs: integer;
+begin
+  allNpcs := RSNPC.AllNPCs;
+  j := 0;
+  if (length(allnpcs) > max) then
+    highNpcs := max
+  else
+    highNpcs := length(allNpcs)-1;
+  for I := 0 to highNpcs do
+  begin
+    if allNpcs[i].Definition.ID = id then
+    begin
+      SetLength(ourNPCs, j+1);
+      ourNPCs[j] := allNpcs[I];
+      inc(j);
+      //Break;
+    end;
+  end;
+  if Length(ourNPCs) < 1 then Exit;
+  currentDist := Distance(RSPlayer.Me.Tile.X, RSPlayer.Me.Tile.Y, ourNPCs[0].Tile.X, ourNPCs[0].Tile.Y);
+  for i := 0 to High(ourNpcs) do
+  begin
+     if Distance(RSPlayer.Me.Tile.X, RSPlayer.Me.Tile.Y, ourNPCs[i].Tile.X, ourNPCs[i].Tile.Y) < currentDist then
+     begin
+      closestNPC := ourNPCs[i];
+      currentDist := Distance(RSPlayer.Me.Tile.X, RSPlayer.Me.Tile.Y, ourNPCs[i].Tile.X, ourNPCs[i].Tile.Y);
+     end;
+  end;
+  Result := closestNPC;
+  RSTypeArray(allNpcs).Free;
+  RSTypeArray(ourNPCs).Free;
+end;

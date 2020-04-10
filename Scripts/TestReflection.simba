@@ -1,8 +1,6 @@
 {$i Reflection/Reflection.simba}
 {$i SRL/osr.simba}
 
-
-
 procedure clickMe;
 var
   players: Array of RSPlayer;
@@ -60,26 +58,6 @@ begin
   end
 end
 
-Function RSObject.MidPoint: TPoint;
-var
-  model: RSModel;
-  triangles: Array of T2DTriangle;
-  points: TPointArray;
-  i: Int32;
-begin
-  model := self.Model;
-  triangles := model.Project(localtile.X, localtile.Y, localtile.GetHeight(), -1);
-  model.Free;
-
-  for i := 0 to high(triangles) do
-  begin
-    points += triangles[i].A;
-    points += triangles[i].B;
-    points += triangles[i].C;
-  end;
-
-  Result := MiddleTPA(points);
-end;
 
 procedure getObject(x,y: integer);
 var
@@ -97,7 +75,7 @@ begin
       writeln(Length(obj.Model.vertices));
       sleep(5000);
     end; }
-    Mouse.Click(obj.MidPoint.X+5, OBJ.MidPoint.Y, MOUSE_LEFT);
+    //Mouse.Click(obj.MidPoint.X+5, OBJ.MidPoint.Y, MOUSE_LEFT);
     Exit;
   end
 end
@@ -259,7 +237,21 @@ begin
   //writeln(BoolToStr(srl.IsClientState(csLogin)));
   //sleep(100);
   //getInv;
-  //TerminateScript;
+  getme;
+
+  //RSetup;
+
+  writeln(R_NPC_GetClosest(3313).Tile);
+  writeln(booltostr(RSPlayer.me.isAnimating));
+  //writeln(R_GetAllInventoryITems[1]);
+  writeln(RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3094, 9502).Definition.Name);
+  writeln(RSWidget.Get(R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Group, R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Child, R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Index).ref);
+ // writeln(RSClient.IsResizeable);
+
+ // Mouse.Click(300, 235, MOUSE_RIGHT);
+  sleep(500);
+  // Mouse.Click(200, 150, MOUSE_RIGHT);
+  TerminateScript;
   while true do
   begin
     getme;

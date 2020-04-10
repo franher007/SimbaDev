@@ -1,0 +1,17 @@
+{$include_once Internal/Reflection.simba}
+{$include_once Constants.simba}
+{$include_once Menu.simba}
+{$include_once Inventory.simba}
+{$include_once Mouse.simba}
+{$include_once Timing.simba}
+{$include_once NPC.simba}
+
+Function R_ChooseDisplayNameScreen: Boolean;
+begin
+  Result := RSWidget.IsValid(R_INTERFACE_TUTORIAL);
+end;
+
+Function R_InTutorialIsland: Boolean;
+begin
+  Result := RSPlayer.me.Tile.InBox(Box(3050, 3100, 3114, 3123));
+end;

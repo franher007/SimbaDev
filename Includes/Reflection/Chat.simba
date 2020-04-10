@@ -96,6 +96,11 @@ begin
   end;
 end;
 
+Function R_IsChatChooseOption: Boolean;
+begin
+  Result := RSWidget.Get(R_CHATBOX_NPC_DIALOG_OPTION.Group, R_CHATBOX_NPC_DIALOG_OPTION.Child).ref <> nil;
+end;
+
 Function R_ChatChooseOption(options: Array of String; caseSensitive: Boolean = True): Boolean;
 var
   I, J: Int32;
@@ -145,6 +150,32 @@ begin
   begin
     Mouse.Click(PlayerContinue.Bounds, MOUSE_LEFT);
     PlayerContinue.Free;
+    Exit(True);
+  end;
+end;
+
+Function R_IsClickToContinue: Boolean;
+var
+  NPCContinue, PlayerContinue, OtherContinue: RSWidget;
+begin
+  NPCContinue := RSWidget.Get(R_CHATBOX_NPC_CLICK_TO_CONTINUE.Group, R_CHATBOX_NPC_CLICK_TO_CONTINUE.Child);
+  if NPCContinue.ref <> nil then
+  begin
+    NPCContinue.Free;
+    Exit(True);
+  end;
+
+  PlayerContinue := RSWidget.Get(R_CHATBOX_PLAYER_CLICK_TO_CONTINUE.Group, R_CHATBOX_PLAYER_CLICK_TO_CONTINUE.Child);
+  if PlayerContinue.ref <> nil then
+  begin
+    PlayerContinue.Free;
+    Exit(True);
+  end;
+
+  OtherContinue := RSWidget.Get(R_CHATBOX_OTHER_DIALOG_CLICK_TO_CONTINUE.Group, R_CHATBOX_OTHER_DIALOG_CLICK_TO_CONTINUE.Child);
+  if OtherContinue.ref <> nil then
+  begin
+    OtherContinue.Free;
     Exit(True);
   end;
 end;
