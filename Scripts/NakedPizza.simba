@@ -6,8 +6,8 @@ const
   useGE   = False;    //Buy/Sell in Grand Exchange?
   lag     = 0;     //use 0 for faster speeds
 
-  P_USERNAME = "";
-  P_PASSWORD = "";
+  P_USERNAME = "rsacc14@franher.com";
+  P_PASSWORD = "Rsacc123";
 
   flourPotID =  1933;
   coinsID = 995;
@@ -571,33 +571,6 @@ begin
   sleep(random(1050,1350));
   R_WithdrawItem(coinsID);
   R_BankScreen_Close;
-end;
-
-procedure sellPizzaBases;
-var
-  exchangeBooth: RSObject;
-begin
-  writelnex('Doing GE');
-  exchangeBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3164, 3487);
-  if (exchangeBooth.ref = nil) then
-  begin
-    writelnex("Exchange not found");
-    TerminateScript;
-  end
-  while not R_GrandExchangeScreen do
-  begin
-    Mouse.Click(exchangeBooth.MidPoint, 2, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end
-  if R_GrandExchange_EmptyAllSlots then sleep(random(700,100));;
-  if R_GrandExchangeCollectAll then sleep(random(700,1000));
-  //SELL STUFF
-  R_GrandExchange_Sell(notedPizzaBaseID, TRSOfferQuantity.ALL);
-  sleep(random(2500,3500));
-  if R_GrandExchangeCollectAll then sleep(random(2000,3000));
-  if R_GrandExchange_Buy("Grain", TRSOfferQuantity.X, 1000, TRSOfferPrice.PLUSFIVE, 2) then sleep(random(1000,1500));
-  if R_GrandExchangeCollectAll then sleep(random(700,1000));
-  R_GrandExchangeScreen_Close;
 end;
 
 procedure withdrawFlourToPizzaItems;
@@ -1391,7 +1364,7 @@ begin
   withdrawWildItems;
   player.WalkTo("bankToGe");
   sleep(random(700, 1000));
-  sellPizzaBases;
+  WritelnEx("Not selling pizzas, do it yourself");
   depositGrains;
   writeln('deposited');
   player.WalkTo("geToBank");

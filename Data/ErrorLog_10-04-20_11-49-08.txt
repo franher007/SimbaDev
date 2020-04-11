@@ -1,0 +1,23 @@
+Program exception! 
+Stacktrace:
+
+Exception class: EThread
+Message: Thread creation error: The paging file is too small for this operation to complete.
+  $00459E82
+  $0045A0C7
+  $0045A854
+  $0045A91F
+  $007AF5B0
+  $0057BF2E
+  $005076AC
+  $74BAD2B3
+  $74B8EFD5
+  $74B8E2D3
+  $74B8DFB0
+  $00508374
+  $00423167
+  $0043255A
+  $004295B4
+  $0057BFB4
+  $0057BF2E
+Simba Version: 1302

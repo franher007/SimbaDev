@@ -1,4 +1,5 @@
-{$i reflection/reflection.simba}
+{$i reflection/reflection.simba}  
+{$include_once reflection/GrandExchange.simba}
 
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
@@ -6,8 +7,8 @@ const
   useGE   = False;    //Buy/Sell in Grand Exchange?
   lag     = 0;     //use 0 for faster speeds
 
-  P_USERNAME = "";
-  P_PASSWORD = "";
+  P_USERNAME = "rsacc311@franher.com";
+  P_PASSWORD = "Rsacc123";
 
   flourPotID =  1933;
   coinsID = 995;
@@ -106,6 +107,16 @@ end;
 Function TRSInventoryItem.MidPoint: TPoint;
 begin
   Result := self.Bounds.Middle;
+end;
+
+Function R_ChooseDisplayNameScreen: Boolean;
+begin
+  Result := RSWidget.IsValid(R_INTERFACE_TUTORIAL);
+end;
+
+Function R_InTutorialIsland: Boolean;
+begin
+  Result := RSPlayer.me.Tile.InBox(Box(3050, 3100, 3114, 3123));
 end;
 
 function TileOnMM(Tile: RSTile; radius: integer = 0): Boolean;

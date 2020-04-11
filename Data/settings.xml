@@ -2,21 +2,21 @@
 <Simba>
   <LastConfig>
     <MainForm>
-      <Position>135:26:1250:773</Position>
-      <State>maximized</State>
+      <Position>-7:0:795:766</Position>
+      <State>normal</State>
       <FunctionListShown>True</FunctionListShown>
       <RecentFiles>
         <Count>10</Count>
-        <File0>C:\Simba\Includes\Reflection\Internal\Hooks.simba</File0>
-        <File1>C:\Simba\Includes\Reflection\Internal\RSVarps.simba</File1>
-        <File2>C:\Simba\Scripts\TestReflection.simba</File2>
-        <File3>C:\Simba\Includes\Reflection\GrandExchange.simba</File3>
-        <File4>C:\Simba\SMART.11200</File4>
-        <File5>C:\Simba\Scripts\PizzaBase.simba</File5>
-        <File6>C:\Simba\Includes\Reflection\Internal\RSPlayer.simba</File6>
-        <File7>C:\Simba\Includes\Reflection\Internal\RSPlayerDefinition.simba</File7>
-        <File8>C:\Simba\Includes\Reflection\Internal\RSTile.simba</File8>
-        <File9>C:\Simba\Includes\reflection\Internal\Setup.simba</File9>
+        <File0>C:\Simba\Includes\Reflection\Internal\RSPlayerDefinition.simba</File0>
+        <File1>C:\Simba\Includes\Reflection\Internal\RSTile.simba</File1>
+        <File2>C:\Simba\Includes\reflection\Internal\Setup.simba</File2>
+        <File3>C:\Simba\git\SimbaDev\Scripts\TestReflection.simba</File3>
+        <File4>C:\Simba\git\SimbaDev\Includes\Reflection\Tutorial.simba</File4>
+        <File5>C:\Simba\git\SimbaDev\Includes\Reflection\Menu.simba</File5>
+        <File6>C:\Simba\git\SimbaDev\Includes\srl\shared\types\TBox.simba</File6>
+        <File7>C:\Simba\git\SimbaDev\Includes\Reflection\Reflection.simba</File7>
+        <File8>C:\Simba\git\SimbaDev\Scripts\PizzaBase.simba</File8>
+        <File9>C:\Simba\git\SimbaDev\Includes\Reflection\GrandExchange.simba</File9>
       </RecentFiles>
     </MainForm>
     <Console>
@@ -26,16 +26,16 @@
   <Settings>
     <ShowBalloonHints>True</ShowBalloonHints>
     <Includes>
-      <Path>C:\Simba\Includes\</Path>
+      <Path>C:\Simba\git\SimbaDev\Includes\</Path>
     </Includes>
     <Fonts>
-      <Path>C:\Simba\Fonts\</Path>
+      <Path>C:\Simba\git\SimbaDev\Fonts\</Path>
     </Fonts>
     <Scripts>
-      <Path>C:\Simba\Scripts\</Path>
+      <Path>C:\Simba\git\SimbaDev\Scripts\</Path>
     </Scripts>
     <Plugins>
-      <Path>C:\Simba\Plugins\</Path>
+      <Path>C:\Simba\git\SimbaDev\Plugins\</Path>
     </Plugins>
     <CodeInsight>
       <ShowHidden>False</ShowHidden>
@@ -96,7 +96,7 @@
       <Visible>False</Visible>
     </Notes>
     <FileBrowser>
-      <Visible>True</Visible>
+      <Visible>False</Visible>
     </FileBrowser>
     <Misc>
       <RestartScriptIfStarted>False</RestartScriptIfStarted>
