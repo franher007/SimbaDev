@@ -2,7 +2,7 @@
 
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
-  action = "hybrid"; //hybrid, doWild, doFlour, doFlourToPizza, doPizza, doCooking, keepAlive
+  action = "hybrid"; //hybrid, doWild, keepAlive
   useGE   = False;    //Buy/Sell in Grand Exchange?
   lag     = 0;     //use 0 for faster speeds
 
@@ -144,7 +144,7 @@ begin
   while Hypot(Xs - Xe, Ys - Ye) > 1 do
   begin
     Dist:= hypot(Xs - Xe, Ys - Ye);
-    Wind:= MinE(Wind, Dist);
+    Wind:= Min(Wind, Dist);
     if Dist >= TargetArea then
     begin
       WindX:= WindX / Sqrt3 + (Random(Round(Wind) * 2 + 1) - Wind) / Sqrt5;
@@ -287,47 +287,6 @@ begin
   Result := Distance(Path[High(Path)], self.Tile) <= (FlagDist + Randomness + 1);
 end;
 
-function RSPlayer.WalkStraightPathMM(Path: Array of RSTile; Reverse: Boolean = False): Boolean;
-type
-  RSTileArray = array of RSTile;
-var
-  I: Integer;
-  TempPath: RSTileArray;
-begin
-  TempPath := RSTileArray(CopyTPA(Path));
-  if Length(TempPath) = 0 then
-    Exit;
-  if Reverse then
-    InvertTPA(TempPath);
-  for I := 0 to High(TempPath) do
-    if not ((TileOnMM(TempPath[I]) and
-      Self.WalkToTileMM(TempPath[I])) or Self.BlindWalkMM(TempPath[I])) then
-      Exit(False);
-  Result := True;
-end;
-
-function RSPlayer.BlindWalkMS(Tile: RSTile; Dist: Integer = 2): Boolean;
-var
-  I, Tries: Integer;
-  OurTile: RSTile;
-  CTRLPoints: TPointArray;
-begin
-  repeat
-  OurTile := self.Tile;
-  CtrlPoints := WindPath(
-    OurTile.x, OurTile.y, Tile.x, Tile.y, 5.0, 2.5, 1.5, 1.0);
-  Inc(Tries);
-  if(Tries > 20)then
-    Exit;
-  for I := High(CtrlPoints) downto 0 do
-  if Self.WalkToTileMS(CtrlPoints[I]) then
-  begin
-    Result := Distance(self.Tile, Tile) <= Dist;
-    Break;
-  end;
-  until(Result);
-end;
-
 function RSPlayer.WalkToTileMSold(Tile: RSTile): Boolean;
 begin
   Tile := Point(0, 0);
@@ -361,24 +320,11 @@ begin
   Result := False;
 end;
 
-function RSPlayer.BlindWalkMM(Tile: RSTile; Dist: Integer = 5): Boolean;
-type
-  RSTileArray = array of RSTile;
-begin
-  Result := (TileOnMM(Tile) and Self.WalkToTileMM(Tile)) or
-    Self.WalkPathMM(RSTileArray(WindPath(
-      Self.Tile.X, Self.Tile.Y, Tile.X, Tile.Y,
-      5.0, 2.5, 1.0, 1.0)), 0, Dist, false);
-end;
-
 function RSPlayer.WalkTo(destination: String; precise: Boolean = False): Boolean;
 var
   geToBankTiles, bankToCookTiles, cookToBankTiles, bankToGETiles, cookWaterSpot, cookExitSpot,
-  bankToJuliet, secondDoorOutside, julietRange, secondDoorInside, firstDoorInside, julietExitSpot,
-  julietToBank, lumbyToVarrock, bankToWild, wildToBank, bankToEast, eastToHouse, houseRange,
-  houseDoorInside, houseToEast, eastToBank, tToFish, tToFishGate, tToChef, tExitChef,
-  tToQuest, ttoMiningInstructor, tToMiningGate, tToRats, tToBank, tToPrayer,
-  tToMagic, choosenTile: Array of RSTile;
+  lumbyToVarrock, bankToWild, wildToBank, bankToEast, eastToHouse, houseRange,
+  houseDoorInside, houseToEast, eastToBank, choosenTile: Array of RSTile;
   tries: Integer;
 begin
   geToBankTiles   := [Point(3165, 3486), Point(3166, 3471),
@@ -402,9 +348,6 @@ begin
   cookWaterSpot   := [Point(3139, 3449)];
 
   cookExitSpot    := [Point(3143, 3446)];
-
-  bankToJuliet    := [Point(3185, 3436), Point(3177, 3434),
-                      Point(3166, 3433)];
 
   bankToWild      := [Point(3183, 3444), Point(3183, 3448),
                       Point(3189, 3448), Point(3196, 3448),
@@ -441,19 +384,6 @@ begin
                       Point(3205, 3438), Point(3199, 3438),
                       Point(3194, 3442), Point(3191, 3448),
                       Point(3184, 3448), Point(3183, 3445)];
-
-  secondDoorOutside := [Point(3160, 3432)];
-
-  julietRange     := [Point(3160, 3428)];
-
-  secondDoorInside := [Point(3160, 3431)];
-
-  firstDoorInside := [Point(3164, 3433)];
-
-  julietExitSpot  := [Point(3165, 3433)];
-
-  julietToBank    := [Point(3169, 3432), Point(3180, 3430),
-                      Point(3185, 3436)];
 
   lumbyToVarrock  := [Point(3222, 3218), Point(3227, 3218),
                       Point(3232, 3220), Point(3232, 3226),
@@ -506,29 +436,6 @@ begin
                         Point(3196, 3428), Point(3190, 3428),
                         Point(3183, 3432), Point(3184, 3438)];
 
-   tToFish          := [Point(3103, 3102), Point(3103, 3096)];
-
-   tToFishGate      := [Point(3095, 3092), Point(3090, 3091)];
-
-   tToChef          := [Point(3079, 3084)];
-
-   tExitChef        := [Point(3073, 3090)];
-
-   tToQuest         := [Point(3076, 3106),Point(3076, 3118),
-                        Point(3086, 3126)];
-
-   tToMiningInstructor  := [Point(3078, 9515),Point(3081, 9504)];
-
-   tToMiningGate        := [Point(3094, 9502)];
-
-   tToRats        := [Point(3111, 9518)];
-
-   tToBank        := [Point(3122, 3123)];
-
-   tToPrayer      := [Point(3133, 3115), Point(3125, 3107)];
-
-   tToMagic       := [Point(3130, 3092), Point(3141, 3087)];
-
    case destination of
     "bankToCook": begin choosenTile := bankToCookTiles end;
     "geToBank": begin choosenTile := geToBankTiles end;
@@ -536,13 +443,6 @@ begin
     "bankToGe": begin choosenTile := bankToGETiles end;
     "cookWaterSpot": begin choosenTile := cookWaterSpot end;
     "cookExitSpot": begin choosenTile := cookExitSpot end;
-    "bankToJuliet": begin choosenTile := bankToJuliet end;
-    "secondDoorOutside": begin choosenTile := secondDoorOutside end;
-    "julietRange": begin choosenTile := julietRange end;
-    "secondDoorInside": begin choosenTile := secondDoorInside end;
-    "firstDoorInside": begin choosenTile := firstDoorInside end;
-    "julietExitSpot": begin choosenTile := julietExitSpot end;
-    "julietToBank": begin choosenTile := julietToBank end;
     "lumbyToVarrock": begin choosenTile := lumbyToVarrock end;
     "bankToWild": begin choosenTile := bankToWild end;
     "wildToBank": begin choosenTile := wildToBank end;
@@ -552,23 +452,13 @@ begin
     "houseDoorInside": begin choosenTile := houseDoorInside end;  
     "houseToEast": begin choosenTile := houseToEast end;
     "eastToBank": begin choosenTile := eastToBank end;
-    "tToFish": begin choosenTile := tToFish end;
-    "tToFishGate": begin choosenTile := tToFishGate end;
-    "tToChef": begin choosenTile := tToChef end;
-    "tExitChef": begin choosenTile := tExitChef end;
-    "tToQuest": begin choosenTile := tToQuest end;
-    "tToMiningInstructor": begin choosenTile := tToMiningInstructor end;
-    "tToMiningGate": begin choosenTile := tToMiningGate end;
-    "tToRats": begin choosenTile := tToRats end;
-    "tToBank": begin choosenTile := tToBank end;
-    "tToPrayer": begin choosenTile := tToPrayer end;
-    "tToMagic": begin choosenTile := tToMagic end;
    end;
 
   self.WalkPathMM(choosenTile, 0, 1, False);
   writelnex("endwalk");
   sleep(random(1200, 1600));
   if not precise then Exit(True);
+  tries := 0;
   while (self.Tile <> choosenTile[high(choosenTile)]) and (tries < 15) do
   begin
     writelnex('Final ' + destination + ' walk step');
@@ -577,6 +467,21 @@ begin
     inc(tries);
   end
   Result:=True;
+  RSTypeArray(eastToBank).Free;
+  RSTypeArray(houseToEast).Free;
+  RSTypeArray(houseDoorInside).Free;
+  RSTypeArray(houseRange).Free;
+  RSTypeArray(eastToHouse).Free;
+  RSTypeArray(bankToEast).Free;
+  RSTypeArray(wildToBank).Free;
+  RSTypeArray(bankToWild).Free;
+  RSTypeArray(lumbyToVarrock).Free;
+  RSTypeArray(cookExitSpot).Free;
+  RSTypeArray(cookWaterSpot).Free;
+  RSTypeArray(bankToGETiles).Free;
+  RSTypeArray(cookToBankTiles).Free;
+  RSTypeArray(geToBankTiles).Free;
+  RSTypeArray(bankToCookTiles).Free;
 end;
 
 Function RSPlayer.ToggleRun(run: boolean): Boolean;
@@ -600,22 +505,6 @@ begin
   end;
 end;
 
-Procedure clickNPC(id: Integer; walk: Boolean = True);
-var
-  gNPC: RSNPC;
-begin
-  gNPC := R_NPC_GetFirst(id);
-  if gNPC.ref = nil then Exit;
-  if walk then
-  begin
-    player.WalkToTileMM(gNPC.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-  end;
-  Mouse.click(gNPC.MidPoint, MOUSE_LEFT);
-  sleep(1000 + random(100, 200));
-  gNPC.Free;
-end;      
-
 Function RSPlayer.inGuild: boolean;
 begin
   Result := self.Tile.InBox(Box(3138, 3444, 3147, 3453));
@@ -625,808 +514,6 @@ Function RSPlayer.inLumby: boolean;
 begin
   Result := self.Tile.InBox(Box(3212, 3206, 3252, 3241));
 end;
-
-Procedure clickClosestNPC(id: Integer; walk: Boolean = True);
-var
-  gNPC: RSNPC;
-begin
-  gNPC := R_NPC_GetClosest(id, 20);
-  if gNPC.ref = nil then Exit;
-  if walk then
-  begin
-    player.WalkToTileMM(gNPC.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-  end;
-  Mouse.click(gNPC.MidPoint, MOUSE_LEFT);
-  sleep(1000 + random(100, 200));
-  gNPC.Free;
-end;
-
-Procedure clickNPCUntilTalk(id: Integer);
-var
-  gNPC: RSNPC;
-  tries: Integer;
-begin
-  gNPC := R_NPC_GetFirst(id);
-  if gNPC.ref = nil then Exit;
-  tries := 0;
-  while (not R_IsClickToContinue) and (tries < 10) do
-  begin
-    player.WalkToTileMM(gNPC.Tile, 0, 0);
-    sleep(2000 + random(100, 200));
-    Mouse.click(gNPC.MidPoint, MOUSE_LEFT);
-    sleep(1000 + random(100, 200)); 
-    inc(tries);
-  end;
-  gNPC.Free;
-end;
-
-Procedure talkToNPC(option: String = "");
-var
-  tries: Integer;
-begin
-  R_ChatInput;
-  while (R_IsClickToContinue or R_IsChatChooseOption) and (tries < 20) do
-  begin
-    SendKeys(" ", 0, 0);
-    if R_IsChatChooseOption then SendKeys(option, 0, 0);
-    sleep(1000 + random(100, 200));
-    inc(tries);
-  end;
-end;
-
-Function R_ChooseName(name: String = ""): Boolean;
-var
-  widget: RSWidget;
-  guideDoor, genericObject: RSObject;
-  gNPC: RSNPC;
-  i, j, y: Integer;
-  attributes: array of RWidget;
-Begin
-  //if not R_InTutorialIsland then Exit(False);
-  //if not R_ChooseDisplayNameScreen then Exit(False);
-
-  {attributes := [R_TUTORIAL_CHOOSE_HAIR_LEFT, R_TUTORIAL_CHOOSE_HEAD_LEFT,
-                 R_TUTORIAL_CHOOSE_JAW_LEFT, R_TUTORIAL_CHOOSE_TORSO_LEFT,
-                 R_TUTORIAL_CHOOSE_ARMS_LEFT, R_TUTORIAL_CHOOSE_HANDS_LEFT,
-                 R_TUTORIAL_CHOOSE_LEGS_LEFT, R_TUTORIAL_CHOOSE_FEET_LEFT,
-                 R_TUTORIAL_CHOOSE_LEGS_COLOR_LEFT, R_TUTORIAL_CHOOSE_TORSO_COLOR_LEFT,
-                 R_TUTORIAL_CHOOSE_FEET_COLOR_LEFT, R_TUTORIAL_CHOOSE_SKIN_COLOR_LEFT];}
-
-  widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_FIELD.Group, R_TUTORIAL_CHOOSE_NAME_FIELD.Child);
-  if widget.ref <> nil then
-  begin
-    Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y + 19, MOUSE_LEFT);
-    sleep(50+random(60,100));
-    Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y, MOUSE_LEFT);
-    widget.Free;
-    sleep(500 + random(500,700));
-    if name <> "" then
-    begin
-      SendKeys(Copy(name, 0, pos("@", name))+"rsacc", 0, 0);
-      wait(100 + random(100,200));
-      PressKey(13);
-      sleep(3500 + random(500,700));
-    end else
-    begin
-      SendKeys("a",0,0); 
-      PressKey(13);    
-      sleep(3500 + random(500,700));
-      Mouse.Click(300, 235, MOUSE_LEFT);
-      sleep(3500 + random(500,700));
-    end;
-    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_SET.Group, R_TUTORIAL_CHOOSE_NAME_SET.Child); 
-    Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y + 19, MOUSE_LEFT);
-    sleep(50+random(60,100));
-    Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y , MOUSE_LEFT);
-    sleep(3500 + random(500,700));     
-    widget.Free;
-  end;
-  while R_ChooseDisplayNameScreen do sleep(100);
-  //sleep(2500 + random(500,700));
-  {for i := 0 to High(attributes) do
-  begin
-    widget := RSWidget.Get(attributes[i].Group, attributes[i].Child, attributes[i].index);
-    for j := 0 to random(4) do
-    begin
-      Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y + 19, MOUSE_LEFT);
-      sleep(100);
-    end;
-    widget.free;
-  end;
-  sleep(500 + random(500,700));
-  if random(0,1) = 1 then
-    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_MALE.Group, R_TUTORIAL_CHOOSE_MALE.Child, R_TUTORIAL_CHOOSE_MALE.index)
-  else
-    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_FEMALE.Group, R_TUTORIAL_CHOOSE_FEMALE.Child, R_TUTORIAL_CHOOSE_FEMALE.index);
-  Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y + 19, MOUSE_LEFT);
-  widget.Free;   }
-
-
-  //PICK CHAR 
-  if random(0,1) = 1 then
-    Mouse.Click(400 + random(5, 10), 280, MOUSE_LEFT)
-  else
-    Mouse.Click(500 + random(5, 10), 280, MOUSE_LEFT);
-  y:=  90;
-  for i:= 0 to 3 do
-  begin
-    for j:= 0 to random(1,3) do
-      Mouse.Click(100 + random(1, 6), y, MOUSE_LEFT);
-      sleep(3);
-    y := y + 35;
-  end;
-  y:=  90;
-  for i:= 0 to 2 do
-  begin
-    for j:= 0 to random(1,3) do
-    begin
-      Mouse.Click(400 + random(5, 10), y, MOUSE_LEFT);
-      sleep(3);
-    end;    
-    y := y + 35;
-  end;
-  y := y + 70;
-  sleep(2 + random(100, 200));
-  Mouse.Click(300 + random(5, 10), 270, MOUSE_LEFT);
-  sleep(2500 + random(500,700));
-
-  RInitializeTileSettings;
-  RInitializeTileHeights;
-  writeln('Reinitialized reflection');
-
-  //Talk to Guide  3308
-
-  clickNPCuntilTalk(3308);
-  talkToNPC("2");
-
-  writeln('c');
-  //Click llave inglesa
-  if RSClient.IsResizeable then
-  begin
-    Mouse.Click(735, 490, MOUSE_LEFT);
-    sleep(1000 + random(100, 200));
-    Mouse.Click(690, 320, MOUSE_LEFT);
-    sleep(4000 + random(100, 200));
-  end else   
-  Mouse.Click(R_GameTabBounds(11), MOUSE_LEFT);  //open settings tab
-
-  //SET ROOFS AND BRIGHTNESS
-  //Mouse.Click(660, 400, MOUSE_LEFT);
-  //sleep(2000 + random(100, 200));   
-  //Mouse.Click(190, 155, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-  Mouse.Click(705, 305, MOUSE_LEFT); 
-  sleep(100 + random(100, 200));
-  //mute Music
-  Mouse.Click(620, 220, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-  Mouse.Click(603, 275, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-  Mouse.Click(603, 320, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-  Mouse.Click(603, 370, MOUSE_LEFT);
-
-  clickNPCuntilTalk(3308);
-  talkToNPC("2");
-
-  //getOutOfGuide
-  while player.Tile.X < 3098 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3098, 3107);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  player.WalkTo("tToFish");
-  sleep(2500+random(200,300));
-  clickNPCuntilTalk(8503);
-  clickNPC(3317);
-  sleep(500);
-  Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);
-  sleep(1000 + random(100, 200));
-  //FISH 
-  clickNPC(3317, false);
-  while R_CountInventoryItem(2514) < 1 do Sleep(100);
-  Mouse.Click(R_GameTabBounds(1), MOUSE_LEFT);
-  sleep(2000 + random(100, 200));
-  //Talk to Survival Expert
-  clickNPCuntilTalk(8503);
-  talkToNPC("2");
-  //Woodcut
-  while R_CountInventoryItem(2511) < 1 do
-  begin
-    genericObject := RSObject.Get(RSObjectType.GAME_OBJECT, 3099, 3095);
-    Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(1000);  
-    while player.IsAnimating do sleep(100);
-  end;
-  //Fire
-  player.WalkTo("tToFishGate", true);
-  sleep(1500 + random(100, 200));
-  Mouse.Click(R_GetInventoryItem(590)[0].Bounds, MOUSE_LEFT);
-  sleep(100);                                               
-  Mouse.Click(R_GetInventoryItem(2511)[0].Bounds, MOUSE_LEFT);
-  sleep(1000);
-  genericObject := RSObject.Get(RSObjectType.GAME_OBJECT, 3090, 3091);
-  while (genericObject.ref = nil) or (genericObject.Definition.Name <> "Fire") do
-  begin
-    sleep(300);
-    genericObject := RSObject.Get(RSObjectType.GAME_OBJECT, 3090, 3091);
-  end;
-  //got fire
-  sleep(1000);
-  while player.IsAnimating do sleep(100);
-  Mouse.Click(R_GetInventoryItem(2514)[0].Bounds, MOUSE_LEFT);
-  sleep(3000);
-  Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-  writeln(genericObject.Tile);
-  genericObject.Free;
-  while R_CountInventoryItem(2514) > 0 do sleep(100);
-  //OpenGateAndGoToChef
-  while player.Tile.X > 3089 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3089, 3091);
-    Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  sleep(1000);
-  player.WalkTo("tToChef");
-  sleep(1500);
-  while player.Tile.X > 3078 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3079, 3084);
-    Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  sleep(2000);
-  //TalkToChef
-  ClickNPCUntilTalk(3305);
-  while R_CountInventoryItem(2516) < 1 do
-  begin
-    SendKeys(" ", 0, 0);
-    if R_IsChatChooseOption then SendKeys("2", 0, 0);
-    sleep(1000 + random(100, 200));
-  end;
-  //Mix Flwater
-  Mouse.Click(R_GetInventoryItem(2516)[0].Bounds, MOUSE_LEFT);
-  sleep(100);
-  Mouse.Click(R_GetInventoryItem(1929)[0].Bounds, MOUSE_LEFT);
-  while R_CountInventoryItem(2307) < 1 do sleep(100);
-  //cookBread
-  while R_CountInventoryItem(2309) < 1 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3075, 3081);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000);
-    Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000);
-    while player.IsAnimating do sleep(100);
-  end;
-  player.WalkTo("tExitChef");
-  sleep(500);
-  while player.IsAnimating do sleep(100);
-
-  while player.Tile.X > 3072 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3072, 3090);
-    Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  sleep(1500);
-  while player.IsAnimating do sleep(100);
-  //WalkToQuest
-  player.WalkTo("tToQuest");
-  sleep(3000);
-  while player.Tile.Y > 3125 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3086, 3126);
-    Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  sleep(1000);
-  //TalkToQuest   
-  ClickNPCUntilTalk(3312);
-  talkToNpc(" ");  
-  Mouse.Click(R_GameTabBounds(2), MOUSE_LEFT);  //open quests tab
-  writeln('w');
-  sleep(1000 + random(100, 200));
-  ClickNPCUntilTalk(3312);
-  talkToNpc(" ");
-  //send one more spacebar
-  SendKeys(" ", 0, 0);
-  sleep(1000 + random(100, 200)); 
-  talkToNpc(" ");
-  while player.Tile.Y < 9020 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3088, 3119);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-
-  RInitializeTileSettings;
-  RInitializeTileHeights;
-  writeln('Reinitialized reflection');
-  //walkToMiningInstructor
-  player.WalkTo("tToMiningInstructor"); 
-  ClickNPCUntilTalk(3311);
-  talkToNpc(" ");
-  //mineTin
-  while R_CountInventoryItem(438) < 1 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3077, 9504);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  //mineCopper
-  while R_CountInventoryItem(436) < 1 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3083, 9501);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  //smeltItem
-  while R_CountInventoryItem(2349) < 1 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3078, 9495);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end; 
-  //walkToMiningInstructor
-  player.WalkTo("tToMiningInstructor");
-  ClickNPCUntilTalk(3311);
-  talkToNpc(" ");
-  //clickAnvil
-  genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3083, 9499);
-  player.WalkToTileMM(genericObject.Tile, 0, 0);
-  sleep(4000 + random(100, 200));
-  Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-  genericObject.Free;
-  sleep(4000 + random(100, 200));
-  while player.IsAnimating do sleep(100);
-  Mouse.Click(40, 70, MOUSE_LEFT);
-  sleep(4000 + random(100, 200));
-  while player.IsAnimating do sleep(100);
-  //GoToGate
-  player.WalkTo("tToMiningGate");
-  sleep(4000 + random(100, 200));
-  while player.Tile.X < 3095 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3094, 9502);
-    Mouse.Click(genericObject.MidPoint, 2, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  //walkToCombatInstructor
-  ClickNPCUntilTalk(3307);
-  talkToNpc(" ");       
-  Mouse.Click(R_GameTabBounds(4), MOUSE_LEFT);  //open equipment tab
-  sleep(1000 + random(100, 200));
-  Mouse.Click(580, 430, MOUSE_LEFT);  
-  sleep(1000 + random(100, 200));  
-  ClickNPCUntilTalk(3307);
-  Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
-  sleep(1000 + random(100, 200));
-  Mouse.Click(R_GetInventoryItem(1205)[0].Bounds, MOUSE_LEFT);
-  sleep(1000 + random(100, 200)); 
-  ClickNPCUntilTalk(3307);
-  talkToNpc(" ");      
-  Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
-  sleep(1000 + random(100, 200));
-  Mouse.Click(R_GetInventoryItem(1277)[0].Bounds, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-  Mouse.Click(R_GetInventoryItem(1171)[0].Bounds, MOUSE_LEFT);
-  sleep(1000 + random(100, 200));    
-  Mouse.Click(R_GameTabBounds(0), MOUSE_LEFT);  //open combat tab
-  sleep(1000 + random(100, 200));
-  //WalkToRats
-  player.WalkTo("tToRats");
-  while player.Tile.X > 3110 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3111, 9518);
-    Mouse.Click(genericObject.MidPoint, 2, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  //killRat
-  ClickClosestNPC(3313);
-  sleep(30000+random(200,300));
-  //while player.IsInCombat do sleep(100);
-  player.WalkTo("tToRats");
-  while player.Tile.X < 3111 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3111, 9518);
-    Mouse.Click(genericObject.MidPoint.x + 3, genericObject.MidPoint.y, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  ClickNPCUntilTalk(3307);
-  talkToNpc(" "); 
-  Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open inventory tab
-  sleep(500+random(200,300));
-  Mouse.Click(R_GetInventoryItem(841)[0].Bounds, MOUSE_LEFT);
-  sleep(200 + random(100, 200));
-  Mouse.Click(R_GetInventoryItem(882)[0].Bounds, MOUSE_LEFT);
-  sleep(1000 + random(100, 200));
-  //killRat
-  player.WalkTo("tToRats");
-  while not player.IsAnimating do ClickClosestNPC(3313, false);
-  sleep(30000+random(200,300));
-  //while player.IsInCombat or player.IsAnimating do sleep(100);
-  while player.Tile.Y > 9020 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3111, 9526);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  //goBank
-  RInitializeTileSettings;
-  RInitializeTileHeights;
-  writeln('Reinitialized reflection');
-  player.WalkTo("tToBank");
-  while not R_BankScreen do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3122, 3124);
-    Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(1000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-
-  while not R_IsClickToContinue do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3119, 3121);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  talkToNpc(" ");
-  SendKeys(" ", 0, 0);
-  sleep(500 + random(100,200));
-  //openFirstBankDoor
-  while player.Tile.X < 3125 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3125, 3124);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;     
-  ClickNPCUntilTalk(3310);
-  talkToNpc(" ");       
-  Mouse.Click(R_GameTabBounds(8), MOUSE_LEFT);  //open account tab
-  sleep(500+random(200,300));
-  ClickNPCUntilTalk(3310);
-  talkToNpc(" ");
-
-  //openSecondBankDoor
-  while player.Tile.X < 3130 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3130, 3124); 
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  //goPRay
-  player.WalkTo("tToPrayer"); 
-  ClickNPCUntilTalk(3319);
-  talkToNpc(" ");   
-  Mouse.Click(R_GameTabBounds(5), MOUSE_LEFT);  //open prayer tab
-  sleep(500+random(200,300));
-  ClickNPCUntilTalk(3319);
-  talkToNpc(" ");       
-  Mouse.Click(R_GameTabBounds(9), MOUSE_LEFT);  //open friends tab
-  sleep(500+random(200,300));
-  ClickNPCUntilTalk(3319);
-  talkToNpc(" ");
-  //openPRayerDoor
-  while player.Tile.Y > 3102 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3122, 3102);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
-  end;
-  //goMagic
-  player.WalkTo("tToMagic"); 
-  RInitializeTileSettings;
-  RInitializeTileHeights;
-  writeln('Reinitialized reflection');
-  ClickNPCUntilTalk(3309);
-  talkToNpc(" "); 
-  Mouse.Click(R_GameTabBounds(6), MOUSE_LEFT);  //open magic tab
-  sleep(500+random(200,300));   
-  ClickNPCUntilTalk(3309);
-  talkToNpc(" ");
-  //kill chickenlittle
-  player.WalkToTileMM(Point(3140, 3091), 0, 0);
-  sleep(3000 + random(100, 200)); 
-  while not player.IsAnimating do
-  begin
-    Mouse.Click(615, 225, MOUSE_LEFT);
-    sleep(100 + random(100,200));
-    ClickClosestNPC(3316, false);  
-    sleep(300 + random(100,200));
-  end;
-  sleep(10000+random(200,300));
-  ClickNPCUntilTalk(3309);
-  SendKeys(" ", 0, 0); 
-  sleep(2000+random(200,300));  
-  SendKeys("1", 0, 0);
-  sleep(2000+random(200,300));
-  talkToNpc("3");   
-  SendKeys(" ", 0, 0);
-  while not player.inLumby do sleep(100);
-
-  //SET ROOFS AND BRIGHTNESS   
-  Mouse.Click(R_GameTabBounds(11), MOUSE_LEFT);  //open settings tab  
-  sleep(1000 + random(100, 200));
-  Mouse.Click(660, 400, MOUSE_LEFT);
-  sleep(2000 + random(100, 200));
-  Mouse.Click(190, 155, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-
-
-end;
-
-procedure grandExchange(needFlour: Boolean; needWater: Boolean);
-var
-  exchangeBooth: RSObject;
-
-begin
-  writelnex('Doing GE');
-  exchangeBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3164, 3487);
-  if (exchangeBooth.ref = nil) then
-  begin
-    writelnex("Exchange not found");
-    TerminateScript;
-  end
-  while not R_GrandExchangeScreen do
-  begin
-    Mouse.Click(exchangeBooth.MidPoint, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end
-  if R_GrandExchange_EmptyAllSlots then sleep(random(700,100));;
-  if R_GrandExchangeCollectAll then sleep(random(700,1000));
-
-  //SELL STUFF
-  R_GrandExchange_Sell(notedPizzaBaseID, TRSOfferQuantity.ALL, 1, TRSOfferPrice.X, 300);
-  sleep(random(700,1000));
-  if R_GrandExchangeCollectAll then sleep(random(700,1000));
-
-  //BUY STUFF
-  if needFlour then
-    if R_GrandExchange_Buy("Pot of flour", TRSOfferQuantity.X, 300, TRSOfferPrice.X, 285) then sleep(random(1000,1500));
-  if R_GrandExchangeCollectAll then sleep(random(700,1000));
-
-  if needWater then
-    if R_GrandExchange_Buy("Bucket of water", TRSOfferQuantity.X, 300, TRSOfferPrice.PLUSFIVE) then sleep(random(700,1000));
-  if R_GrandExchangeCollectAll then sleep(random(700,1000));
-
-  //SELL MORE STUFF
-  R_GrandExchange_Sell(notedBucketID);
-  sleep(random(700,1000));
-  if R_GrandExchangeCollectAll then sleep(random(700,1000));
-  R_GrandExchange_Sell(notedPotID, TRSOfferQuantity.ALL, 1, TRSOfferPrice.MINUSFIVE );
-  sleep(random(700,1000));
-  if R_GrandExchangeCollectAll then sleep(random(700,1000));
-
-  if not R_GrandExchangeCollectAll then
-  begin
-    writelnex('Cant collect items,  NOTsleeping for 30 secs');
-    sleep(random(15000,30000));
-    R_GrandExchangeCollectAll;
-    sleep(random(700,1000));
-  end
-
-  R_GrandExchangeScreen_Close;
-  sleep(random(300,500));
-  //TerminateScript;
-end
-
-procedure withdrawItems(nFlour: Boolean = False; nWater: Boolean = False);
-var
-  bankBooth: RSObject;
-  currentBases: Integer;
-  coins, flourPot, waterBucket: TRSBankItem;
-begin
-  currentBases := R_CountInventoryItem(pizzaBaseID);
-  pizzasDone += currentBases;
-  writelnex("BASES: " + intToStr(currentBases) + " TOTAL: " + intToStr(pizzasDone) + " RUNS: " + intToStr(runs) + " TIME: " + intToStr(timerTrack.ElapsedTime div 1000));
-  writelnex("Opening bank");
-  bankBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3162, 3489);
-  if (bankBooth.ref = nil) then
-  begin
-    writelnex("Bank not found");
-    TerminateScript;
-  end
-  while not R_BankScreen do
-  begin
-    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end
-
-  R_DepositAll_Items;
-  writelnex('Deposited items');
-  Sleep(RandomRange(500, 700));
-
-  coins := R_FindBankItem(coinsID);
-  flourPot := R_FindBankItem(flourPotID);
-  waterBucket := R_FindBankItem(waterBucketID);
-
-  //R_SetBankWithdrawMode(False);
-
-  if (useGe AND (((flourPot.id = -1) or nFlour) or ((waterBucket.id = -1) or nWater))) then
-  begin
-    writelnex("missing items, do some GE");
-    //if (coins.id = -1) then TerminateScript;
-    R_WithdrawItem(coins.ID);
-    sleep(random(50,150));
-    R_SetBankWithdrawMode(True);
-    sleep(random(50,150));
-    R_WithdrawItem(pizzaBaseID);
-    sleep(random(50,150));
-    R_WithdrawItem(bucketID);
-    sleep(random(50,150));
-    R_WithdrawItem(potID);
-    sleep(random(50,150));
-    R_SetBankWithdrawMode(False);
-    //Mouse.click(485 + random(-5, 5),25 + random(-5, 5), MOUSE_LEFT);
-    R_BankScreen_Close;
-    sleep(random(400,650));
-    //BankScreen.Close;
-    if (nFlour and (flourPot.amount < 500)) then
-    begin
-      if(nWater and (waterBucket.amount < 500)) then
-        grandExchange(True, True)
-      else grandExchange(True, False);
-    end
-    else if(nWater and (waterBucket.amount < 500)) then
-      grandExchange(False, True);
-
-    grandExchange((flourPot.id = -1), (waterBucket.id = -1));
-    Exit;
-  end
-
-  //R_SetBankQuantityMode(TRSBankQuantity.ALL);
-  sleep(random(500,700));
-  R_WithdrawItem(flourPot.ID, 9);
-  sleep(random(150,150));
-  R_WithdrawItem(waterBucket.ID, 9);
-  sleep(random(350,150));
-  //Mouse.click(485 + random(-5, 5),25 + random(-5, 5), MOUSE_LEFT);
-  R_BankScreen_Close;
-  sleep(random(600,850));
-  //BankScreen.Close;
-end
-
-procedure makePizzaBase;
-var
-  previousFlour: Integer;
-  flourPot, waterBucket: Array of TRSInventoryItem;
-begin
-
-  flourPot := R_GetInventoryItem(flourPotID);
-  waterBucket := R_GetInventoryItem(waterBucketID);
-  previousFlour := R_CountInventoryItem(flourPotID);
-
-  if (Length(flourPot) <= 0) or (Length(waterBucket) <= 0) then withdrawItems;
-
-  writelnex(intToStr(previousFlour) + " flours");
-
-  Mouse.click(flourPot[random(0,high(flourPot)-1)].MidPoint, MOUSE_LEFT);
-  sleep(random(50,100));
-  Mouse.Click(waterBucket[random(0,high(waterBucket)-1)].MidPoint, MOUSE_LEFT);
-  sleep(random(1000,1200));
-  writelnex("Choosing Option");
-  R_ChatSkillChooseOptions(3);
-  sleep(random(1400,1600));
-  if (previousFlour = R_CountInventoryItem(flourPotID)) then
-  begin
-    writelnex('OptionFailsafe');
-    R_ChatSkillChooseOptions(3);
-  end
-  writelnex('Past failsafe');
-  //while R_InventoryCount < 27 do sleep(50);
-  while (R_InventoryCount < 27) AND (R_CountInventoryItem(flourPotID) >= 1) AND (R_CountInventoryItem(waterBucketID) >= 1) do sleep(50);
-  //TerminateScript;
-end;
-
-procedure withdrawFlourItems;
-var
-  bankBooth: RSObject;
-  currentFlourPots: Integer;
-  emptyPot, grain: TRSBankItem;
-begin
-  currentFlourPots := R_CountInventoryItem(flourPotID);
-  floursDone += currentFlourPots;
-
-  writelnex("Opening bank");
-  bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3186, 3444);
-  if (bankBooth.ref = nil) then
-  begin
-    writelnex("Bank not found");
-    TerminateScript;
-  end
-  while not R_BankScreen do
-  begin
-    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end
-
-  R_DepositAll_Items;
-  writelnex('Deposited all items');
-  Sleep(RandomRange(500, 700));
-
-  emptyPot := R_FindBankItem(potID);
-  grain := R_FindBankItem(grainID);
-
-  //R_SetBankWithdrawMode(False);
-
-  if ((emptyPot.id = -1)) or ((grain.id = -1)) then
-  begin
-    writelnex("missing items, TERMINATING but should do some GE");
-    TerminateScript;
-  end;
-
-  //R_SetBankQuantityMode(TRSBankQuantity.ALL);
-  sleep(random(500,700));
-  R_WithdrawItem(emptyPot.ID, 14);
-  sleep(random(150,150));
-  R_WithdrawItem(grain.ID, 14);
-  sleep(random(350,150));
-  //Mouse.click(485 + random(-5, 5),25 + random(-5, 5), MOUSE_LEFT);
-  R_BankScreen_Close;
-  sleep(random(600,850));
-  //BankScreen.Close;
-end
 
 procedure buyFlourToPizzaItems;
 begin
@@ -1700,174 +787,6 @@ begin
   result := false;
 end;
 
-procedure makeFlour;
-var
-  cookStairs, cookDoor, hopper, hopperControl, cookMill: RSObject;
-  i: Integer;
-  timer: Timer;
-
-begin
-  writelnex('Making flour!');
-
-  //TODO check if not at cook then die
-
-  //openCookDoor;
-  writelnex('Opening door');
-  cookDoor := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3143, 3443);
-  if (cookDoor.ref = nil) then
-  begin
-    writelnex("CookDoor not found");
-    Exit;
-  end;
-  while player.Tile <> Point(3143, 3444) do
-  begin
-    if player.Tile.Y >= 3444 then Break;
-    Mouse.Click(cookDoor.MidPoint, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end;
-
-  //CheckMill;
-  writelnex('Checking Mill');
-  cookMill := RSObject.Get(RSObjectType.GAME_OBJECT, 3140, 3449);
-  if (cookMill.ref = nil) then
-  begin
-    writelnex("cookMill not found");
-    Exit;
-  end;
-
-  Mouse.Click(cookMill.MidPoint, MOUSE_RIGHT);
-  Wait(50 + RandomRange(50, 100));
-  while (StrInArray("Empty Flour bin", R_MenuItems)) AND (R_CountInventoryItem(potID) >= 1) do
-  begin
-    R_ChooseOptions(['Empty Flour bin']);
-    sleep(random(1000,1500) + lag);
-    Mouse.Click(cookMill.MidPoint, MOUSE_RIGHT);
-  end;
-
-
-  //ClimbStairs;
-  writelnex('Climbing Stairs');
-  cookStairs := RSObject.Get(RSObjectType.GAME_OBJECT, 3144, 3447);
-  if (cookStairs.ref = nil) then
-  begin
-    writelnex("cookStairs not found");
-    Exit;
-  end;
-  if (RSClient.Plane <> 0) then
-  begin
-    writelnex("Not in ground floor");
-    Exit;
-  end;
-  Mouse.Click(cookStairs.MidPoint, MOUSE_LEFT);
-
-  while RSClient.Plane <> 1 do sleep(300);
-  sleep(random(1000,1500));
-
-  Mouse.Click(cookStairs.MidPoint, MOUSE_RIGHT);
-  Wait(50 + RandomRange(50, 100));
-  R_ChooseOptions(['Climb-up Staircase']);
-
-  while RSClient.Plane <> 2 do sleep(300);
-  sleep(random(1000,1500));;
-
-  //third floor now
-  writelnex('Filling Hopper');
-  hopper := RSObject.Get(RSObjectType.GAME_OBJECT, 3142, 3452);
-  if (hopper.ref = nil) then
-  begin
-    writelnex("hopper not found");
-    Exit;
-  end;
-  Mouse.Click(hopper.MidPoint, MOUSE_LEFT);
-
-  timer.Start;
-  while(not player.Tile.Equals(Point(3142, 3451))) do
-  begin
-    if timer.ElapsedTime >= 5000 + lag then
-      Break;
-    Wait(50 + Random(50));
-  end;
-  timer.Reset;
-  sleep(random(400,600));  //5000
-
-  writelnex('Activating Hopper');
-  hopperControl := RSObject.Get(RSObjectType.GAME_OBJECT, 3141, 3453);
-  if (hopperControl.ref = nil) then
-  begin
-    writelnex("hopperControl not found");
-    Exit;
-  end;
-  Mouse.Click(hopperControl.MidPoint, MOUSE_LEFT);
-  timer.Start;
-  while(not player.Tile.Equals(Point(3141, 3452))) do
-  begin
-    if timer.ElapsedTime >= 5000 + lag then
-      Break;
-    Wait(50 + Random(50));
-  end;
-  timer.Reset;
-  //sleep(random(2000,2500));
-  sleep(random(400,600));
-
-  //TODO better check while shouldAddGrains do
-  for i := 0 to 16 do
-  begin
-    if (R_CountInventoryItem(grainID) < 1) then Break;
-    Mouse.Click(hopper.MidPoint, MOUSE_LEFT);
-    sleep(random(1000,1500));
-    Mouse.Click(hopperControl.MidPoint, MOUSE_LEFT);
-    sleep(random(1000,1500));
-  end;
-
-  hopper.Free;
-  hopperControl.Free;
-
-  //climbDown;
-  writelnex('Going down');
-  Mouse.Click(cookStairs.MidPoint, MOUSE_LEFT);
-  while RSClient.Plane <> 1 do sleep(300);
-  sleep(random(1000,1500));
-
-  Mouse.Click(cookStairs.MidPoint, MOUSE_RIGHT);
-  Wait(50 + RandomRange(50, 100));
-  R_ChooseOptions(['Climb-down Staircase']);
-  while RSClient.Plane <> 0 do sleep(300);
-  sleep(random(1000,1500));
-
-  cookStairs.free;
-
-  Mouse.Click(cookMill.MidPoint, MOUSE_LEFT);
-  sleep(random(3000,2500));
-  writelnex('Emptyign flour pot');
-
-  Mouse.Click(cookMill.MidPoint, MOUSE_RIGHT);
-  Wait(50 + RandomRange(50, 100));
-  while (StrInArray("Empty Flour bin", R_MenuItems)) AND (R_CountInventoryItem(potID) >= 1) do
-  begin
-    R_ChooseOptions(['Empty Flour bin']);
-    sleep(random(1000,1500));
-    Mouse.Click(cookMill.MidPoint, MOUSE_RIGHT);
-  end;
-  sleep(random(400, 550));
-  cookMill.Free;
-
-  Mouse.Click(Point(6080, 6976), MOUSE_LEFT);
-  sleep(random(1000, 1500));
-
-  writelnex('Exiting door');
-  while player.Tile <> Point(3143, 3443) do
-  begin
-    if player.Tile.Y < 3444 then Break;
-    Mouse.Click(cookDoor.MidPoint, MOUSE_LEFT);
-    sleep(random(2000, 2500));
-  end;
-  cookDoor.Free;
-
-  //OutOfCook;
-  //bank north booth 3186 3444
-
-end;
-
 Function cookGuildDoor(enter: Boolean): Boolean;
 var
   cookDoor: RSObject;
@@ -1916,78 +835,6 @@ begin
     end;
   end;
   cookDoor.Free;
-  Result:=True;
-end;
-
-Function julietDoor(enter: Boolean): Boolean;
-var
-  julietDoor: RSObject;
-  tries:    Integer;
-  julietBox: TBox;
-begin
-  julietDoor := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3165, 3433);
-  tries := 0;
-  julietBox := Box(3156, 3432, 3164, 3438);
-  //openCookDoor;
-  if enter then
-  begin
-    writelnex('Entering Juliet door');
-    if player.Tile.InBox(julietBox) then
-    begin
-      writelnex('Already inside');
-      player.WalkTo("firstDoorOutside");
-      sleep(random(500, 700));
-      exit(True);
-    end;
-    player.walkTo("julietExitSpot");
-    sleep(random(500, 700));
-    if (julietDoor.ref = nil) then
-    begin
-      writelnex("julietDoor is Open");
-      player.WalkTo("secondDoorOutside");
-      sleep(random(500, 700));
-      Exit(True);
-    end;
-    while (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3165, 3433).ref <> nil) do
-    begin
-      if tries > 10 then Exit(False);
-      if (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3165, 3433).ref = nil) then Break;
-      Mouse.Click(julietDoor.MidPoint, MOUSE_LEFT);
-      sleep(random(1000,1500));
-      inc(tries);
-    end;
-    player.WalkTo("secondDoorOutside");
-    sleep(random(500, 700));
-  end else
-  begin
-    writelnex('Leaving Juliet door');
-    if not player.Tile.InBox(julietBox) then
-    begin
-      writelnex('Already outside');
-      exit(True);
-    end;
-    player.WalkTo("firstDoorInside");
-    sleep(random(500, 700));
-    if (julietDoor.ref = nil) then
-    begin
-      writelnex("julietDoor is Open");
-      player.WalkTo("julietExitSpot");
-      sleep(random(500, 700));
-      Exit(True);
-    end;
-
-    while (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3165, 3433).ref <> nil) do
-    begin
-      if tries > 10 then Exit(False);
-      if (RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3165, 3433).ref = nil) then Break;
-      Mouse.Click(julietDoor.MidPoint, MOUSE_LEFT);
-      sleep(random(1000, 1500));
-      inc(tries);
-    end;
-    player.WalkTo("julietExitSpot");
-    sleep(random(1000, 1500));
-  end;
-  julietDoor.Free;
   Result:=True;
 end;
 
@@ -2468,34 +1315,8 @@ begin
   end;
 end;
 
-procedure flourProcedure;
-begin
-  player.walkTo("cookToBank");
-  sleep(random(700, 1000));
-  withdrawFlourItems;
-  sleep(random(700, 1000));
-  player.walkTo("bankToCook");
-  sleep(random(700, 1000));
-  makeFlour;
-end;
-
 procedure flourToPizzaProcedure;
-begin{
-  makeflourtopizza;
-  cookGuildDoor(False);
-  player.walkTo("cookToBank");
-  sleep(random(700, 1000));
-  withdrawFlourToPizzaItems;
-  ProgressReport;
-  sleep(random(700, 1000));
-  player.walkTo("bankToCook");
-  sleep(random(700, 1000));
-  cookGuildDoor(True);
-  sleep(random(700, 1000));
-  makeFlourToPizza;
-  sleep(random(700, 1000));
-  cookGuildDoor(False);}
-  //smart, non procedural:
+begin
   if player.InGuild then
   begin
     writelnEx("InGuild");
@@ -2523,28 +1344,6 @@ begin{
       ProgressReport;
       sleep(random(700, 1000));
     end;
-  end;
-end;
-
-procedure pizzaProcedure;
-begin
-  player.walkTo("bankToGe");
-  sleep(random(700, 1000));
-  //if R_InventoryCount >= 27 then
-  if (R_CountInventoryItem(flourPotID) < 1) or (R_CountInventoryItem(waterBucketID) < 1) or (R_InventoryCount > 27 ) then
-  begin
-    inc(runs);
-    writelnex("No more prime material");
-    withdrawItems;
-  end else
-  begin
-    makePizzaBase;
-    sleep(100);
-  end;
-  if runs mod 30 = 0 then
-  begin
-    writelnex('30 rounds! a GE');
-    withdrawItems(true, true);
   end;
 end;
 
@@ -2603,12 +1402,7 @@ begin
 end;
 
 procedure hybridProcedure;
-begin  
-  if R_InTutorialIsland then
-  begin
-    writelnEx("InTut");
-    R_ChooseName();
-  end;
+begin
   if player.InLumby then
   begin
     writelnEx("InLumby");
@@ -2626,7 +1420,6 @@ procedure testProcedure;
 begin
   loginPlayer;
   sleep(3000);
-  R_ChooseName();
   terminatescript;
 end;
 
@@ -2651,10 +1444,6 @@ begin
       startPos := player.Tile;
       player.ToggleRun(True);
       case action of
-        "doFlour": begin flourProcedure end;
-        "doPizza": begin pizzaProcedure end;
-        "doFlourToPizza": begin flourToPizzaProcedure end;
-        "doCooking": begin cookingProcedure end;
         "keepAlive": begin keepAliveProcedure end;
         "doTest":   begin testProcedure; end;
         "doWild":   begin wildProcedure; end;
