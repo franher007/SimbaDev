@@ -1,4 +1,5 @@
 {$i Reflection/Reflection.simba}
+{$i Reflection/GrandExchange.simba}
 {$i SRL/osr.simba}
 
 procedure clickMe;
@@ -225,9 +226,105 @@ begin
   end;
 end;
 
+
+Function getSpiralTiles(x, y: Integer; Distance: integer = 0): Array of TPoint;
+var
+  i, resultIndex: Integer
+begin
+  resultIndex := ceil(pow((2*Distance+1),2))-1;
+
+  for i := 0 to resultIndex do
+  begin
+    //writeln('('+inttostr(x)+','+inttostr(y)+'),');
+    SetLength(Result,i+1);
+    Result[i] := Point(x, y);
+    if (abs(X) <= abs(Y)) and ((x <> y) or (x >= 0)) then
+    begin
+      if y >= 0 then
+        x := x + 1
+      else
+        x := x - 1;
+    end else
+    begin
+      if x >= 0 then
+        y := y - 1
+      else
+        y := y + 1;
+    end;
+  end;
+end;
+
+Function R_GetClosestObject(ID: Integer; Offset: Integer = 10): RSObject; static;
+var
+  X, Y, i: Int32;
+  Tiles: Array of TPoint;
+  currentObject: RSObject;
+begin
+  Y := RSPlayer.Me.Tile.Y;
+  X := RSPlayer.Me.Tile.X;
+  Tiles := getSpiralTiles(X, Y, Offset);
+
+  for i := 0 to High(Tiles) do
+  begin
+    currentObject := RSObject.Get(GAME_OBJECT, Tiles[i].X, Tiles[i].Y);
+    if currentObject.ref = nil then currentObject := RSObject.Get(BOUNDARY_OBJECT, Tiles[i].X, Tiles[i].Y);
+    if currentObject.ref = nil then currentObject := RSObject.Get(FLOOR_DECORATION, Tiles[i].X, Tiles[i].Y);
+    if currentObject.ref = nil then currentObject := RSObject.Get(WALL_DECORATION, Tiles[i].X, Tiles[i].Y);
+    if currentObject.Definition.ID = ID then
+    begin
+      Result := currentObject;
+      Break;
+    end;
+  end;
+  RSTypeArray(Tiles).Free;
+  currentObject.Free;
+end;
+
+Function R_GetClosestObjectByName(Name: String; Offset: Integer = 10): RSObject;
+var
+  X, Y, i: Int32;
+  Tiles: Array of TPoint;
+  currentObject: RSObject;
+begin
+  Y := RSPlayer.Me.Tile.Y;
+  X := RSPlayer.Me.Tile.X;
+  Tiles := getSpiralTiles(X, Y, Offset);
+
+  for i := 0 to High(Tiles) do
+  begin
+    currentObject := RSObject.Get(RSObjectType.GAME_OBJECT, Tiles[i].X, Tiles[i].Y);
+    if currentObject.Definition.Name = Name then
+    begin
+      Result := currentObject;
+      Break;
+    end;
+    currentObject := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, Tiles[i].X, Tiles[i].Y);
+    if currentObject.Definition.Name = Name then
+    begin
+      Result := currentObject;
+      Break;
+    end;
+    currentObject := RSObject.Get(RSObjectType.FLOOR_DECORATION, Tiles[i].X, Tiles[i].Y);
+    if currentObject.Definition.Name = Name then
+    begin
+      Result := currentObject;
+      Break;
+    end;
+    currentObject := RSObject.Get(RSObjectType.WALL_DECORATION, Tiles[i].X, Tiles[i].Y);
+    if currentObject.Definition.Name = Name then
+    begin
+      Result := currentObject;
+      Break;
+    end;
+  end;
+  RSTypeArray(Tiles).Free;
+end;
+
+
 var
   mibool: Boolean;
   iskey: Boolean;
+  obj: RSOBject;
 begin
   //writeln(booltostr(R_ChatSkillOption(3)));
   //getObject(RSPlayer.Me.Tile.x+1, RSPlayer.Me.Tile.y);
@@ -237,14 +334,28 @@ begin
   //writeln(BoolToStr(srl.IsClientState(csLogin)));
   //sleep(100);
   //getInv;
-  getme;
+  GETME;
+  writeln(RSCLient.LoginState);
+  TErminateScript;
+  while true do
+  begin
+    wait(2000);
+    writeln("Me:");  
+    getme;
+    //writeln(RSPlayer.me.Tile.InBox(Box(3138, 3458, 3144, 3463)));
+    writeln("Grain:");
+    obj := R_GetClosestObjectByName("Flower", 0);
+    writeln(obj.Tile);
+
+  end;
+  terminatescript;
 
   //RSetup;
 
   writeln(R_NPC_GetClosest(3313).Tile);
   writeln(booltostr(RSPlayer.me.isAnimating));
   //writeln(R_GetAllInventoryITems[1]);
-  writeln(RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3094, 9502).Definition.Name);
+  writeln(RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3142, 3457).Definition.Name);
   writeln(RSWidget.Get(R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Group, R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Child, R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Index).ref);
  // writeln(RSClient.IsResizeable);
 
@@ -252,11 +363,6 @@ begin
   sleep(500);
   // Mouse.Click(200, 150, MOUSE_RIGHT);
   TerminateScript;
-  while true do
-  begin
-    getme;
-    wait(2000);
-  end;
   writeln(booltostr(R_IsEquipped(1949)));
   writeln('log: '+inttostr(RSCLient.LoginState));  //24 = disconnected   Point(3212, 3206),    Point(3232, 3226),
   writeln('gst: '+inttostr(RSCLient.GameState));
