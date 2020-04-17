@@ -38,6 +38,7 @@ var
   isMillEmpty                       : Boolean;
   player                            : RSPlayer;
   startPos                          : TPoint;
+  sellPizzas                        : Boolean;
 
 Procedure writelnex(text: String);
 begin
@@ -114,9 +115,19 @@ begin
   Result := RSWidget.IsValid(R_INTERFACE_TUTORIAL);
 end;
 
+Function R_ChooseCharacterScreen: Boolean;
+begin
+  Result := RSWidget.IsValid(R_INTERFACE_CHARACTER);
+end;
+
 Function R_InTutorialIsland: Boolean;
 begin
-  Result := RSPlayer.me.Tile.InBox(Box(3050, 3100, 3114, 3123));
+  Result := RSPlayer.me.Tile.InBox(Box(3050, 3100, 3114, 3123)) or RSPlayer.me.Tile.InBox(Box(3050, 8800, 3114, 9704));
+end;
+
+Function RT_InGielinorGuide: Boolean;
+begin
+  Result := RSPlayer.me.Tile.InBox(Box(3087, 3100, 3097, 3112));
 end;
 
 function TileOnMM(Tile: RSTile; radius: integer = 0): Boolean;
@@ -611,6 +622,16 @@ begin
   end;
 end;
 
+Function RSPlayer.inGuild: boolean;
+begin
+  Result := self.Tile.InBox(Box(3138, 3444, 3147, 3453));
+end;
+
+Function RSPlayer.inLumby: boolean;
+begin
+  Result := self.Tile.InBox(Box(3212, 3206, 3252, 3241));
+end;
+
 Procedure clickNPC(id: Integer; walk: Boolean = True);
 var
   gNPC: RSNPC;
@@ -625,16 +646,6 @@ begin
   Mouse.click(gNPC.MidPoint, MOUSE_LEFT);
   sleep(1000 + random(100, 200));
   gNPC.Free;
-end;      
-
-Function RSPlayer.inGuild: boolean;
-begin
-  Result := self.Tile.InBox(Box(3138, 3444, 3147, 3453));
-end;
-
-Function RSPlayer.inLumby: boolean;
-begin
-  Result := self.Tile.InBox(Box(3212, 3206, 3252, 3241));
 end;
 
 Procedure clickClosestNPC(id: Integer; walk: Boolean = True);
@@ -686,6 +697,69 @@ begin
   end;
 end;
 
+procedure ResMouseClick(X, Y, R: Integer; Button: Integer);
+begin
+    Mouse.Click(x + ((RSClient.ViewPortWidth - 765) div 2) + random(-R, R), y + ((RSClient.ViewPortHeight - 503) div 2) + random(-R, R), Button);
+end;
+procedure ResMouseMove(X, Y: Integer; R: Integer = 0);
+begin
+    Mouse.Move(x + ((RSClient.ViewPortWidth - 765) div 2) + 5 + random(-R, R), y + ((RSClient.ViewPortHeight - 503) div 2) + random(-R, R));
+end;
+
+Function TextMatches(a, b: String): Boolean;
+begin
+  Result := a = b;
+end;
+
+Function TextContains(substr, source: String): Boolean;
+begin
+  Result := pos(substr, source) > 0;
+end;
+
+Function isWidgetHidden(widget: RSWidget): Boolean;
+begin
+  Result := widget.IsHidden;
+end;
+
+Function isSuggestedNameHiddenn: Boolean;
+begin
+  Result := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_SUGGESTED.Group, R_TUTORIAL_CHOOSE_NAME_SUGGESTED.Child).IsHidden;
+end;
+
+function isNameAvailable: Boolean;
+begin
+  Result := TextContains("reat", RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_AVAILABLE.Group, R_TUTORIAL_CHOOSE_NAME_AVAILABLE.Child).Text);
+end;
+
+procedure condWait(Condition: Function:Boolean; timeout: integer; trueOrFalse: Boolean = true);
+var
+  timer: Timer;
+begin
+  timer.Start;
+  if trueOrFalse then
+  begin
+    while (not Condition) do
+    begin
+      if timer.ElapsedTime >= timeout + lag then
+        Break;
+      Wait(50 + Random(50));
+    end;
+  end else
+  begin
+    while (Condition) do
+    begin
+      if timer.ElapsedTime >= timeout + lag then
+        Break;
+      Wait(50 + Random(50));
+    end;
+  end;
+end;
+
+function returnTrue:Boolean;
+begin
+  Result := true;
+end;
+
 Function R_ChooseName(name: String = ""): Boolean;
 var
   widget: RSWidget;
@@ -694,72 +768,83 @@ var
   i, j, y: Integer;
   attributes: array of RWidget;
 Begin
-  //if not R_InTutorialIsland then Exit(False);
-  //if not R_ChooseDisplayNameScreen then Exit(False);
+  if not R_InTutorialIsland then Exit(False);
+  //if not R_ChooseDisplayNameScreen then Exit(False);  
 
-  {attributes := [R_TUTORIAL_CHOOSE_HAIR_LEFT, R_TUTORIAL_CHOOSE_HEAD_LEFT,
-                 R_TUTORIAL_CHOOSE_JAW_LEFT, R_TUTORIAL_CHOOSE_TORSO_LEFT,
-                 R_TUTORIAL_CHOOSE_ARMS_LEFT, R_TUTORIAL_CHOOSE_HANDS_LEFT,
-                 R_TUTORIAL_CHOOSE_LEGS_LEFT, R_TUTORIAL_CHOOSE_FEET_LEFT,
-                 R_TUTORIAL_CHOOSE_LEGS_COLOR_LEFT, R_TUTORIAL_CHOOSE_TORSO_COLOR_LEFT,
-                 R_TUTORIAL_CHOOSE_FEET_COLOR_LEFT, R_TUTORIAL_CHOOSE_SKIN_COLOR_LEFT];}
+  RInitializeTileSettings;
+  RInitializeTileHeights;
+  writeln('Reinitialized reflection');
 
-  widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_FIELD.Group, R_TUTORIAL_CHOOSE_NAME_FIELD.Child);
-  if widget.ref <> nil then
+  while R_ChooseDisplayNameScreen do
   begin
-    Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y + 19, MOUSE_LEFT);
-    sleep(50+random(60,100));
-    Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y, MOUSE_LEFT);
-    widget.Free;
-    sleep(500 + random(500,700));
-    if name <> "" then
+    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_FIELD.Group, R_TUTORIAL_CHOOSE_NAME_FIELD.Child);
+    if widget.ref <> nil then
     begin
-      SendKeys(Copy(name, 0, pos("@", name))+"rsacc", 0, 0);
-      wait(100 + random(100,200));
-      PressKey(13);
-      sleep(3500 + random(500,700));
-    end else
-    begin
-      SendKeys("a",0,0); 
-      PressKey(13);    
-      sleep(3500 + random(500,700));
-      Mouse.Click(300, 235, MOUSE_LEFT);
-      sleep(3500 + random(500,700));
+      ResMouseClick(widget.Bounds.Middle.x + 10, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+      widget.Free;
+      sleep(500 + random(500,700));
+      if name <> "" then
+      begin
+        SendKeys(Copy(name, 0, pos("@", name))+"rsacc", 0, 0);
+        wait(100 + random(100,200));
+        PressKey(13);
+
+        //sleep(3500 + random(500,700));
+      end else
+      begin
+        SendKeys("a",0,0);
+        PressKey(13);
+        widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_SUGGESTED.Group, R_TUTORIAL_CHOOSE_NAME_SUGGESTED.Child);
+        condWait(@isSuggestedNameHiddenn, 10000, false);
+        ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+      end;
+      condWait(@isNameAvailable, 10000, true);
+      widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_SET.Group, R_TUTORIAL_CHOOSE_NAME_SET.Child);
+      ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+      sleep(50+random(60,100));
+      condWait(@R_ChooseDisplayNameScreen, 10000, false);
+      widget.Free;
     end;
-    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_SET.Group, R_TUTORIAL_CHOOSE_NAME_SET.Child); 
-    Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y + 19, MOUSE_LEFT);
-    sleep(50+random(60,100));
-    Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y , MOUSE_LEFT);
-    sleep(3500 + random(500,700));     
-    widget.Free;
   end;
-  while R_ChooseDisplayNameScreen do sleep(100);
-  //sleep(2500 + random(500,700));
-  {for i := 0 to High(attributes) do
+
+  //PICK CHAR
+  while R_ChooseCharacterScreen do
   begin
-    widget := RSWidget.Get(attributes[i].Group, attributes[i].Child, attributes[i].index);
-    for j := 0 to random(4) do
+
+    attributes := [R_TUTORIAL_CHOOSE_HAIR, R_TUTORIAL_CHOOSE_HEAD,
+                 R_TUTORIAL_CHOOSE_JAW, R_TUTORIAL_CHOOSE_TORSO,
+                 R_TUTORIAL_CHOOSE_ARMS, R_TUTORIAL_CHOOSE_HANDS,
+                 R_TUTORIAL_CHOOSE_LEGS, R_TUTORIAL_CHOOSE_FEET,
+                 R_TUTORIAL_CHOOSE_LEGS_COLOR, R_TUTORIAL_CHOOSE_TORSO_COLOR,
+                 R_TUTORIAL_CHOOSE_FEET_COLOR, R_TUTORIAL_CHOOSE_SKIN_COLOR];
+    if random(0,1) = 1 then
+      widget := RSWidget.Get(R_TUTORIAL_CHOOSE_MALE.Group, R_TUTORIAL_CHOOSE_MALE.Child)
+    else
+      widget := RSWidget.Get(R_TUTORIAL_CHOOSE_FEMALE.Group, R_TUTORIAL_CHOOSE_FEMALE.Child);
+    ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+
+    //sleep(2500 + random(500,700));
+    for i := 0 to High(attributes) do
     begin
-      Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y + 19, MOUSE_LEFT);
-      sleep(100);
+      widget := RSWidget.Get(attributes[i].Group, attributes[i].Child);
+      for j := 0 to random(4) do
+      begin
+        ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+        //sleep(100);
+      end;
     end;
+
+
+    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_ACCEPT_RES.Group, R_TUTORIAL_CHOOSE_ACCEPT_RES.Child);
+    ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
     widget.free;
+    condWait(@R_ChooseCharacterScreen, 10000, false);
+    RSTypeArray(attributes).Free;
   end;
-  sleep(500 + random(500,700));
-  if random(0,1) = 1 then
-    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_MALE.Group, R_TUTORIAL_CHOOSE_MALE.Child, R_TUTORIAL_CHOOSE_MALE.index)
-  else
-    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_FEMALE.Group, R_TUTORIAL_CHOOSE_FEMALE.Child, R_TUTORIAL_CHOOSE_FEMALE.index);
-  Mouse.Click(widget.Bounds.Middle.x + 2, widget.Bounds.Middle.y + 19, MOUSE_LEFT);
-  widget.Free;   }
 
+  terminateScript;
 
-  //PICK CHAR 
-  if random(0,1) = 1 then
-    Mouse.Click(400 + random(5, 10), 280, MOUSE_LEFT)
-  else
-    Mouse.Click(500 + random(5, 10), 280, MOUSE_LEFT);
-  y:=  90;
+  {y:=  90;
   for i:= 0 to 3 do
   begin
     for j:= 0 to random(1,3) do
@@ -780,57 +865,56 @@ Begin
   y := y + 70;
   sleep(2 + random(100, 200));
   Mouse.Click(300 + random(5, 10), 270, MOUSE_LEFT);
-  sleep(2500 + random(500,700));
-
-  RInitializeTileSettings;
-  RInitializeTileHeights;
-  writeln('Reinitialized reflection');
+  sleep(2500 + random(500,700));         }
 
   //Talk to Guide  3308
 
-  clickNPCuntilTalk(3308);
-  talkToNPC("2");
-
-  writeln('c');
-  //Click llave inglesa
-  if RSClient.IsResizeable then
+  while (RT_InGielinorGuide) do
   begin
-    Mouse.Click(735, 490, MOUSE_LEFT);
-    sleep(1000 + random(100, 200));
-    Mouse.Click(690, 320, MOUSE_LEFT);
-    sleep(4000 + random(100, 200));
-  end else   
-  Mouse.Click(R_GameTabBounds(11), MOUSE_LEFT);  //open settings tab
+    clickNPCuntilTalk(3308);
+    talkToNPC("2");
 
-  //SET ROOFS AND BRIGHTNESS
-  //Mouse.Click(660, 400, MOUSE_LEFT);
-  //sleep(2000 + random(100, 200));   
-  //Mouse.Click(190, 155, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-  Mouse.Click(705, 305, MOUSE_LEFT); 
-  sleep(100 + random(100, 200));
-  //mute Music
-  Mouse.Click(620, 220, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-  Mouse.Click(603, 275, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-  Mouse.Click(603, 320, MOUSE_LEFT);
-  sleep(100 + random(100, 200));
-  Mouse.Click(603, 370, MOUSE_LEFT);
+    writeln('c');
+    //Click llave inglesa
+    if RSClient.IsResizeable then
+    begin
+      Mouse.Click(735, 490, MOUSE_LEFT);
+      sleep(1000 + random(100, 200));
+      Mouse.Click(690, 320, MOUSE_LEFT);
+      sleep(4000 + random(100, 200));
+    end else
+    Mouse.Click(R_GameTabBounds(11), MOUSE_LEFT);  //open settings tab
 
-  clickNPCuntilTalk(3308);
-  talkToNPC("2");
+    //SET ROOFS AND BRIGHTNESS
+    //Mouse.Click(660, 400, MOUSE_LEFT);
+    //sleep(2000 + random(100, 200));
+    //Mouse.Click(190, 155, MOUSE_LEFT);
+    sleep(100 + random(100, 200));
+    Mouse.Click(705, 305, MOUSE_LEFT);
+    sleep(100 + random(100, 200));
+    //mute Music
+    Mouse.Click(620, 220, MOUSE_LEFT);
+    sleep(100 + random(100, 200));
+    Mouse.Click(603, 275, MOUSE_LEFT);
+    sleep(100 + random(100, 200));
+    Mouse.Click(603, 320, MOUSE_LEFT);
+    sleep(100 + random(100, 200));
+    Mouse.Click(603, 370, MOUSE_LEFT);
 
-  //getOutOfGuide
-  while player.Tile.X < 3098 do
-  begin
-    genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3098, 3107);
-    player.WalkToTileMM(genericObject.Tile, 0, 0);
-    sleep(3000 + random(100, 200));
-    Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
-    genericObject.Free;
-    sleep(3000 + random(100, 200));
-    while player.IsAnimating do sleep(100);
+    clickNPCuntilTalk(3308);
+    talkToNPC("2");
+
+    //getOutOfGuide
+    while player.Tile.X < 3098 do
+    begin
+      genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3098, 3107);
+      player.WalkToTileMM(genericObject.Tile, 0, 0);
+      sleep(3000 + random(100, 200));
+      Mouse.Click(genericObject.MidPoint, 5, MOUSE_LEFT);
+      genericObject.Free;
+      sleep(3000 + random(100, 200));
+      while player.IsAnimating do sleep(100);
+    end;
   end;
   player.WalkTo("tToFish");
   sleep(2500+random(200,300));
@@ -2439,7 +2523,13 @@ end;
 Function LoginPlayer:Boolean;
 begin
   writeln("["+P_USERNAME+"]Logging in: " + P_USERNAME);
-  if (RSCLient.LoginState = 2) and (RSClient.GameState > 10) then Exit(True);
+  if (RSCLient.LoginState = 2) and (RSClient.GameState > 10) then
+  begin
+    KeyDown(VK_UP);
+    sleep(3000);
+    KeyUp(VK_UP);
+    Exit(True);
+  end;
   if RSClient.LoginState = 24 then
   begin
     Mouse.Click(400, 310, MOUSE_LEFT);
@@ -2635,9 +2725,9 @@ end;
 
 procedure testProcedure;
 begin
-  loginPlayer;
-  sleep(3000);
-  R_ChooseName();
+  //loginPlayer;
+  writeln(R_ChooseCharacterScreen);
+  writeln(R_ChooseDisplayNameScreen);
   terminatescript;
 end;
 

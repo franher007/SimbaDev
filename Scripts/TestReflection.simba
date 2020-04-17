@@ -320,11 +320,59 @@ begin
   RSTypeArray(Tiles).Free;
 end;
 
+procedure ResMouseClick(X, Y, R: Integer; Button: Integer);
+begin
+    Mouse.Click(x + ((RSClient.ViewPortWidth - 765) div 2) + random(-R, R), y + ((RSClient.ViewPortHeight - 503) div 2) + random(-R, R), Button);
+end;
+procedure ResMouseMove(X, Y: Integer; R: Integer = 0);
+begin
+    Mouse.Move(x + ((RSClient.ViewPortWidth - 765) div 2) + 5 + random(-R, R), y + ((RSClient.ViewPortHeight - 503) div 2) + random(-R, R));
+end;
+
+procedure condWait(Condition: Function:Boolean; timeout: integer; trueOrFalse: Boolean = true);
+var
+  timer: Timer;
+begin
+  timer.Start;
+  if trueOrFalse then
+  begin
+    while (not Condition) do
+    begin
+      if timer.ElapsedTime >= timeout then
+        Break;
+      Wait(50 + Random(50));
+    end;
+  end else
+  begin
+    while (Condition) do
+    begin
+      if timer.ElapsedTime >= timeout then
+        Break;
+      Wait(50 + Random(50));
+    end;
+  end;
+end;
+ 
+type
+  TFunctionParameter = function(value : Integer): Boolean;
+
+
+function returnTrue(a:Integer):Boolean;
+begin
+  Result := true;
+end;
+
+function returnFalse:Boolean;
+begin
+  Result := false;
+end;
 
 var
   mibool: Boolean;
   iskey: Boolean;
   obj: RSOBject;
+  widget: RSWidget;
+  dif, clickX, clickY: integer;
 begin
   //writeln(booltostr(R_ChatSkillOption(3)));
   //getObject(RSPlayer.Me.Tile.x+1, RSPlayer.Me.Tile.y);
@@ -335,7 +383,33 @@ begin
   //sleep(100);
   //getInv;
   GETME;
-  writeln(RSCLient.LoginState);
+  writeln(R_GetAllInventoryItems);
+  TerminateScript;
+  RInitializeTileSettings;
+  RInitializeTileHeights;
+  writeln('Reinitialized reflection');
+  while true do
+  begin
+    widget := RSWidget.Get(R_TUTORIAL_PROGRESS.Group, R_TUTORIAL_PROGRESS.Child);
+    writeln(RSWidget.Get(R_TUTORIAL_PROGRESS.Group, R_TUTORIAL_PROGRESS.Child).Width);
+    terminatescript;
+    if widget.ref <> nil then
+    begin
+      Mouse.Move(widget.Bounds.Middle.X, widget.Bounds.Middle.Y);
+      writeln(widget.IsHidden);
+      //simpleCondWait(@returnTrue(1));
+    end else
+    begin
+      writeln('not found bro');
+    end;
+    sleep(2000);
+  end;
+  widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_FIELD.Group, R_TUTORIAL_CHOOSE_NAME_FIELD.Child);
+  dif := RSClient.ViewportScale - RSClient.ViewPortHeight;
+  if widget.ref <> nil then
+  begin
+    Mouse.Move(((RSClient.ViewPortWidth * widget.Bounds.Middle.x) div 765), ((RSClient.ViewPortHeight * widget.Bounds.Middle.y) div 503) );
+  end;
   TErminateScript;
   while true do
   begin
@@ -356,7 +430,7 @@ begin
   writeln(booltostr(RSPlayer.me.isAnimating));
   //writeln(R_GetAllInventoryITems[1]);
   writeln(RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3142, 3457).Definition.Name);
-  writeln(RSWidget.Get(R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Group, R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Child, R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Index).ref);
+  //writeln(RSWidget.Get(R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Group, R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Child, R_TUTORIAL_CHOOSE_ACCEPT_FIXED.Index).ref);
  // writeln(RSClient.IsResizeable);
 
  // Mouse.Click(300, 235, MOUSE_RIGHT);
