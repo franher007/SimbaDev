@@ -465,6 +465,19 @@ begin
 
    tToMagic       := [Point(3130, 3092), Point(3141, 3087)];
 
+   grainEnterSpot  := [Point(3142, 3454)];
+
+   grainExitSpot  := [Point(3142, 3460)];
+
+   bankToGrains     := [Point(3181, 3451),
+                        Point(3175, 3453), Point(3169, 3456),
+                        Point(3163, 3456), Point(3156, 3456),
+                        Point(3149, 3456), Point(3142, 3457)];
+
+   grainsToCook     := [Point(3142, 3457),
+                        Point(3137, 3452), Point(3137, 3446),
+                        Point(3143, 3442)];
+
    case destination of
     "bankToCook": begin choosenTile := bankToCookTiles end;
     "geToBank": begin choosenTile := geToBankTiles end;
@@ -491,7 +504,11 @@ begin
     "tToRats": begin choosenTile := tToRats end;
     "tToBank": begin choosenTile := tToBank end;
     "tToPrayer": begin choosenTile := tToPrayer end;
-    "tToMagic": begin choosenTile := tToMagic end;
+    "tToMagic": begin choosenTile := tToMagic end; 
+    "bankToGrains": begin choosenTile := bankToGrains end;
+    "grainsToCook": begin choosenTile := grainsToCook end;
+    "grainExitSpot": begin choosenTile := grainExitSpot end;
+    "grainEnterSpot": begin choosenTile := grainEnterSpot end;
    end;
 
   self.WalkPathMM(choosenTile, 0, 1, False);
