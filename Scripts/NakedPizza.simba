@@ -2582,7 +2582,7 @@ var
   i: Integer;
   validActions: TStringArray;
 begin
-  validActions := ["hybrid", "doWild", "doTest", "walkToGe", "walkToBank", "walkToWild"];
+  validActions := ["hybrid", "doWild", "doTest", "walkToGe", "walkToBank", "walkToWild", "pause"];
   for i := 0 to high(validActions) do
     if validActions[i] = action then Exit(true);
 end;
