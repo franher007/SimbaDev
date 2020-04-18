@@ -2617,34 +2617,34 @@ begin
   srl.Setup([]);
   Mouse.Setup();
   Sleep(50);
-  ClearDebug;
+  ClearDebug; 
+  TryAgain:
+  webPlayer := getWebPlayer;
+
+  if (P_USERNAME <> "") and (P_PASSWORD <> "") then
+  begin
+    currentUser := P_USERNAME;
+    currentPassword := P_PASSWORD;
+  end else
+  if (webPlayer.email <> "") and (webPlayer.password <> "") and (not webPlayer.online) then
+  begin
+    currentUser := webPlayer.email;
+    currentPassword := webPlayer.password;
+  end else
+  begin
+    Writeln("No USER set and can't get one from the site, sleeping 5 min and retrying");
+    sleep(5 * 60 * 1000);
+    goto TryAgain;
+  end;
+
   while True do
   begin
     Try
-      TryAgain:
       webAction := GetPage(actionWeb + "/" + scriptID + ".txt");
       if isWebActionValid(webAction) then
         action := webAction
       else
         action := userAction;
-
-      webPlayer := getWebPlayer;
-
-      if (P_USERNAME <> "") and (P_PASSWORD <> "") then
-      begin        
-        currentUser := P_USERNAME;
-        currentPassword := P_PASSWORD;
-      end else
-      if (webPlayer.email <> "") and (webPlayer.password <> "") and (not webPlayer.online) then
-      begin
-        currentUser := webPlayer.email;
-        currentPassword := webPlayer.password;
-      end else
-      begin
-        Writeln("No USER set and can't get one from the site, sleeping 5 min and retrying");
-        sleep(5 * 60 * 1000);
-        goto TryAgain;
-      end;
 
       player.Free;
       progressReport;
