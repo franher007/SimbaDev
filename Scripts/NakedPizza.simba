@@ -4,7 +4,7 @@
 const
   userAction  = "hybrid"; //hybrid, doWild, keepAlive
   actionWeb   = "http://franher.com/nakedpizza";
-  scriptID    = "1";
+  scriptID    = "";
   useGE       = False;    //Buy/Sell in Grand Exchange?
   lag         = 0;     //use 0 for faster speeds
 
@@ -2591,6 +2591,7 @@ Function getWebPlayer: TWebPlayer;
 var
   response: String;
 begin
+  if scriptID = "" then Exit;
   response := GetPage(actionWeb + "/enviar.php?getuserfromscript=" + scriptID);
   if response <> "" then
   begin
@@ -2659,17 +2660,57 @@ begin
         "doWild":   begin wildProcedure; end;
         "hybrid":   begin hybridProcedure end;
         "walkToGe":   begin
+                        if player.InLumby then
+                        begin
+                          writelnEx("InLumby");
+                          player.walkTo("lumbyToVarrock");
+                        end;
+
+                        if player.InGuild then
+                        begin
+                          writelnEx("InGuild");
+                          climbToFloor(0);
+                          cookGuildDoor(False);
+                        end;
                         player.WalkTo("cookToBank");
                         player.WalkTo("bankToGe");
                       end;
         "walkToBank":   begin
+                        if player.InLumby then
+                        begin
+                          writelnEx("InLumby");
+                          player.walkTo("lumbyToVarrock");
+                        end;
+
+                        if player.InGuild then
+                        begin
+                          writelnEx("InGuild");
+                          climbToFloor(0);
+                          cookGuildDoor(False);
+                        end;
                         player.WalkTo("cookToBank");
                         player.WalkTo("GeToBank");
                       end;
         "walkToWild":  begin
+                        if player.InLumby then
+                        begin
+                          writelnEx("InLumby");
+                          player.walkTo("lumbyToVarrock");
+                        end;
+
+                        if player.InGuild then
+                        begin
+                          writelnEx("InGuild");
+                          climbToFloor(0);
+                          cookGuildDoor(False);
+                        end;
                         player.WalkTo("cookToBank");
                         player.WalkTo("geToBank");
                         player.WalkTo("bankToWild");
+                      end;
+        "pause":      begin
+                        writeLn("PAUSE");
+                        sleep(10* 1000);
                       end;
         else
         begin
