@@ -2,12 +2,14 @@
 
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
-  action = "hybrid"; //hybrid, doWild, keepAlive
-  useGE   = False;    //Buy/Sell in Grand Exchange?
-  lag     = 0;     //use 0 for faster speeds
+  userAction  = "hybrid"; //hybrid, doWild, keepAlive
+  actionWeb   = "http://franher.com/nakedpizza";
+  scriptID    = "1";
+  useGE       = False;    //Buy/Sell in Grand Exchange?
+  lag         = 0;     //use 0 for faster speeds
 
   P_USERNAME = "10@juav.com";
-  P_PASSWORD = "";
+  P_PASSWORD = "Rsacc123";
 
   flourPotID =  1933;
   coinsID = 995;
@@ -29,6 +31,12 @@ const
   notedPizzaBaseID = 2284;
   notedGrainID = 1948;
 
+type
+  TWebPlayer = record
+  email, password, user, action, scriptId: String;
+  active, online: Boolean;
+  end;
+
 
 var
   pizzasDone, runs, floursDone, fishesDone      : Integer;
@@ -39,6 +47,11 @@ var
   startPos                          : TPoint;
   pickWheat                         : Boolean;
   sellPizzas                        : Boolean;
+  webAction                         : String;
+  action                            : String;
+  currentUser                       : String;
+  currentPassword                   : String;
+  webPlayer                         : TWebPlayer;
 
 Procedure writelnex(text: String);
 begin
@@ -332,7 +345,7 @@ var
   tToMagic, choosenTile: Array of RSTile;
   tries: Integer;
 begin
-  geToBankTiles   := [Point(3165, 3486), Point(3166, 3471),
+  geToBankTiles   := [Point(3165, 3483), Point(3165, 3486), Point(3166, 3471),
                       Point(3170, 3457), Point(3182, 3449),
                       Point(3183, 3445)];
 
@@ -516,13 +529,13 @@ begin
   sleep(random(1200, 1600));
   if not precise then Exit(True);
   tries := 0;
-  while (self.Tile <> choosenTile[high(choosenTile)]) and (tries < 15) do
+  while (self.Tile <> choosenTile[high(choosenTile)]) and (tries < 5) do
   begin
     writelnex('Final ' + destination + ' walk step');
     self.WalkToTileMS(choosenTile[high(choosenTile)]);
     Sleep(RandomRange(2000, 2500));
     inc(tries);
-  end
+  end;
   Result:=True;
   RSTypeArray(eastToBank).Free;
   RSTypeArray(houseToEast).Free;
@@ -544,12 +557,30 @@ begin
   RSTypeArray(bankToGrains).Free;
   RSTypeArray(grainsToCook).Free;
 end;
+
+procedure SetPlayerOnline(name: String);
+begin
+  GetPage(actionWeb + "/enviar.php?setonlinebyname=" + name);
+end;
+
+procedure SetPlayerUsername(name, email: String);
+begin
+  GetPage(actionWeb + "/enviar.php?setusername=" + name + "&email=" + email);
+end;
+
+
+
 Function LoginPlayer:Boolean;
 var
   i: Integer;
+  timer: Timer;
 begin
-  writeln("["+P_USERNAME+"]Logging in: " + P_USERNAME);
-  if (RSCLient.LoginState = 2) and (RSClient.GameState > 10) then Exit(True);
+  writeln("["+CurrentUser+"]Logging in: " + CurrentUser);
+  if (RSCLient.LoginState = 2) and (RSClient.GameState > 10) then
+  begin
+    SetPlayerOnline(RSPlayer.me.Name);
+    Exit(True);
+  end;
   if RSClient.LoginState = 24 then
   begin
     Mouse.Click(400, 310, MOUSE_LEFT);
@@ -570,16 +601,23 @@ begin
     wait(500 + random(100,200));
     //for i:= 0 to 29 do
     //  PressKey(VK_BACK);
-    SendKeys(P_USERNAME, 0, 0);
+    SendKeys(CurrentUser, 0, 0);
     wait(100 + random(100,200));
     PressKey(13);
     //for i:= 0 to 29 do
     //  PressKey(VK_BACK);
-    SendKeys(P_PASSWORD, 0, 0);
+    SendKeys(CurrentPassword, 0, 0);
     wait(100 + random(100,200));
     PressKey(13);
     wait(500 + random(100,200));
-    while RSClient.GameState < 30 do wait(300);
+    timer.Start;
+    while RSClient.GameState < 30 do
+    begin
+      if timer.ElapsedTime >= 20000 + lag then
+        Exit(false);
+      wait(300);
+    end;
+    timer.Reset;
     wait(1500 + random(200,500));
     Mouse.Click(400, 340, MOUSE_LEFT);
     wait(1500 + random(200,500));
@@ -589,6 +627,9 @@ begin
     RInitializeTileSettings;
     RInitializeTileHeights;
     writeln('Reinitialized reflection');
+    SetPlayerUsername(RSPlayer.me.Name, currentUser);
+    sleep(500);
+    SetPlayerOnline(RSPlayer.me.Name);
     Exit(True);
   end;
 end;
@@ -616,7 +657,7 @@ end;
 
 Function RSPlayer.inGE: boolean;
 begin
-  Result := self.Tile.InBox(Box(3155, 3470, 3176, 3488));
+  Result := self.Tile.InBox(Box(3155, 3470, 3176, 3494));
 end;
 
 Function RSPlayer.inGrains: boolean;
@@ -861,6 +902,11 @@ end;
 Function TextContains(substr, source: String): Boolean;
 begin
   Result := pos(substr, source) > 0;
+end;
+
+function substring(const d, start, finish: String):String;
+begin
+  Result := Copy(d, pos(start, d) + length(start), pos(finish, d) - pos(start, d) - length(finish));
 end;
 
 Function isWidgetHidden(widget: RSWidget): Boolean;
@@ -2076,7 +2122,7 @@ begin
   //TODO check if not at cook then die
   while (R_CountInventoryItem(pizzaBaseID) < 26) do
   begin
-
+    if not LoginPlayer then Exit;
     if (R_CountInventoryItem(grainID) < 1) then
     begin
       writelnex('Not going up because we aint got grains left');
@@ -2167,7 +2213,7 @@ begin
         if (currentGrains = R_CountInventoryItem(grainID)) then
         begin
           WriteLnEx(inttostr(breakHopperCounter) + "/ At top floor - Hopper seems full");
-          if (lag > 0) and (breakHopperCounter > 2) then Break;
+          if (breakHopperCounter > 7) then Break;
           inc(breakHopperCounter);
         end;
         currentGrains := R_CountInventoryItem(grainID);
@@ -2524,13 +2570,41 @@ end;
 
 procedure testProcedure;
 var
-  obj: RSObject;
+  obj: RSObject;  
+  bmp: TMufasaBitmap;
+  w, h: Int32;
 begin
-  loginPlayer;
-  writeln(R_InTutorialIsland);
-  R_TutorialIsland("");
-  terminatescript;
+  writeln("testing");
 end;
+
+Function isWebActionValid(action: String): Boolean;
+var
+  i: Integer;
+  validActions: TStringArray;
+begin
+  validActions := ["hybrid", "doWild", "doTest", "walkToGe", "walkToBank", "walkToWild"];
+  for i := 0 to high(validActions) do
+    if validActions[i] = action then Exit(true);
+end;
+
+Function getWebPlayer: TWebPlayer;
+var
+  response: String;
+begin
+  response := GetPage(actionWeb + "/enviar.php?getuserfromscript=" + scriptID);
+  if response <> "" then
+  begin
+    Result.email := substring(response, "email:'.", ".':email");
+    Result.password := substring(response, "password:'.", ".':password");
+    Result.user := substring(response, "username:'.", ".':username");
+    Result.action := substring(response, "action:'.", ".':action");
+    Result.scriptId := substring(response, "scriptid:'.", ".':scriptid");
+    Result.active := StrToBool(substring(response, "active:'.", ".':active"));
+    Result.online := StrToBool(substring(response, "online:'.", ".':online"));
+  end;
+end;
+
+label TryAgain;
 
 begin
   timerTrack.Start;
@@ -2547,10 +2621,30 @@ begin
   while True do
   begin
     Try
+      TryAgain:
+      webAction := GetPage(actionWeb + "/" + scriptID + ".txt");
+      if isWebActionValid(webAction) then
+        action := webAction
+      else
+        action := userAction;
+
+      webPlayer := getWebPlayer;
+
+      if (webPlayer.email <> "") and (webPlayer.password <> "") and (not webPlayer.online) then
+      begin
+        currentUser := webPlayer.email;
+        currentPassword := webPlayer.password;
+      end else
+      begin     
+        currentUser := P_USERNAME;
+        currentPassword := P_PASSWORD;
+
+      end;
+
       player.Free;
       progressReport;
       inc(runs);
-      if not loginPlayer then TerminateScript;
+      if not loginPlayer then goto TryAgain;
       player := RSPlayer.Me;
       startPos := player.Tile;
       player.ToggleRun(True);
@@ -2559,6 +2653,24 @@ begin
         "doTest":   begin testProcedure; end;
         "doWild":   begin wildProcedure; end;
         "hybrid":   begin hybridProcedure end;
+        "walkToGe":   begin
+                        player.WalkTo("cookToBank");
+                        player.WalkTo("bankToGe");
+                      end;
+        "walkToBank":   begin
+                        player.WalkTo("cookToBank");
+                        player.WalkTo("GeToBank");
+                      end;
+        "walkToWild":  begin
+                        player.WalkTo("cookToBank");
+                        player.WalkTo("geToBank");
+                        player.WalkTo("bankToWild");
+                      end;
+        else
+        begin
+          WriteLn("NO VALID ACTION FOUND");
+          TerminateScript;
+        end;
       end;
     RInitializeTileSettings;
     RInitializeTileHeights;

@@ -373,9 +373,10 @@ var
   obj: RSOBject;
   widget: RSWidget;
   dif, clickX, clickY: integer;
+  bmp: TMufasaBitmap;
+  w, h: Int32;
 begin
-  //writeln(booltostr(R_ChatSkillOption(3)));
-  //getObject(RSPlayer.Me.Tile.x+1, RSPlayer.Me.Tile.y);
+
 
   //getObject(3242, 3412);
   //writeln(RSPlayer.Me.Tile);
