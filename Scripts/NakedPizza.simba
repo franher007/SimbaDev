@@ -8,8 +8,8 @@ const
   useGE       = False;    //Buy/Sell in Grand Exchange?
   lag         = 0;     //use 0 for faster speeds
 
-  P_USERNAME = "10@juav.com";
-  P_PASSWORD = "Rsacc123";
+  P_USERNAME = "";
+  P_PASSWORD = "";
 
   flourPotID =  1933;
   coinsID = 995;
@@ -2630,15 +2630,20 @@ begin
 
       webPlayer := getWebPlayer;
 
+      if (P_USERNAME <> "") and (P_PASSWORD <> "") then
+      begin        
+        currentUser := P_USERNAME;
+        currentPassword := P_PASSWORD;
+      end else
       if (webPlayer.email <> "") and (webPlayer.password <> "") and (not webPlayer.online) then
       begin
         currentUser := webPlayer.email;
         currentPassword := webPlayer.password;
       end else
-      begin     
-        currentUser := P_USERNAME;
-        currentPassword := P_PASSWORD;
-
+      begin
+        Writeln("No USER set and can't get one from the site, sleeping 5 min and retrying");
+        sleep(5 * 60 * 1000);
+        goto TryAgain;
       end;
 
       player.Free;
