@@ -983,7 +983,7 @@ begin
   end
   while not R_GrandExchangeScreen do
   begin
-    Mouse.Click(exchangeBooth.MidPoint, MOUSE_LEFT);
+    Mouse.Click(exchangeBooth.MidPoint, 5, MOUSE_LEFT);
     sleep(random(2000,2500));
   end
   //cancel current offer and collect
@@ -1014,7 +1014,7 @@ begin
   end
   while not R_GrandExchangeScreen do
   begin
-    Mouse.Click(exchangeBooth.MidPoint, MOUSE_LEFT);
+    Mouse.Click(exchangeBooth.MidPoint, 5, MOUSE_LEFT);
     sleep(random(2000,2500));
   end
   //cancel current offer and collect 
@@ -1665,20 +1665,20 @@ begin
   end;
   while not R_BankScreen do
   begin
-    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
+    Mouse.Click(bankBooth.MidPoint, 5, MOUSE_LEFT);
     sleep(random(2000,2500));
   end;
 
   R_DepositAll_Items;
-  sleep(random(50,150));
+  sleep(random(850,1050));
   if buyGrains then R_WithdrawItem(coinsID);
-  sleep(random(50,150));
+  sleep(random(1500,1850));
   if sellPizzas then
   begin
     R_SetBankWithdrawMode(True);
     sleep(random(50,150));
     R_WithdrawItem(pizzaBaseID);
-    sleep(random(50,150));
+    sleep(random(550,750));
     R_SetBankWithdrawMode(False);
   end;
   R_BankScreen_Close;
@@ -1697,14 +1697,14 @@ begin
   end;
   while not R_BankScreen do
   begin
-    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
+    Mouse.Click(bankBooth.MidPoint, 5, MOUSE_LEFT);
     sleep(random(2000,2500));
   end;
 
   R_DepositAll_Items;
   sleep(random(50,150));
   R_DepositAll_Equipment;
-  sleep(random(550,850));
+  sleep(random(1550,1850));
   R_WithdrawItem(coinsID);  
   sleep(random(550,850));
   R_BankScreen_Close;
@@ -2548,9 +2548,9 @@ end;
 procedure grandExchange(buyGrains, sellPizzas: boolean);
 begin
   if not player.inGE then Exit;
-  withdrawGrandExchangeItems(buyGrains, sellPizzas);
-  if buyGrains then buyCancelAndCollect("Grain", 2000, currentGrainPrice);
+  withdrawGrandExchangeItems(buyGrains, sellPizzas);              
   if sellPizzas then sellCancelAndCollect("Pizza base", notedPizzaBaseID, currentPizzaPrice);
+  if buyGrains then buyCancelAndCollect("Grain", 2000, currentGrainPrice);
 end;
 
 procedure flourToPizzaProcedure;
