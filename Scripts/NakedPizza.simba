@@ -1,8 +1,9 @@
-{$i reflection/reflection.simba}
+{$i reflection/reflection.simba}                      
+{$include_once reflection/GrandExchange.simba}
 
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
-  userAction  = "hybrid"; //hybrid, doWild, keepAlive
+  userAction  = "doTest"; //hybrid, doWild, keepAlive
   actionWeb   = "http://franher.com/nakedpizza";
   scriptID    = "";
   useGE       = False;    //Buy/Sell in Grand Exchange?
@@ -10,6 +11,9 @@ const
 
   P_USERNAME = "";
   P_PASSWORD = "";
+
+  PIZZA_PRICE  = 350;
+  GRAIN_PRICE  = 35;
 
   flourPotID =  1933;
   coinsID = 995;
@@ -37,21 +41,32 @@ type
   active, online: Boolean;
   end;
 
+type
+  TWebScript = record
+  action: String;
+  ID, pizzaPrice, grainPrice: Integer;
+  end;
+
 
 var
   pizzasDone, runs, floursDone, fishesDone      : Integer;
   timerTrack                        : Timer;
+  timeSinceLastGeVisit              : Timer;
   startTime                         : TDateTime;
   isMillEmpty                       : Boolean;
   player                            : RSPlayer;
   startPos                          : TPoint;
   pickWheat                         : Boolean;
   sellPizzas                        : Boolean;
-  webAction                         : String;
   action                            : String;
   currentUser                       : String;
   currentPassword                   : String;
+  currentGrainPrice                 : Integer;
+  currentPizzaPrice                 : Integer;
   webPlayer                         : TWebPlayer;
+  webScript                         : TWebScript;
+  grainsInBank                      : Integer;
+  shouldRunOneOff                   : Boolean;
 
 Procedure writelnex(text: String);
 begin
@@ -953,6 +968,69 @@ begin
   Result := true;
 end;
 
+procedure sellCancelAndCollect(itemName: String;itemID, price:Integer);
+var
+  exchangeBooth: RSObject;
+
+begin
+  writelnex('Selling ' + itemName + ' for ' + inttostr(price));
+  exchangeBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3164, 3487);
+  if (exchangeBooth.ref = nil) then
+  begin
+    writelnex("Exchange not found");
+    Exit;
+  end
+  while not R_GrandExchangeScreen do
+  begin
+    Mouse.Click(exchangeBooth.MidPoint, MOUSE_LEFT);
+    sleep(random(2000,2500));
+  end
+  //cancel current offer and collect
+  if R_GrandExchange_EmptyItem(itemName) then sleep(random(1200,1400));;
+  if R_GrandExchangeCollectAll then sleep(random(1200,1400));
+
+  //SELL STUFF
+  R_GrandExchange_Sell(itemID, TRSOfferQuantity.ALL, 1, TRSOfferPrice.X, price);
+  sleep(random(1200,1400));
+  if R_GrandExchangeCollectAll then sleep(random(700,1000));
+
+  R_GrandExchangeScreen_Close;
+  sleep(random(300,500));
+  //TerminateScript;
+end
+
+procedure buyCancelAndCollect(itemName: String;quantity, price:Integer);
+var
+  exchangeBooth: RSObject;
+
+begin
+  writelnex('Buying ' + itemName + ' for ' + inttostr(price));
+  exchangeBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3164, 3487);
+  if (exchangeBooth.ref = nil) then
+  begin
+    writelnex("Exchange not found");
+    Exit;
+  end
+  while not R_GrandExchangeScreen do
+  begin
+    Mouse.Click(exchangeBooth.MidPoint, MOUSE_LEFT);
+    sleep(random(2000,2500));
+  end
+  //cancel current offer and collect 
+  if R_GrandExchangeCollectAll then sleep(random(1200,1400));
+  if R_GrandExchange_EmptyItem(itemName) then sleep(random(1200,1400));
+  if R_GrandExchangeCollectAll then sleep(random(1200,1400));
+
+  //BUY STUFF
+  R_GrandExchange_Buy(itemName, TRSOfferQuantity.X, quantity, TRSOfferPrice.X, price);
+  sleep(random(1200,1400));
+  if R_GrandExchangeCollectAll then sleep(random(700,1000));
+
+  R_GrandExchangeScreen_Close;
+  sleep(random(300,500));
+  //TerminateScript;
+end
+
 Function R_TutorialIsland(name: String = ""): Boolean;
 var
   widget: RSWidget;
@@ -1572,12 +1650,45 @@ procedure buyFlourToPizzaItems;
 begin
 end;
 
+procedure withdrawGrandExchangeItems(buyGrains, sellPizzas: boolean);
+var
+  bankBooth: RSObject;
+  currentGrains, currentPizzas: Integer;
+begin
+  writelnex("Opening bank");
+  bankBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3162, 3489);
+  if (bankBooth.ref = nil) then
+  begin
+    writelnex("Bank not found");
+    Exit;
+  end;
+  while not R_BankScreen do
+  begin
+    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
+    sleep(random(2000,2500));
+  end;
+
+  R_DepositAll_Items;
+  sleep(random(50,150));
+  if buyGrains then R_WithdrawItem(coinsID);
+  sleep(random(50,150));
+  if sellPizzas then
+  begin
+    R_SetBankWithdrawMode(True);
+    sleep(random(50,150));
+    R_WithdrawItem(pizzaBaseID);
+    sleep(random(50,150));
+    R_SetBankWithdrawMode(False);
+  end;
+  R_BankScreen_Close;
+end;
+
 procedure withdrawWildItems;
 var
   bankBooth: RSObject;
 begin
   writelnex("Opening bank");
-  bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3186, 3444);
+  bankBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3162, 3489);
   if (bankBooth.ref = nil) then
   begin
     writelnex("Bank not found");
@@ -1593,13 +1704,8 @@ begin
   sleep(random(50,150));
   R_DepositAll_Equipment;
   sleep(random(550,850));
-  R_WithdrawItem(coinsID);
-  sleep(random(50,150));
-  R_SetBankWithdrawMode(True);
-  sleep(random(50,150));
-  R_WithdrawItem(pizzaBaseID);
-  sleep(random(50,150));
-  R_SetBankWithdrawMode(False); 
+  R_WithdrawItem(coinsID);  
+  sleep(random(550,850));
   R_BankScreen_Close;
 end;
 
@@ -1638,6 +1744,7 @@ begin
 
   writelnex("Opening bank");
   bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3186, 3444);
+  if (bankBooth.ref = nil) then bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3162, 3489);
   if (bankBooth.ref = nil) then
   begin
     writelnex("Bank not found");
@@ -1661,6 +1768,8 @@ begin
     pickWheat := True
   else
     pickWheat := False;
+
+  grainsInBank := grain.Amount;
 
   if ((emptyPot.id = -1)) or ((emptyBucket.id = -1)) then
   begin
@@ -2435,6 +2544,14 @@ begin
   grainsGate(false);
 end;
 
+procedure grandExchange(buyGrains, sellPizzas: boolean);
+begin
+  if not player.inGE then Exit;
+  withdrawGrandExchangeItems(buyGrains, sellPizzas);
+  if buyGrains then buyCancelAndCollect("Grain", 2000, currentGrainPrice);
+  if sellPizzas then sellCancelAndCollect("Pizza base", notedPizzaBaseID, currentPizzaPrice);
+end;
+
 procedure flourToPizzaProcedure;
 begin
   if player.inGrains then
@@ -2470,6 +2587,17 @@ begin
       sleep(random(700, 1000));
       withdrawFlourToPizzaItems;
       ProgressReport;
+      if (grainsInBank < 2000) and (timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) then
+      begin
+        writeln("DOING GE");
+        timeSinceLastGeVisit.Reset;
+        player.WalkTo("bankToGe"); 
+        sleep(random(700, 1000));
+        grandExchange(true, true);
+        sleep(random(700, 1000));
+        player.WalkTo("geToBank");
+        Exit;
+      end;
       sleep(random(700, 1000));
       if pickWheat then
       begin      
@@ -2575,6 +2703,8 @@ var
   w, h: Int32;
 begin
   writeln("testing");
+  grandExchange(true, true);
+  terminatescript;
 end;
 
 Function isWebActionValid(action: String): Boolean;
@@ -2582,7 +2712,7 @@ var
   i: Integer;
   validActions: TStringArray;
 begin
-  validActions := ["hybrid", "doWild", "doTest", "walkToGe", "walkToBank", "walkToWild", "pause"];
+  validActions := ["hybrid", "doWild", "doTest", "walkToGe", "walkToBank", "walkToWild", "pause", "buyGrains", "sellPizzas", "withdrawWildItems"];
   for i := 0 to high(validActions) do
     if validActions[i] = action then Exit(true);
 end;
@@ -2605,10 +2735,26 @@ begin
   end;
 end;
 
+Function getWebScript: TWebScript;
+var
+  response: String;
+begin
+  if scriptID = "" then Exit;
+  response := GetPage(actionWeb + "/" + scriptID + ".txt");
+  if response <> "" then
+  begin
+    Result.ID := strtoint(scriptID);
+    Result.action := substring(response, "action:'.", ".':action");
+    Result.grainPrice := strtoint(substring(response, "grainprice:'.", ".':grainprice"));
+    Result.pizzaPrice := strtoint(substring(response, "pizzaprice:'.", ".':pizzaprice"));
+  end;
+end;
+
 label TryAgain;
 
 begin
   timerTrack.Start;
+  timeSinceLastGeVisit.Start;
   startTime  := Now;
   pizzasDone := 0;
   floursDone := 0;
@@ -2618,7 +2764,8 @@ begin
   srl.Setup([]);
   Mouse.Setup();
   Sleep(50);
-  ClearDebug; 
+  ClearDebug;
+  shouldRunOneOff := true;
   TryAgain:
   webPlayer := getWebPlayer;
 
@@ -2628,9 +2775,9 @@ begin
     currentPassword := P_PASSWORD;
   end else
   if (webPlayer.email <> "") and (webPlayer.password <> "") and (not webPlayer.online) then
-  begin
-    currentUser := webPlayer.email;
-    currentPassword := webPlayer.password;
+    begin
+      currentUser := webPlayer.email;
+      currentPassword := webPlayer.password;
   end else
   begin
     Writeln("No USER set and can't get one from the site, sleeping 5 min and retrying");
@@ -2641,11 +2788,20 @@ begin
   while True do
   begin
     Try
-      webAction := GetPage(actionWeb + "/" + scriptID + ".txt");
-      if isWebActionValid(webAction) then
-        action := webAction
-      else
-        action := userAction;
+      if scriptID <> "" then webScript := getWebScript;
+      writeln(webScript);
+      if isWebActionValid(webScript.action) then
+      begin
+        if action <> webScript.action then shouldRunOneOff := True;
+        action := webScript.Action;
+        currentGrainPrice := webScript.grainPrice;
+        currentPizzaPrice := webScript.pizzaPrice;
+      end else
+      begin
+        action := userAction; 
+        currentGrainPrice := GRAIN_PRICE;
+        currentPizzaPrice := PIZZA_PRICE;
+      end;
 
       player.Free;
       progressReport;
@@ -2660,53 +2816,110 @@ begin
         "doWild":   begin wildProcedure; end;
         "hybrid":   begin hybridProcedure end;
         "walkToGe":   begin
-                        if player.InLumby then
+                        if not shouldRunOneOff then
                         begin
-                          writelnEx("InLumby");
-                          player.walkTo("lumbyToVarrock");
-                        end;
+                          writeln('No new action, sleeping');
+                          sleep(10* 1000);
+                        end else
+                        begin
+                          shouldRunOneOff := false;
+                          if player.InLumby then
+                          begin
+                            writelnEx("InLumby");
+                            player.walkTo("lumbyToVarrock");
+                          end;
 
-                        if player.InGuild then
-                        begin
-                          writelnEx("InGuild");
-                          climbToFloor(0);
-                          cookGuildDoor(False);
+                          if player.InGuild then
+                          begin
+                            writelnEx("InGuild");
+                            climbToFloor(0);
+                            cookGuildDoor(False);
+                          end;
+                          player.WalkTo("cookToBank");
+                          player.WalkTo("bankToGe");
                         end;
-                        player.WalkTo("cookToBank");
-                        player.WalkTo("bankToGe");
                       end;
-        "walkToBank":   begin
-                        if player.InLumby then
+        "walkToBank":   begin     
+                        if not shouldRunOneOff then
+                        begin                 
+                          writeln('No new action, sleeping');
+                          sleep(10* 1000);
+                        end else
                         begin
-                          writelnEx("InLumby");
-                          player.walkTo("lumbyToVarrock");
-                        end;
+                          shouldRunOneOff := false;
+                          if player.InLumby then
+                          begin
+                            writelnEx("InLumby");
+                            player.walkTo("lumbyToVarrock");
+                          end;
 
-                        if player.InGuild then
-                        begin
-                          writelnEx("InGuild");
-                          climbToFloor(0);
-                          cookGuildDoor(False);
+                          if player.InGuild then
+                          begin
+                            writelnEx("InGuild");
+                            climbToFloor(0);
+                            cookGuildDoor(False);
+                          end;
+                          player.WalkTo("cookToBank");
+                          player.WalkTo("GeToBank");
                         end;
-                        player.WalkTo("cookToBank");
-                        player.WalkTo("GeToBank");
                       end;
-        "walkToWild":  begin
-                        if player.InLumby then
+        "walkToWild":  begin     
+                        if not shouldRunOneOff then
+                        begin               
+                          writeln('No new action, sleeping');
+                          sleep(10* 1000);
+                        end else
                         begin
-                          writelnEx("InLumby");
-                          player.walkTo("lumbyToVarrock");
-                        end;
+                          shouldRunOneOff := false;
+                          if player.InLumby then
+                          begin
+                            writelnEx("InLumby");
+                            player.walkTo("lumbyToVarrock");
+                          end;
 
-                        if player.InGuild then
-                        begin
-                          writelnEx("InGuild");
-                          climbToFloor(0);
-                          cookGuildDoor(False);
+                          if player.InGuild then
+                          begin
+                            writelnEx("InGuild");
+                            climbToFloor(0);
+                            cookGuildDoor(False);
+                          end;
+                          player.WalkTo("cookToBank");
+                          player.WalkTo("geToBank");
+                          player.WalkTo("bankToWild");
                         end;
-                        player.WalkTo("cookToBank");
-                        player.WalkTo("geToBank");
-                        player.WalkTo("bankToWild");
+                      end;
+        "sellPizzas": begin
+                        if not shouldRunOneOff then
+                        begin
+                          writeln('No new action, sleeping');
+                          sleep(10* 1000);
+                        end else
+                        begin   
+                          shouldRunOneOff := false;
+                          grandExchange(false, true);
+                        end;
+                      end;
+        "buyGrains": begin
+                        if not shouldRunOneOff then
+                        begin    
+                          writeln('No new action, sleeping');
+                          sleep(10* 1000);
+                        end else
+                        begin
+                          shouldRunOneOff := false;
+                          grandExchange(true, false);
+                        end;
+                      end;
+        "withdrawWildItems": begin
+                        if not shouldRunOneOff then
+                        begin     
+                          writeln('No new action, sleeping');
+                          sleep(10* 1000);
+                        end else
+                        begin
+                          shouldRunOneOff := false;
+                          withdrawWildItems;
+                        end;
                       end;
         "pause":      begin
                         writeLn("PAUSE");

@@ -384,7 +384,8 @@ begin
   //sleep(100);
   //getInv;
   GETME;
-  writeln(R_GetAllInventoryItems);
+  //widget := RSWidget.Get(R_GRAND_EXCHANGE_SLOT_1.Group, R_GRAND_EXCHANGE_SLOT_1.Child);
+  writeln(R_CurrentGrandExchangeSlot);
   TerminateScript;
   RInitializeTileSettings;
   RInitializeTileHeights;
