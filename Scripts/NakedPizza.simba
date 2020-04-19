@@ -49,7 +49,7 @@ type
 
 
 var
-  pizzasDone, runs, floursDone, fishesDone      : Integer;
+  pizzasDone, runs, floursDone, fishesDone, geVisits      : Integer;
   timerTrack                        : Timer;
   timeSinceLastGeVisit              : Timer;
   startTime                         : TDateTime;
@@ -82,11 +82,13 @@ begin
   writelnex('## Flours      : ' + intToStr(floursDone));
   writelnex('## Pizzas      : ' + intToStr(pizzasDone));
   writelnex('## Fishes      : ' + intToStr(fishesDone));
+  writelnex('## GE VISITS   : ' + intToStr(geVisits));
   writelnex('## -------  PER HOUR  ------- ##');
   writelnex('## RUNS        : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * runs)));
   writelnex('## Flours      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * floursDone)));
   writelnex('## Pizzas      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * pizzasDone)));
   writelnex('## Fishes      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * fishesDone)));
+  writelnex('## GE visits   : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * geVisits)));
   writelnex('################################');
   writelnex('GTR: ' + inttostr(GetTimeRunning));
   writelnex('TSLGEV: ' + inttostr(TimeSinceLastGeVisit.ElapsedTime));
@@ -2550,7 +2552,7 @@ begin
   if not player.inGE then Exit;
   withdrawGrandExchangeItems(buyGrains, sellPizzas);              
   if sellPizzas then sellCancelAndCollect("Pizza base", notedPizzaBaseID, currentPizzaPrice);
-  if buyGrains then buyCancelAndCollect("Grain", 2000, currentGrainPrice);
+  if buyGrains then buyCancelAndCollect("Grain", 500, currentGrainPrice);
 end;
 
 procedure flourToPizzaProcedure;
@@ -2588,14 +2590,26 @@ begin
       sleep(random(700, 1000));
       withdrawFlourToPizzaItems;
       ProgressReport;
-      if (grainsInBank < 2000) and (timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) then
-      begin
-        writeln("DOING GE");
+      if (timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) then
+      begin      
+        RInitializeTileSettings;
+        RInitializeTileHeights;
+        writeln('Reinitialized reflection');
+        writelnEx("DOING GE");
+        inc(geVisits);
         timeSinceLastGeVisit.Reset;
         timeSinceLastGeVisit.Start;
         player.WalkTo("bankToGe"); 
         sleep(random(700, 1000));
-        grandExchange(true, true);
+        if (grainsInBank < 2000) then
+        begin
+          WriteLnEx('GE: GrainsAndPizza, timer is now: ' + inttostr(timeSinceLastGeVisit.ElapsedTime));
+          grandExchange(true, true);
+        end else
+        begin
+          WriteLnEx('GE: PizzaOnly, timer is now: ' + inttostr(timeSinceLastGeVisit.ElapsedTime));
+          grandExchange(false, true);
+        end;
         sleep(random(700, 1000));
         player.WalkTo("geToBank");
         Exit;
@@ -2760,6 +2774,7 @@ begin
   startTime  := Now;
   pizzasDone := 0;
   floursDone := 0;
+  geVisits := 0;
   pickWheat := True;
   sellPizzas := False;
   runs := 0;
