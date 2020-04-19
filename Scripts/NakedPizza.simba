@@ -89,6 +89,7 @@ begin
   writelnex('## Fishes      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * fishesDone)));
   writelnex('################################');
   writelnex('GTR: ' + inttostr(GetTimeRunning));
+  writelnex('TSLGEV: ' + inttostr(TimeSinceLastGeVisit.ElapsedTime));
 end;
 
 Function RSObject.MidPoint: TPoint;
@@ -2591,6 +2592,7 @@ begin
       begin
         writeln("DOING GE");
         timeSinceLastGeVisit.Reset;
+        timeSinceLastGeVisit.Start;
         player.WalkTo("bankToGe"); 
         sleep(random(700, 1000));
         grandExchange(true, true);
