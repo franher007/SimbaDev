@@ -3,11 +3,11 @@
 
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
-  userAction  = "doTest"; //hybrid, doWild, keepAlive
+  userAction  = "hybrid"; //hybrid, doWild, keepAlive
   actionWeb   = "http://franher.com/nakedpizza";
   scriptID    = "";
-  useGE       = False;    //Buy/Sell in Grand Exchange?
-  lag         = 0;     //use 0 for faster speeds
+  useGE       = True;    //Buy/Sell in Grand Exchange?
+  lag         = 0;     //use 0 if you have faster cpu speeds, increase for shitty pc
 
   P_USERNAME = "";
   P_PASSWORD = "";
@@ -1776,8 +1776,8 @@ begin
 
   if ((emptyPot.id = -1)) or ((emptyBucket.id = -1)) then
   begin
-    writelnex("missing flourToPizza items, TERMINATING but should do some GE");
-    if useGE then buyFlourToPizzaItems else TerminateScript;;
+    writelnex("missing flourToPizza items (pot or bucket), TERMINATING but should do some GE");
+    TerminateScript;
   end;
 
   //R_SetBankQuantityMode(TRSBankQuantity.ALL);
@@ -2590,7 +2590,7 @@ begin
       sleep(random(700, 1000));
       withdrawFlourToPizzaItems;
       ProgressReport;
-      if (timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) then
+      if (timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) and useGe then
       begin      
         RInitializeTileSettings;
         RInitializeTileHeights;
