@@ -586,6 +586,11 @@ begin
   GetPage(actionWeb + "/enviar.php?setusername=" + name + "&email=" + email);
 end;
 
+procedure SetPlayerBanned(email: String);
+begin
+  GetPage(actionWeb + "/enviar.php?setbanned=" + email);
+end;
+
 
 
 Function LoginPlayer:Boolean;
@@ -602,6 +607,11 @@ begin
   if RSClient.LoginState = 24 then
   begin
     Mouse.Click(400, 310, MOUSE_LEFT);
+    wait(500 + random(100,200));
+  end;   
+  if RSClient.LoginState = 12 then
+  begin
+    Mouse.Click(380, 320, MOUSE_LEFT);
     wait(500 + random(100,200));
   end;
   while (RSClient.GameState > 10) or (RSClient.LoginState > 0) do
@@ -631,11 +641,19 @@ begin
     timer.Start;
     while RSClient.GameState < 30 do
     begin
+      if RSClient.LoginState = 12 then
+      begin
+        Mouse.Click(380, 320, MOUSE_LEFT);
+        wait(500 + random(100,200));
+        SetPlayerBanned(currentUser);
+        Exit(false);
+      end;
       if timer.ElapsedTime >= 20000 + lag then
         Exit(false);
       wait(300);
-    end;
+    end;   
     timer.Reset;
+
     wait(1500 + random(200,500));
     Mouse.Click(400, 340, MOUSE_LEFT);
     wait(1500 + random(200,500));

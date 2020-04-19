@@ -383,9 +383,13 @@ begin
   //writeln(BoolToStr(srl.IsClientState(csLogin)));
   //sleep(100);
   //getInv;
-  GETME;
+  //GETME;
   //widget := RSWidget.Get(R_GRAND_EXCHANGE_SLOT_1.Group, R_GRAND_EXCHANGE_SLOT_1.Child);
-  writeln(R_CurrentGrandExchangeSlot);
+
+  writeln('log: '+inttostr(RSCLient.LoginState));  //24 = disconnected (370,300) - ,    Point(3212, 3206),    Point(3232, 3226),
+  writeln('gst: '+inttostr(RSCLient.GameState));   //12 = banned ( ) -
+  writeln('lsc: '+inttostr(RSCLient.loopcycle));
+  Mouse.Move(360,320);
   TerminateScript;
   RInitializeTileSettings;
   RInitializeTileHeights;
