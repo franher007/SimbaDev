@@ -367,6 +367,69 @@ begin
   Result := false;
 end;
 
+function TFont.Create(name:String; size:Int32; fs:TFontStyles; fq:TFontQuality): TFont; static;
+begin
+  Result.Init();
+  Result.SetName(name);
+  Result.SetSize(size);
+  Result.SetStyle(fs);
+  Result.SetQuality(fq);
+  Result.SetColor($FFFFFF);
+end;
+
+procedure TMufasaBitmap.DrawText(txt:String; pt:TPoint; font:TFont;
+  color:Int32; align:Int32=0; shadow:Boolean=False; shadowDir:Byte=0); overload;
+var
+  bit:TBitmap;
+  muf,flipMuf:TMufasaBitmap;
+  W,H:Int32;
+begin
+  bit.Init();
+  bit.GetCanvas().SetFont(font);
+  bit.GetCanvas().GetBrush().SetStyle(bsClear);
+
+  W := bit.GetCanvas().TextWidth(txt);
+  H := bit.GetCanvas().TextHeight(txt);
+  bit.SetWidth(W+1);
+  bit.SetHeight(H+1);
+
+  if align then
+    pt := Point(pt.x-W, pt.y);
+
+  muf := self.Copy(pt.x,pt.y,pt.x+W,pt.y+H);
+  muf.DrawToCanvas(0,0,bit.getCanvas());
+
+  if Shadow then
+  begin
+    bit.getCanvas().getFont().setColor(1);
+    case ShadowDir of
+      0:bit.GetCanvas().TextOut(0,0,txt);
+      1:bit.GetCanvas().TextOut(1,0,txt);
+      2:bit.GetCanvas().TextOut(2,0,txt);
+      3:bit.GetCanvas().TextOut(2,1,txt);
+      4:bit.GetCanvas().TextOut(2,2,txt);
+      5:bit.GetCanvas().TextOut(1,2,txt);
+      6:bit.GetCanvas().TextOut(0,2,txt);
+      7:bit.GetCanvas().TextOut(0,1,txt);
+    end;
+    bit.GetCanvas().GetFont().SetColor(color);
+    bit.GetCanvas().TextOut(1,1,txt);
+  end else
+  begin
+    bit.GetCanvas().GetFont().SetColor(color);
+    bit.GetCanvas().TextOut(0,0,txt);
+  end;
+
+  muf.LoadFromTBitmap(bit);
+  muf.DrawTransparent(pt.x,pt.y,self);
+
+  muf.Free();
+  bit.Free();
+end;
+
+var
+  PROGGY_FONT := TFont.Create('Tahoma', 7, [fsBold], fqCleartype);
+
 var
   mibool: Boolean;
   iskey: Boolean;
@@ -377,15 +440,25 @@ var
   w, h: Int32;
 begin
 
+  GetClientDimensions(W, H);
+  EIOS_SetGraphicsDebugging(R_EIOS, True);
 
-  //getObject(3242, 3412);
-  //writeln(RSPlayer.Me.Tile);
-  //writeln(BoolToStr(srl.IsClientState(csLogin)));
-  //sleep(100);
-  //getInv;
-  //GETME;
-  //widget := RSWidget.Get(R_GRAND_EXCHANGE_SLOT_1.Group, R_GRAND_EXCHANGE_SLOT_1.Child);
+  Bmp.Init;
+  Bmp.SetPersistentMemory(PtrUInt(EIOS_GetDebugImageBuffer(R_EIOS)), w, h);
 
+  Bmp.Rectangle([0, 0, w - 1, h - 1], $00);
+
+  client.GetMBitmaps().AddBMP(bmp);
+  bmp.DrawText("Hola", Point(20,20), $FFFFFF);
+  bmp.DrawText("Hola", Point(20,30), $FFFFFF);
+  bmp.DrawText("Hola", Point(20,40), $FFFFFF);
+  //bmp.DrawTPA(TPAFromText("holas", "/StatChars07", w, h), $FFFFFF);
+
+  bmp.free;
+  //bmp.drawText("Holasss", Point(100,100), PROGGY_FONT, $FFFFFF, 0, False, 4);
+  //client.GetMBitmaps().AddBMP(bmp);
+
+  terminatescript;
   writeln('log: '+inttostr(RSCLient.LoginState));  //24 = disconnected (370,300) - ,    Point(3212, 3206),    Point(3232, 3226),
   writeln('gst: '+inttostr(RSCLient.GameState));   //12 = banned ( ) -
   writeln('lsc: '+inttostr(RSCLient.loopcycle));

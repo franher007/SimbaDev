@@ -3,7 +3,7 @@
 
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
-  userAction  = "hybrid"; //hybrid, doWild, keepAlive
+  userAction  = "doTest"; //hybrid, doWild, keepAlive
   actionWeb   = "http://franher.com/nakedpizza";
   scriptID    = "";
   useGE       = True;    //Buy/Sell in Grand Exchange?
@@ -81,12 +81,36 @@ var
   grainsInBank                      : Integer;
   shouldRunOneOff                   : Boolean;
 
+  bmp: TMufasaBitmap;
+  w, h: Int32;
+
 Procedure writelnex(text: String);
 begin
   writeln("[0]["+player.name+"]: " + text);
 end;
 
+procedure writeDebug(strings: TStringArray);
+var
+  i, y: integer;
+begin
+  for i := 0 to high(strings) do
+  begin
+    y := (i * 10) + 20;
+    bmp.Rectangle([20, y, w - 1, y + 10], $00);
+    bmp.DrawText(strings[i], Point(20, y), $FFFFFF);
+  end;
+end;
+
+function debugTabulator(str:String):String
+var
+  i: integer;
+begin
+  for i:= 0 to (5 - length(str)) do Result += " ";
+end;
+
 procedure ProgressReport;
+var
+  debugStrings: TStringArray;
 begin
   writelnex('##########  PROGRESS  ##########');
   writelnex('## CURRENT TIME: ' + FormatDateTime('hh:nn:ss',now));
@@ -105,6 +129,15 @@ begin
   writelnex('################################');
   writelnex('GTR: ' + inttostr(GetTimeRunning));
   writelnex('TSLGEV: ' + inttostr(TimeSinceLastGeVisit.ElapsedTime));
+
+  debugStrings := [ CurrentUser + ': ScriptID: ' + scriptID + ' - Action: ' + action,
+                    'Time running: ' + FormatDateTime('hh:nn:ss',now-startTime),
+                    'Runs       : ' + intToStr(runs) + debugTabulator(intToStr(runs)) + " | " + inttostr( Round(60 / (GetTimeRunning/1000/60) * runs)),
+                    'Pizzas    : ' + intToStr(pizzasDone) + debugTabulator(intToStr(pizzasDone)) + " | " + inttostr( Round(60 / (GetTimeRunning/1000/60) * pizzasDone)),
+                    'GE visits : ' + intToStr(geVisits) + debugTabulator(intToStr(geVisits)) + " | " + inttostr( Round(60 / (GetTimeRunning/1000/60) * geVisits)),
+                    'Time since last GE visit: ' +  inttostr(TimeSinceLastGeVisit.ElapsedTime div 1000 div 60)];
+  writeDebug(debugStrings);
+  RSTypeArray(debugStrings).Free;
 end;
 
 Function RSObject.MidPoint: TPoint;
@@ -2876,15 +2909,8 @@ var
   w, h: Int32;
 begin
   writeln("testing");
-  //writeln(R_UpText);
-  //terminateScript;
-  writeln(webScript);
-  checkCurrentResources("Bank booth");
-  //buyResources;
-  //buyCancelAndCollect("Grain", (R_GetInventoryItem(coinsID)[0].Amount div 100), 100);
-  //R_GrandExchange_Buy("Grain", TRSOfferQuantity.X, 2, TRSOfferPrice.X, 2);
-  //openClosestExchange;
-  //openClosestBank("Grand Exchange booth", 10, "Bank Grand");
+  sleep(1000);
+  progressreport;
   terminatescript;
 end;
 
@@ -2956,6 +2982,16 @@ begin
   shouldRunOneOff := true;
   TryAgain:
   webPlayer := getWebPlayer;
+
+  //setup Drawing
+  GetClientDimensions(W, H);
+  EIOS_SetGraphicsDebugging(R_EIOS, True);
+
+  Bmp.Init;
+  Bmp.SetPersistentMemory(PtrUInt(EIOS_GetDebugImageBuffer(R_EIOS)), w, h);
+
+  Bmp.Rectangle([0, 0, w - 1, h - 1], $00); 
+  client.GetMBitmaps().AddBMP(bmp);
 
   if (P_USERNAME <> "") and (P_PASSWORD <> "") then
   begin
