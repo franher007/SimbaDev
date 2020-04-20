@@ -449,9 +449,7 @@ begin
   Bmp.Rectangle([0, 0, w - 1, h - 1], $00);
 
   client.GetMBitmaps().AddBMP(bmp);
-  bmp.DrawText("Hola", Point(20,20), $FFFFFF);
-  bmp.DrawText("Hola", Point(20,30), $FFFFFF);
-  bmp.DrawText("Hola", Point(20,40), $FFFFFF);
+  bmp.DrawText("Hola", Point(130,460), $11);
   //bmp.DrawTPA(TPAFromText("holas", "/StatChars07", w, h), $FFFFFF);
 
   bmp.free;

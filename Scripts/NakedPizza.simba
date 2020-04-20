@@ -85,9 +85,17 @@ var
   bmp: TMufasaBitmap;
   w, h: Int32;
 
+
+
+procedure writeStatus(string: String);
+begin
+  bmp.Rectangle([130, 460, w - 1, 460 + 10], $00);
+  bmp.DrawText(string, Point(130, 460), $111111);
+end;
+
 Procedure writelnex(text: String);
 begin
-  if useDebug then writeln("["+scriptID+"]["+player.name+"]: " + text);
+  if useDebug then writeln("["+scriptID+"]["+player.name+"]: " + text) else writeStatus(text);
 end;
 
 procedure writeDebug(strings: TStringArray);
