@@ -14,6 +14,12 @@ const
 
   PIZZA_PRICE  = 350;
   GRAIN_PRICE  = 35;
+  SHRIMP_PRICE = 70;
+  TROUT_PRICE  = 50;
+  SALMON_PRICE = 80;
+  HAT_PRICE    = 500;
+  POT_PRICE    = 20;
+  BUCKET_PRICE = 20;
 
   flourPotID =  1933;
   coinsID = 995;
@@ -44,12 +50,13 @@ type
 type
   TWebScript = record
   action: String;
-  ID, pizzaPrice, grainPrice: Integer;
+  ID, pizzaPrice, grainPrice, shrimpPrice, troutPrice, salmonPrice, hatPrice, potPrice, bucketPrice: Integer;
   end;
 
 
 var
-  pizzasDone, runs, floursDone, fishesDone, geVisits      : Integer;
+  pizzasDone, runs, floursDone, fishesDone, geVisits              : Integer;
+  cShrimps, cTrouts, cSalmons, cPots, cBuckets, cHats, cCoins     : Integer;
   timerTrack                        : Timer;
   timeSinceLastGeVisit              : Timer;
   startTime                         : TDateTime;
@@ -63,6 +70,12 @@ var
   currentPassword                   : String;
   currentGrainPrice                 : Integer;
   currentPizzaPrice                 : Integer;
+  currentShrimpPrice                : Integer;
+  currentTroutPrice                 : Integer;
+  currentSalmonPrice                : Integer;
+  currentHatPrice                   : Integer;
+  currentPotPrice                   : Integer;
+  currentBucketPrice                : Integer;
   webPlayer                         : TWebPlayer;
   webScript                         : TWebScript;
   grainsInBank                      : Integer;
@@ -711,6 +724,11 @@ begin
   Result := self.Tile.InBox(Box(3212, 3206, 3252, 3261));
 end;
 
+Function RSPlayer.inWestBank: boolean;
+begin
+  Result := self.Tile.InBox(Box(3180, 3433, 3190, 3447));
+end;
+
 Function RT_inLumby: boolean;
 begin
   Result := RSPlayer.Me.Tile.InBox(Box(3212, 3206, 3252, 3261));
@@ -797,63 +815,71 @@ begin
   end;
 end;
 
-Function R_GetClosestObjectByName(Name: String; Offset: Integer = 10): RSObject;
+Function R_GetClosestObjectByName(Name: String; Offset: Integer = 10; upText: String = ""): RSObject;
 var
-  X, Y, i, j, distance, distanceLeft: Int32;
+  X, Y, i, j, otIndex, distance, distanceLeft: Int32;
   Tiles, TilesLeft: Array of TPoint;
   currentObject, currentObjectLeft: RSObject;
+  badUptext: Boolean;
+  objectTypes: Array of RSObjectType;
 begin
   Y := RSPlayer.Me.Tile.Y;
   X := RSPlayer.Me.Tile.X;
   Tiles := getSpiralTiles(X, Y, Offset, True);
   TilesLeft := getSpiralTiles(X, Y, Offset, False);
+  objectTypes := [RSObjectType.GAME_OBJECT, RSObjectType.BOUNDARY_OBJECT, RSObjectType.FLOOR_DECORATION, RSObjectType.WALL_DECORATION];
 
-  for i := 0 to High(Tiles) do
+  for otIndex := 0 to High(objectTypes) do
   begin
-    currentObject := RSObject.Get(RSObjectType.GAME_OBJECT, Tiles[i].X, Tiles[i].Y);
-    if currentObject.Definition.Name = Name then
+    for i := 0 to High(Tiles) do
     begin
-      distance := abs(currentObject.Tile.X - X) + abs(currentObject.Tile.Y - Y);
-      for j := 0 to High(TilesLeft) do
+      badUptext := False;
+      currentObject := RSObject.Get(objectTypes[otIndex], Tiles[i].X, Tiles[i].Y);
+      if currentObject.Definition.Name = Name then
       begin
-        currentObjectLeft := RSObject.Get(RSObjectType.GAME_OBJECT, TilesLeft[j].X, TilesLeft[j].Y);
-        if currentObjectLeft.Definition.Name = Name then
+        if upText <> "" then
         begin
-          distanceLeft := abs(currentObjectLeft.Tile.X - X) + abs(currentObjectLeft.Tile.Y - Y);
-          break;
+          Mouse.Move(currentObject.MidPoint, 3);
+          sleep(100 + random(100, 200));
+          if not R_IsUpText([upText], false) then badUptext := True;
         end;
+        if badUptext then Continue;
+        distance := abs(currentObject.Tile.X - X) + abs(currentObject.Tile.Y - Y);
+        for j := 0 to High(TilesLeft) do
+        begin
+          badUptext := False;
+          currentObjectLeft := RSObject.Get(objectTypes[otIndex], TilesLeft[j].X, TilesLeft[j].Y);
+          if currentObjectLeft.Definition.Name = Name then
+          begin
+            if upText <> "" then
+            begin
+              Mouse.Move(currentObjectLeft.MidPoint, 3);
+              sleep(100 + random(100, 200));
+              if not R_IsUpText([upText], false) then badUptext := True;
+            end;
+            if badUptext then Continue;
+            distanceLeft := abs(currentObjectLeft.Tile.X - X) + abs(currentObjectLeft.Tile.Y - Y);
+            break;
+          end;
+        end;
+        if distanceLeft > distance then
+        begin
+          Result := currentObject;
+          currentObjectLeft.Free;
+          Exit;
+        end else
+        begin
+          Result := currentObjectLeft;
+          currentObject.Free;
+          Exit;
+        end;
+        Break;
       end;
-      if distanceLeft > distance then
-      begin
-        Result := currentObject;
-        currentObjectLeft.Free;
-      end else
-      begin
-        Result := currentObjectLeft;
-        currentObject.Free;
-      end;
-      Break;
-    end;
-    currentObject := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, Tiles[i].X, Tiles[i].Y);
-    if currentObject.Definition.Name = Name then
-    begin
-      Result := currentObject;
-      Break;
-    end;
-    currentObject := RSObject.Get(RSObjectType.FLOOR_DECORATION, Tiles[i].X, Tiles[i].Y);
-    if currentObject.Definition.Name = Name then
-    begin
-      Result := currentObject;
-      Break;
-    end;
-    currentObject := RSObject.Get(RSObjectType.WALL_DECORATION, Tiles[i].X, Tiles[i].Y);
-    if currentObject.Definition.Name = Name then
-    begin
-      Result := currentObject;
-      Break;
     end;
   end;
+  RSTypeArray(objectTypes).Free;
   RSTypeArray(Tiles).Free;
+  RSTypeArray(TilesLeft).Free;
 end;
 
 Procedure clickNPC(id: Integer; walk: Boolean = True);
@@ -989,23 +1015,58 @@ begin
   Result := true;
 end;
 
-procedure sellCancelAndCollect(itemName: String;itemID, price:Integer);
+Function openClosestBank(name: String = "Bank booth"; offset: Integer = 10; upText: String = "Bank"): Boolean;
+var
+  bankBooth: RSObject;
+  tries, clickTries: Integer;
+begin
+  tries := 0;
+  while not R_BankScreen do
+  begin
+    inc(tries);
+    writelnex("Opening bank");
+    bankBooth := R_GetClosestObjectByName(name, offset, upText);
+    if (bankBooth.ref = nil) or (tries > 15) then
+    begin
+      writelnex("Bank not found");
+      bankBooth.Free;
+      Exit(False);
+    end;
+    Mouse.Click(bankBooth.MidPoint, 3, MOUSE_LEFT);
+    condWait(@R_BankScreen, 5000, true);
+    bankbooth.Free;
+  end;
+  Result := True;
+end;
+
+Function openClosestExchange: Boolean;
 var
   exchangeBooth: RSObject;
-
+  tries: Integer;
 begin
-  writelnex('Selling ' + itemName + ' for ' + inttostr(price));
-  exchangeBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3164, 3487);
-  if (exchangeBooth.ref = nil) then
-  begin
-    writelnex("Exchange not found");
-    Exit;
-  end
+  tries := 0;
   while not R_GrandExchangeScreen do
   begin
-    Mouse.Click(exchangeBooth.MidPoint, 5, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end
+    inc(tries);
+    writelnex("Opening GE");
+    exchangeBooth := R_GetClosestObjectByName("Grand Exchange booth", 10, "Exchange Grand");
+    if (exchangeBooth.ref = nil) or (tries > 15) then
+    begin
+      writelnex("Bank not found");
+      exchangeBooth.Free;
+      Exit(False);
+    end;
+    Mouse.Click(exchangeBooth.MidPoint, 3, MOUSE_LEFT);
+    condWait(@R_GrandExchangeScreen, 5000, true);
+    exchangeBooth.Free;
+  end;
+  Result := True;
+end;
+
+procedure sellCancelAndCollect(itemName: String;itemID, price:Integer);
+begin
+  writelnex('Selling ' + itemName + ' for ' + inttostr(price));
+  if not openClosestExchange then Exit;
   //cancel current offer and collect
   if R_GrandExchange_EmptyItem(itemName) then sleep(random(1200,1400));;
   if R_GrandExchangeCollectAll then sleep(random(1200,1400));
@@ -1014,29 +1075,12 @@ begin
   R_GrandExchange_Sell(itemID, TRSOfferQuantity.ALL, 1, TRSOfferPrice.X, price);
   sleep(random(1200,1400));
   if R_GrandExchangeCollectAll then sleep(random(700,1000));
-
-  R_GrandExchangeScreen_Close;
-  sleep(random(300,500));
-  //TerminateScript;
 end
 
 procedure buyCancelAndCollect(itemName: String;quantity, price:Integer);
-var
-  exchangeBooth: RSObject;
-
 begin
-  writelnex('Buying ' + itemName + ' for ' + inttostr(price));
-  exchangeBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3164, 3487);
-  if (exchangeBooth.ref = nil) then
-  begin
-    writelnex("Exchange not found");
-    Exit;
-  end
-  while not R_GrandExchangeScreen do
-  begin
-    Mouse.Click(exchangeBooth.MidPoint, 5, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end
+  writelnex('Buying ' + inttostr(quantity) + " " + itemName + ' for ' + inttostr(price));
+  if not openClosestExchange then Exit;
   //cancel current offer and collect 
   if R_GrandExchangeCollectAll then sleep(random(1200,1400));
   if R_GrandExchange_EmptyItem(itemName) then sleep(random(1200,1400));
@@ -1046,10 +1090,6 @@ begin
   R_GrandExchange_Buy(itemName, TRSOfferQuantity.X, quantity, TRSOfferPrice.X, price);
   sleep(random(1200,1400));
   if R_GrandExchangeCollectAll then sleep(random(700,1000));
-
-  R_GrandExchangeScreen_Close;
-  sleep(random(300,500));
-  //TerminateScript;
 end
 
 Function R_TutorialIsland(name: String = ""): Boolean;
@@ -1667,8 +1707,36 @@ Begin
   PressKey(13);
 end;
 
-procedure buyFlourToPizzaItems;
+
+procedure withdrawCoins;
 begin
+  if not openClosestBank("Grand Exchange booth") then Exit;
+  R_WithdrawItem(coinsID);
+end;
+
+procedure checkCurrentResources(bankName: String = "Grand Exchange booth");
+begin
+  if not openClosestBank(bankName) then Exit;
+
+  cShrimps  := R_FindBankItem(rawShrimpID).Amount  + R_CountInventoryItem(rawShrimpID);
+  cTrouts   := R_FindBankItem(rawTroutID).Amount   + R_CountInventoryItem(rawTroutID);
+  cSalmons  := R_FindBankItem(rawSalmonID).Amount  + R_CountInventoryItem(rawSalmonID);
+  cHats     := R_FindBankItem(chefHatID).Amount    + R_CountInventoryItem(chefHatID);
+  cBuckets  := R_FindBankItem(bucketID).Amount     + R_CountInventoryItem(bucketID);
+  cPots     := R_FindBankItem(potID).Amount        + R_CountInventoryItem(potID);
+  try
+    cCoins    := R_FindBankItem(coinsID).Amount      + R_GetInventoryItem(coinsID)[0].Amount;
+  Except
+    cCoins    := R_FindBankItem(coinsID).Amount;
+  end;
+
+  if cShrimps = -1 then cShrimps  := 0;
+  if cTrouts  = -1 then cTrouts   := 0;
+  if cSalmons = -1 then cSalmons  := 0;
+  if cHats    = -1 then cHats     := 0;
+  if cBuckets = -1 then cBuckets  := 0;
+  if cPots    = -1 then cPots     := 0;
+  if cCoins   = -1 then cCoins    := 0;
 end;
 
 procedure withdrawGrandExchangeItems(buyGrains, sellPizzas: boolean);
@@ -1685,7 +1753,7 @@ begin
   end;
   while not R_BankScreen do
   begin
-    Mouse.Click(bankBooth.MidPoint, 5, MOUSE_LEFT);
+    Mouse.Click(bankBooth.MidPoint, 15, MOUSE_LEFT);
     sleep(random(2000,2500));
   end;
 
@@ -1701,7 +1769,8 @@ begin
     sleep(random(550,750));
     R_SetBankWithdrawMode(False);
   end;
-  R_BankScreen_Close;
+  R_BankScreen_Close; 
+  bankbooth.Free;
 end;
 
 procedure withdrawWildItems;
@@ -1727,7 +1796,8 @@ begin
   sleep(random(1550,1850));
   R_WithdrawItem(coinsID);  
   sleep(random(550,850));
-  R_BankScreen_Close;
+  R_BankScreen_Close;  
+  bankbooth.Free;
 end;
 
 procedure depositGrains;
@@ -1750,7 +1820,8 @@ begin
   R_DepositAll_Items;
   sleep(random(1050,1350));
   R_WithdrawItem(coinsID);
-  R_BankScreen_Close;
+  R_BankScreen_Close;    
+  bankbooth.Free;
 end;
 
 procedure withdrawFlourToPizzaItems;
@@ -1835,7 +1906,8 @@ begin
     else
       TerminateScript;
     sleep(random(600,850));
-  end;
+  end;  
+  bankbooth.Free;
 end
 
 procedure cookFish;
@@ -1876,7 +1948,7 @@ begin
     //sleep(random(1000,1100));
     writelnex("Choosing Option");
     R_ChatSkillChooseOptions(1);
-    sleep(random(8000,1100));
+    sleep(random(1000,1100));
     timer.Start;
     while (player.isAnimating) do
     begin
@@ -1936,7 +2008,8 @@ begin
   R_WithdrawItem(currentFish.ID, 28);
   sleep(random(550,650));
   R_BankScreen_Close;
-  sleep(random(600,850));
+  sleep(random(600,850)); 
+  bankbooth.Free;
 end
 
 function StrInArray(const Value : String;const ArrayOfString : Array of String) : Boolean;
@@ -2164,8 +2237,8 @@ begin
     Exit(False);
   end;
   startingFloor := RSClient.plane;
-  Mouse.Move(cookStairs.MidPoint.X, cookStairs.MidPoint.y + 35);
-  Wait(50 + RandomRange(50,100));
+  Mouse.Move(cookStairs.MidPoint.X + random(30), cookStairs.MidPoint.y + random(30) - 105);
+  Wait(150 + RandomRange(50,100));
   Mouse.Click(cookStairs.MidPoint, 2, MOUSE_RIGHT);
   Wait(50 + RandomRange(50, 100));
   R_ChooseOptions(['Climb-' + direction +' Staircase']);
@@ -2568,9 +2641,53 @@ end;
 procedure grandExchange(buyGrains, sellPizzas: boolean);
 begin
   if not player.inGE then Exit;
-  withdrawGrandExchangeItems(buyGrains, sellPizzas);              
+  withdrawGrandExchangeItems(buyGrains, sellPizzas);
   if sellPizzas then sellCancelAndCollect("Pizza base", notedPizzaBaseID, currentPizzaPrice);
   if buyGrains then buyCancelAndCollect("Grain", 500, currentGrainPrice);
+  R_GrandExchangeScreen_Close;
+end;
+
+function calculateEstimatedCashNeeded: Integer;
+begin
+  Result += (150-cShrimps) * currentShrimpPrice;
+  Result += (170-cTrouts)  * currentTroutPrice;
+  Result += (170-cSalmons) * currentSalmonPrice;
+  Result += (2-cHats)      * currentHatPRice;
+  Result += (10-cBuckets)  * currentBucketPrice;
+  Result += (10-cPots)     * currentPotPrice;
+end;
+
+function buyResources: Boolean;
+var
+  estimatedCashNeeded: Integer;
+begin
+  if not player.inGE then Exit(False); 
+  openClosestBank("Grand Exchange booth", 10, "Bank Grand");
+  checkCurrentResources;
+  estimatedCashNeeded := calculateEstimatedCashNeeded;
+
+  writeln("Need " + inttostr(estimatedCashNeeded) + " Coins");
+  if cCoins < estimatedCashNeeded then
+  begin
+    R_BankScreen_Close;
+    writelnEx("Not enough coins, need " + inttostr(estimatedCashNeeded));
+    Exit(False);
+  end;
+  withdrawCoins;
+  sleep(random(1500, 2000));
+  R_BankScreen_Close;
+  sleep(random(500, 800));
+  if not openClosestExchange then Exit(False);
+  sleep(random(1200, 1500));
+  if cShrimps < 150 then buyCancelAndCollect("Raw shrimps", 150 - cShrimps, currentShrimpPrice);
+  if cTrouts  < 170 then buyCancelAndCollect("Raw trout",   170 - cTrouts,  currentTroutPrice);
+  if cSalmons < 170 then buyCancelAndCollect("Raw salmon",  170 - cSalmons, currentSalmonPrice);
+  if cHats    < 2   then buyCancelAndCollect("Chef's hat",  2   - cHats,    currentHatPrice);
+  if cBuckets < 10  then buyCancelAndCollect("Bucket",      10  - cBuckets, currentBucketPrice);
+  if cPots    < 10  then buyCancelAndCollect("Pot",         10  - cPots,    currentPotPrice);
+  buyCancelAndCollect("Grain", (R_GetInventoryItem(coinsID)[0].Amount div currentGrainPrice), currentGrainPrice);
+  R_GrandExchangeScreen_Close;
+  Result := True;
 end;
 
 procedure flourToPizzaProcedure;
@@ -2723,6 +2840,28 @@ begin
   if player.me.SkillLevel(7) < 32 then
   begin
     writelnex("Getting that cooking up");
+    if player.inWestBank then
+    begin
+      checkCurrentResources("Bank booth");
+      if (cShrimps < 150) or (cTrouts < 170) or (cSalmons < 170) then
+      begin
+        if cCoins < calculateEstimatedCashNeeded then
+        begin
+          shouldRunOneOff := false;
+          writelnEx('No cooking level, no fish in bank, and no money, halt until we get dem fishes');
+          //acceptTradesMode
+          Exit;
+        end else
+        begin
+          player.walkTo('bankToGe');
+          buyResources;
+          player.WalkTo('geToBank');
+          openClosestBank;
+          R_DepositAll_Items;
+          R_BankScreen_Close;
+        end;
+      end;
+    end;
     cookingProcedure;
   end else
   begin
@@ -2737,7 +2876,15 @@ var
   w, h: Int32;
 begin
   writeln("testing");
-  grandExchange(true, true);
+  //writeln(R_UpText);
+  //terminateScript;
+  writeln(webScript);
+  checkCurrentResources("Bank booth");
+  //buyResources;
+  //buyCancelAndCollect("Grain", (R_GetInventoryItem(coinsID)[0].Amount div 100), 100);
+  //R_GrandExchange_Buy("Grain", TRSOfferQuantity.X, 2, TRSOfferPrice.X, 2);
+  //openClosestExchange;
+  //openClosestBank("Grand Exchange booth", 10, "Bank Grand");
   terminatescript;
 end;
 
@@ -2746,7 +2893,7 @@ var
   i: Integer;
   validActions: TStringArray;
 begin
-  validActions := ["hybrid", "doWild", "doTest", "walkToGe", "walkToBank", "walkToWild", "pause", "buyGrains", "sellPizzas", "withdrawWildItems"];
+  validActions := ["hybrid", "doWild", "doTest", "walkToGe", "walkToBank", "walkToWild", "pause", "buyGrains", "buyResources", "sellPizzas", "withdrawWildItems"];
   for i := 0 to high(validActions) do
     if validActions[i] = action then Exit(true);
 end;
@@ -2777,10 +2924,16 @@ begin
   response := GetPage(actionWeb + "/" + scriptID + ".txt");
   if response <> "" then
   begin
-    Result.ID := strtoint(scriptID);
-    Result.action := substring(response, "action:'.", ".':action");
-    Result.grainPrice := strtoint(substring(response, "grainprice:'.", ".':grainprice"));
-    Result.pizzaPrice := strtoint(substring(response, "pizzaprice:'.", ".':pizzaprice"));
+    Result.ID           := strtoint(scriptID);
+    Result.action       := substring(response, "action:'.", ".':action");
+    Result.grainPrice   := strtoint(substring(response, "grainprice:'.", ".':grainprice"));
+    Result.pizzaPrice   := strtoint(substring(response, "pizzaprice:'.", ".':pizzaprice"));
+    Result.shrimpPrice  := strtoint(substring(response, "shrimpprice:'.", ".':shrimpprice"));
+    Result.troutPrice   := strtoint(substring(response, "troutprice:'.", ".':troutprice"));
+    Result.salmonPrice  := strtoint(substring(response, "salmonprice:'.", ".':salmonprice"));
+    Result.hatPrice     := strtoint(substring(response, "hatprice:'.", ".':hatprice"));
+    Result.potPrice     := strtoint(substring(response, "potprice:'.", ".':potprice"));
+    Result.bucketPrice  := strtoint(substring(response, "bucketprice:'.", ".':bucketprice"));
   end;
 end;
 
@@ -2828,9 +2981,15 @@ begin
       if isWebActionValid(webScript.action) then
       begin
         if action <> webScript.action then shouldRunOneOff := True;
-        action := webScript.Action;
-        currentGrainPrice := webScript.grainPrice;
-        currentPizzaPrice := webScript.pizzaPrice;
+        action              := webScript.Action;
+        currentGrainPrice   := webScript.grainPrice;
+        currentPizzaPrice   := webScript.pizzaPrice;
+        currentShrimpPrice  := webScript.shrimpPrice;
+        currentTroutPrice   := webScript.troutPrice;
+        currentSalmonPrice  := webScript.salmonPrice;
+        currentHatPrice     := webScript.hatPrice;
+        currentPotPrice     := webScript.potPrice;
+        currentBucketPrice  := webScript.bucketPrice;
       end else
       begin
         action := userAction; 
@@ -2849,7 +3008,7 @@ begin
         "keepAlive": begin keepAliveProcedure end;
         "doTest":   begin testProcedure; end;
         "doWild":   begin wildProcedure; end;
-        "hybrid":   begin hybridProcedure end;
+        "hybrid":   begin if shouldRunOneOff then hybridProcedure end;
         "walkToGe":   begin
                         if not shouldRunOneOff then
                         begin
@@ -2936,13 +3095,24 @@ begin
                       end;
         "buyGrains": begin
                         if not shouldRunOneOff then
-                        begin    
+                        begin
                           writeln('No new action, sleeping');
                           sleep(10* 1000);
                         end else
                         begin
                           shouldRunOneOff := false;
                           grandExchange(true, false);
+                        end;
+                      end;
+        "buyResources": begin
+                        if not shouldRunOneOff then
+                        begin
+                          writeln('No new action, sleeping');
+                          sleep(10* 1000);
+                        end else
+                        begin
+                          shouldRunOneOff := false;
+                          buyResources;
                         end;
                       end;
         "withdrawWildItems": begin

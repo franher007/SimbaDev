@@ -364,9 +364,10 @@ end;
 
 Function R_GrandExchange_Buy(itemName: String; Mode: TRSOfferQuantity = TRSOfferQuantity.ONE; XAmount: Int32 = -1; PriceMode: TRSOfferPrice = TRSOfferPrice.GUIDE; XPrice: Int32 = -1; totalSlots: Int32 = 2 ): Boolean;
 var
-  i: Integer;
+  i, j: Integer;
   confirmWidget, buySpriteWidget, titleWidget: RSWidget;
   items: Array of TRSInventoryItem;
+  chatboxItems: Array of RSWidget;
   spriteVars, buyVars: Array of RWidget;
 
 begin
@@ -415,21 +416,30 @@ begin
     buySpriteWidget.Free;
     sleep(random(1500, 2500));
     Keyboard.Send(itemName);
-    sleep(random(1500, 2000));
-    Keyboard.Send("", VK_ENTER);
-    sleep(random(700, 1000));
-
-    R_GrandExchange_Offer_Add_Quantity(Mode, XAmount);
-    sleep(random(800,1000));
-    R_GrandExchange_Offer_Set_Price(PriceMode, XPrice);
-    sleep(random(800,1000));
-    confirmWidget := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_CONFIRM.Group, R_GRAND_EXCHANGE_OFFER_CONFIRM.Child);
-    if confirmWidget.ref = nil then
-      Exit(False);
-    Mouse.Click(confirmWidget.Bounds, MOUSE_LEFT);
-    confirmWidget.Free;
-    Exit(True);
-
+    sleep(random(2000, 2500));
+    chatboxItems := RSWidget.Get(R_GRAND_EXCHANGE_CHATBOX_ITEMS.Group, R_GRAND_EXCHANGE_CHATBOX_ITEMS.Child).Children;
+    for j := 0 to high(chatboxItems) do
+    begin
+      if chatboxItems[j].Text = itemName then
+      begin
+        Mouse.Click(chatboxItems[j].Bounds.Middle, 3, MOUSE_LEFT); 
+        sleep(random(1200, 1500));
+        RSTypeArray(chatboxITems).Free;
+        R_GrandExchange_Offer_Add_Quantity(Mode, XAmount);
+        sleep(random(1200,1500));
+        R_GrandExchange_Offer_Set_Price(PriceMode, XPrice);
+        sleep(random(1200,1500));
+        confirmWidget := RSWidget.Get(R_GRAND_EXCHANGE_OFFER_CONFIRM.Group, R_GRAND_EXCHANGE_OFFER_CONFIRM.Child);
+        if confirmWidget.ref = nil then
+          Exit(False);
+        Mouse.Click(confirmWidget.Bounds.Middle, MOUSE_LEFT);
+        confirmWidget.Free;
+        Exit(True);
+      end;
+    end;
   end;
   Result = False;
+  RSTypeArray(chatboxITems).Free;
+  RSTypeArray(buyVars).Free;
+  RSTypeArray(spriteVars).Free;
 end;
