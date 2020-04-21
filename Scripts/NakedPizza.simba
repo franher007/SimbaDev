@@ -108,7 +108,7 @@ begin
   end;
   debugLines[high(debugLines)] := text;
 
-  for i := 0 to high(debugLines)-1 do
+  for i := 0 to high(debugLines) do
   begin
     y := (i * 14) + 340;
     debugLines[i] := debugLines[i+1];
