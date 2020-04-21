@@ -627,7 +627,7 @@ begin
    end;
 
   self.WalkPathMM(choosenTile, 0, 1, False);
-  writelnex("endwalk");
+  writelnex("endwalk " + destination);
   sleep(random(1200, 1600));
   if not precise then Exit(True);
   tries := 0;
