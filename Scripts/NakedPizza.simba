@@ -1118,6 +1118,7 @@ begin
     bankbooth.Free;
   end;
   Result := True;
+  sleep(random(1500,1800));
 end;
 
 Function openClosestExchange: Boolean;
@@ -1807,14 +1808,12 @@ end;
 procedure withdrawCoins;
 begin
   if not openClosestBank("Grand Exchange booth", 10, "Bank Grand") then Exit;
-  sleep(1500 + random(200, 500));
   R_WithdrawItem(coinsID);
 end;
 
 procedure checkCurrentResources(bankName: String = "Grand Exchange booth"; upText: String = "Bank Grand");
 begin
-  if not openClosestBank(bankName, 10, upText) then Exit; 
-  sleep(1500 + random(200, 500));
+  if not openClosestBank(bankName, 10, upText) then Exit;
 
   cShrimps  := R_FindBankItem(rawShrimpID).Amount  + R_CountInventoryItem(rawShrimpID);
   cTrouts   := R_FindBankItem(rawTroutID).Amount   + R_CountInventoryItem(rawTroutID);
@@ -1841,8 +1840,7 @@ procedure withdrawGrandExchangeItems(buyGrains, sellPizzas: boolean);
 var
   currentGrains, currentPizzas: Integer;
 begin
-  openClosestBank("Grand Exchange booth", 10, "Bank Grand"); 
-  sleep(1500 + random(200, 500));
+  openClosestBank("Grand Exchange booth", 10, "Bank Grand");
 
   R_DepositAll_Items;
   sleep(random(850,1050));
@@ -1861,20 +1859,9 @@ end;
 
 procedure withdrawWildItems;
 var
-  bankBooth: RSObject;
 begin
   writelnex("Opening bank");
-  bankBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3162, 3489);
-  if (bankBooth.ref = nil) then
-  begin
-    writelnex("Bank not found");
-    TerminateScript;
-  end;
-  while not R_BankScreen do
-  begin
-    Mouse.Click(bankBooth.MidPoint, 5, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end;
+  if not openClosestBank then Exit;
 
   R_DepositAll_Items;
   sleep(random(50,150));
@@ -1882,37 +1869,23 @@ begin
   sleep(random(1550,1850));
   R_WithdrawItem(coinsID);  
   sleep(random(550,850));
-  R_BankScreen_Close;  
-  bankbooth.Free;
+  R_BankScreen_Close;
 end;
 
 procedure depositGrains;
 var
-  bankBooth: RSObject;
 begin
   writelnex("Opening bank");
-  bankBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3162, 3489);
-  if (bankBooth.ref = nil) then
-  begin
-    writelnex("Bank not found");
-    TerminateScript;
-  end;
-  while not R_BankScreen do
-  begin
-    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end;
+ if not openClosestBank then Exit;
 
   R_DepositAll_Items;
   sleep(random(1050,1350));
   R_WithdrawItem(coinsID);
-  R_BankScreen_Close;    
-  bankbooth.Free;
+  R_BankScreen_Close;
 end;
 
 procedure withdrawFlourToPizzaItems;
 var
-  bankBooth: RSObject;
   currentPizzaBases: Integer;
   emptyPot, emptyBucket, grain, chefHat: TRSBankItem;
   chefHatInv: Array of TRSInventoryItem;
@@ -1921,18 +1894,8 @@ begin
   pizzasDone += currentPizzaBases;
 
   writelnex("Opening bank");
-  bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3186, 3444);
-  if (bankBooth.ref = nil) then bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3162, 3489);
-  if (bankBooth.ref = nil) then
-  begin
-    writelnex("Bank not found");
-    TerminateScript;
-  end;
-  while not R_BankScreen do
-  begin
-    Mouse.Click(bankBooth.MidPoint, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end;
+
+  if not openClosestBank then Exit;
 
   R_DepositAll_Items;
   writelnex('Deposited all items');
@@ -1994,8 +1957,7 @@ begin
     else
       TerminateScript;
     sleep(random(600,850));
-  end;  
-  bankbooth.Free;
+  end;
 end
 
 procedure cookFish;
@@ -2052,7 +2014,6 @@ end;
 
 procedure withdrawCookingItems;
 var
-  bankBooth: RSObject;
   currentFishID, currentCookingLevel, currentFishes: Integer;
   currentFish: TRSBankItem;
 begin
@@ -2067,18 +2028,7 @@ begin
   currentFishes := R_CountInventoryItem(currentFishID-2);
   fishesDone += currentFishes;
 
-  writelnex("Opening bank");
-  bankBooth := RSObject.Get(RSObjectType.GAME_OBJECT, 3254, 3419);
-  if (bankBooth.ref = nil) then
-  begin
-    writelnex("Bank not found");
-    TerminateScript;
-  end;
-  while not R_BankScreen do
-  begin
-    Mouse.Click(bankBooth.MidPoint,2, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end
+  if not openClosestBank then Exit;
 
   R_DepositAll_Items;
   writelnex('Deposited all items');
@@ -2096,8 +2046,7 @@ begin
   R_WithdrawItem(currentFish.ID, 28);
   sleep(random(550,650));
   R_BankScreen_Close;
-  sleep(random(600,850)); 
-  bankbooth.Free;
+  sleep(random(600,850));
 end
 
 function StrInArray(const Value : String;const ArrayOfString : Array of String) : Boolean;
@@ -2574,6 +2523,7 @@ begin
         writelnex("No empty bucket");
         //Exit;
         if not emptyWaterBucket then Exit;
+        emptyBucket := R_GetInventoryItem(bucketID);
       end;
       sleep(random(150,200));
       Mouse.click(emptyBucket[0].MidPoint, MOUSE_LEFT);
@@ -2643,7 +2593,7 @@ begin
       end;
       timer.Reset;
       //sleep(random(500,700));
-      if (R_CountInventoryItem(flourPotID) > 0) then
+      if (RMouse_CountInventoryItem(flourPotID) > 0) then
       begin
         writelnex('OptionFailsafe');
         Mouse.click(flourPot[0].MidPoint, MOUSE_LEFT);
@@ -2941,7 +2891,6 @@ begin
           buyResources;
           player.WalkTo('geToBank');
           openClosestBank;
-          sleep(random(1000,1500));
           R_DepositAll_Items;   
           sleep(random(1000,1500));
           R_BankScreen_Close;
