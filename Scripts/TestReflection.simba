@@ -439,7 +439,8 @@ var
   bmp: TMufasaBitmap;
   w, h: Int32;
 begin
-
+  r_WithdrawItem(995);
+  terminatescript;
   GetClientDimensions(W, H);
   EIOS_SetGraphicsDebugging(R_EIOS, True);
 

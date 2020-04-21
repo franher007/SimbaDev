@@ -1807,12 +1807,14 @@ end;
 procedure withdrawCoins;
 begin
   if not openClosestBank("Grand Exchange booth", 10, "Bank Grand") then Exit;
+  sleep(1500 + random(200, 500));
   R_WithdrawItem(coinsID);
 end;
 
 procedure checkCurrentResources(bankName: String = "Grand Exchange booth"; upText: String = "Bank Grand");
 begin
-  if not openClosestBank(bankName, 10, upText) then Exit;
+  if not openClosestBank(bankName, 10, upText) then Exit; 
+  sleep(1500 + random(200, 500));
 
   cShrimps  := R_FindBankItem(rawShrimpID).Amount  + R_CountInventoryItem(rawShrimpID);
   cTrouts   := R_FindBankItem(rawTroutID).Amount   + R_CountInventoryItem(rawTroutID);
@@ -1839,7 +1841,8 @@ procedure withdrawGrandExchangeItems(buyGrains, sellPizzas: boolean);
 var
   currentGrains, currentPizzas: Integer;
 begin
-  openClosestBank("Grand Exchange booth", 10, "Bank Grand");
+  openClosestBank("Grand Exchange booth", 10, "Bank Grand"); 
+  sleep(1500 + random(200, 500));
 
   R_DepositAll_Items;
   sleep(random(850,1050));
