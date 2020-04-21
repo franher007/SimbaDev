@@ -84,9 +84,11 @@ var
 
   bmp: TMufasaBitmap;
   w, h: Int32;
+  debugLines: TStringArray;
 
 procedure setupDrawing;
 begin
+  debugLines := ['','','','','',''];
   GetClientDimensions(W, H);
   EIOS_SetGraphicsDebugging(R_EIOS, True);
 
@@ -98,14 +100,30 @@ begin
 end;
 
 procedure writeStatus(text:string);
+var i, y: integer;
 begin
-  bmp.Rectangle([130, 460, w - 1, 460 + 10], $00);
-  bmp.DrawText(text, Point(130, 460), $111111);
+  for i := 0 to high(debugLines)-1 do
+  begin
+    debugLines[i] := debugLines[i+1];
+  end;
+  debugLines[high(debugLines)] := text;
+
+  for i := 0 to high(debugLines)-1 do
+  begin
+    y := (i * 14) + 340;
+    debugLines[i] := debugLines[i+1];
+    bmp.Rectangle([7, y, 494, y + 16], 9812684);
+    bmp.DrawText(debugLines[i], Point(7, y), $11);
+  end;
 end;
 
 Procedure writelnex(text: String);
 begin
-  if useDebug then writeln("["+scriptID+"]["+player.name+"]: " + text) else writeStatus(text);
+  try
+    if useDebug then writeln("["+scriptID+"]["+player.name+"]: " + text) else writeStatus(text);
+  Except
+    if useDebug then writeln("["+scriptID+"]["+currentUser+"]: " + text) else writeStatus(text);
+  end;
 end;
 
 procedure writeDebug(strings: TStringArray);
@@ -115,7 +133,7 @@ begin
   for i := 0 to high(strings) do
   begin
     y := (i * 10) + 20;
-    bmp.Rectangle([20, y, w - 1, y + 10], $00);
+    bmp.Rectangle([20, y, w - 1, y + 16], $00);
     bmp.DrawText(strings[i], Point(20, y), $FFFFFF);
   end;
 end;
@@ -131,24 +149,26 @@ procedure ProgressReport;
 var
   debugStrings: TStringArray;
 begin
-  writelnex('##########  PROGRESS  ##########');
-  writelnex('## CURRENT TIME: ' + FormatDateTime('hh:nn:ss',now));
-  writelnex('## Time Running: ' + FormatDateTime('hh:nn:ss',now-startTime));
-  writelnex('## RUNS        : ' + intToStr(runs));
-  writelnex('## Flours      : ' + intToStr(floursDone));
-  writelnex('## Pizzas      : ' + intToStr(pizzasDone));
-  writelnex('## Fishes      : ' + intToStr(fishesDone));
-  writelnex('## GE VISITS   : ' + intToStr(geVisits));
-  writelnex('## -------  PER HOUR  ------- ##');
-  writelnex('## RUNS        : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * runs)));
-  writelnex('## Flours      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * floursDone)));
-  writelnex('## Pizzas      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * pizzasDone)));
-  writelnex('## Fishes      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * fishesDone)));
-  writelnex('## GE visits   : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * geVisits)));
-  writelnex('################################');
-  writelnex('GTR: ' + inttostr(GetTimeRunning));
-  writelnex('TSLGEV: ' + inttostr(TimeSinceLastGeVisit.ElapsedTime));
-
+  if useDebug then
+  begin
+    writelnex('##########  PROGRESS  ##########');
+    writelnex('## CURRENT TIME: ' + FormatDateTime('hh:nn:ss',now));
+    writelnex('## Time Running: ' + FormatDateTime('hh:nn:ss',now-startTime));
+    writelnex('## RUNS        : ' + intToStr(runs));
+    writelnex('## Flours      : ' + intToStr(floursDone));
+    writelnex('## Pizzas      : ' + intToStr(pizzasDone));
+    writelnex('## Fishes      : ' + intToStr(fishesDone));
+    writelnex('## GE VISITS   : ' + intToStr(geVisits));
+    writelnex('## -------  PER HOUR  ------- ##');
+    writelnex('## RUNS        : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * runs)));
+    writelnex('## Flours      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * floursDone)));
+    writelnex('## Pizzas      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * pizzasDone)));
+    writelnex('## Fishes      : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * fishesDone)));
+    writelnex('## GE visits   : ' + inttostr( Round(60 / (GetTimeRunning/1000/60) * geVisits)));
+    writelnex('################################');
+    writelnex('GTR: ' + inttostr(GetTimeRunning));
+    writelnex('TSLGEV: ' + inttostr(TimeSinceLastGeVisit.ElapsedTime));
+  end;
   debugStrings := [ CurrentUser + ': ScriptID: ' + scriptID + ' - Action: ' + action,
                     'Time running: ' + FormatDateTime('hh:nn:ss',now-startTime),
                     'Runs       : ' + intToStr(runs) + debugTabulator(intToStr(runs)) + " | " + inttostr( Round(60 / (GetTimeRunning/1000/60) * runs)),
@@ -376,7 +396,7 @@ begin
     end else
     begin
       Inc(Tries);
-      writeln('Tries: '+ inttostr(tries));
+      writelnEx('Tries: '+ inttostr(tries));
       wait(800+Random(600));
     end;
     if Tries >= 10 then Break;
@@ -663,7 +683,7 @@ var
   i, tries: Integer;
   timer: Timer;
 begin
-  writeln("["+CurrentUser+"]Logging in: " + CurrentUser);
+  writelnEx("["+CurrentUser+"]Logging in: " + CurrentUser);
   if (RSCLient.LoginState = 2) and (RSClient.GameState > 10) then
   begin
     SetPlayerOnline(RSPlayer.me.Name);
@@ -734,7 +754,7 @@ begin
     KeyUp(VK_UP);
     RInitializeTileSettings;
     RInitializeTileHeights;
-    writeln('Reinitialized reflection');
+    writelnEx('Reinitialized reflection');
     SetPlayerUsername(RSPlayer.me.Name, currentUser);
     sleep(500);
     SetPlayerOnline(RSPlayer.me.Name);
@@ -1644,7 +1664,7 @@ Begin
   //goBank
   RInitializeTileSettings;
   RInitializeTileHeights;
-  writeln('Reinitialized reflection');
+  writelnEx('Reinitialized reflection');
   while (R_GetTutorialProgress = 223) do
   begin
     player.WalkTo("tToBank");
@@ -1742,7 +1762,7 @@ Begin
     player.WalkTo("tToMagic");
     RInitializeTileSettings;
     RInitializeTileHeights;
-    writeln('Reinitialized reflection');
+    writelnEx('Reinitialized reflection');
     ClickNPCUntilTalk(3309);
     talkToNpc(" ");
     Mouse.Click(R_GameTabBounds(6), MOUSE_LEFT);  //open magic tab
@@ -1787,13 +1807,13 @@ end;
 
 procedure withdrawCoins;
 begin
-  if not openClosestBank("Grand Exchange booth") then Exit;
+  if not openClosestBank("Grand Exchange booth", 10, "Bank Grand") then Exit;
   R_WithdrawItem(coinsID);
 end;
 
-procedure checkCurrentResources(bankName: String = "Grand Exchange booth");
+procedure checkCurrentResources(bankName: String = "Grand Exchange booth"; upText: String = "Bank Grand");
 begin
-  if not openClosestBank(bankName) then Exit;
+  if not openClosestBank(bankName, 10, upText) then Exit;
 
   cShrimps  := R_FindBankItem(rawShrimpID).Amount  + R_CountInventoryItem(rawShrimpID);
   cTrouts   := R_FindBankItem(rawTroutID).Amount   + R_CountInventoryItem(rawTroutID);
@@ -1818,10 +1838,9 @@ end;
 
 procedure withdrawGrandExchangeItems(buyGrains, sellPizzas: boolean);
 var
-  bankBooth: RSObject;
   currentGrains, currentPizzas: Integer;
 begin
-  openClosestBank;
+  openClosestBank("Grand Exchange booth", 10, "Bank Grand");
 
   R_DepositAll_Items;
   sleep(random(850,1050));
@@ -1835,8 +1854,7 @@ begin
     sleep(random(550,750));
     R_SetBankWithdrawMode(False);
   end;
-  R_BankScreen_Close; 
-  bankbooth.Free;
+  R_BankScreen_Close;
 end;
 
 procedure withdrawWildItems;
@@ -2401,7 +2419,6 @@ begin
       begin
         writelnex('No flour on mill either, back to bank');
         isMillEmpty := True;
-        writelnex('MILL VERTICES: ' + inttostr(Length(cookMill.Model.Vertices)));
         Break;
       end;
     end else
@@ -2577,7 +2594,6 @@ begin
       begin
         writelnex('No more flour left');
         isMillEmpty := True;
-        writelnex('MILL VERTICES: ' + inttostr(Length(cookMill.Model.Vertices)));
         Break;
         inc(fails);
       end;
@@ -2644,8 +2660,6 @@ begin
 
   writelnex('Full of pizza bases or no more flour left');
   isMillEmpty := (Length(cookMill.Model.Vertices) <> 316);
-  writelnex('isMillEmpty: ' + booltostr(ismillempty));
-  writelnex('MILL VERTICES: ' + inttostr(Length(cookMill.Model.Vertices)));
   cookMill.Free;
   //end floors repeat here
   //player.WalkToTileMS(Point(3143, 3446));
@@ -2734,7 +2748,7 @@ begin
   checkCurrentResources;
   estimatedCashNeeded := calculateEstimatedCashNeeded;
 
-  writeln("Need " + inttostr(estimatedCashNeeded) + " Coins");
+  writelnEx("Need " + inttostr(estimatedCashNeeded) + " Coins");
   if cCoins < estimatedCashNeeded then
   begin
     R_BankScreen_Close;
@@ -2797,7 +2811,7 @@ begin
       begin      
         RInitializeTileSettings;
         RInitializeTileHeights;
-        writeln('Reinitialized reflection');
+        writelnEx('Reinitialized reflection');
         writelnEx("DOING GE");
         inc(geVisits);
         timeSinceLastGeVisit.Reset;
@@ -2877,7 +2891,7 @@ begin
   sleep(random(700, 1000));
   WritelnEx("Not selling pizzas, do it yourself");
   depositGrains;
-  writeln('deposited');
+  writelnEx('deposited');
   player.WalkTo("geToBank");
   sleep(random(700, 1000));
   player.WalkTo("bankToWild");
@@ -2925,7 +2939,9 @@ begin
           buyResources;
           player.WalkTo('geToBank');
           openClosestBank;
-          R_DepositAll_Items;
+          sleep(random(1000,1500));
+          R_DepositAll_Items;   
+          sleep(random(1000,1500));
           R_BankScreen_Close;
         end;
       end;
@@ -3033,6 +3049,7 @@ begin
   end else
   begin
     Writeln("No USER set and can't get one from the site, sleeping 5 min and retrying");
+    WritelnEx("No USER set and can't get one from the site, sleeping 5 min and retrying");
     sleep(5 * 60 * 1000);
     goto TryAgain;
   end;
@@ -3083,6 +3100,7 @@ begin
                         if not shouldRunOneOff then
                         begin
                           writeln('No new action, sleeping');
+                          writelnEx('No new action, sleeping');
                           sleep(10* 1000);
                         end else
                         begin
@@ -3105,8 +3123,9 @@ begin
                       end;
         "walkToBank":   begin     
                         if not shouldRunOneOff then
-                        begin                 
+                        begin
                           writeln('No new action, sleeping');
+                          writelnEx('No new action, sleeping');
                           sleep(10* 1000);
                         end else
                         begin
@@ -3129,8 +3148,9 @@ begin
                       end;
         "walkToWild":  begin     
                         if not shouldRunOneOff then
-                        begin               
+                        begin
                           writeln('No new action, sleeping');
+                          writelnEx('No new action, sleeping');
                           sleep(10* 1000);
                         end else
                         begin
@@ -3156,6 +3176,7 @@ begin
                         if not shouldRunOneOff then
                         begin
                           writeln('No new action, sleeping');
+                          writelnEx('No new action, sleeping');
                           sleep(10* 1000);
                         end else
                         begin   
@@ -3167,6 +3188,7 @@ begin
                         if not shouldRunOneOff then
                         begin
                           writeln('No new action, sleeping');
+                          writelnEx('No new action, sleeping');
                           sleep(10* 1000);
                         end else
                         begin
@@ -3178,6 +3200,7 @@ begin
                         if not shouldRunOneOff then
                         begin
                           writeln('No new action, sleeping');
+                          writelnEx('No new action, sleeping');
                           sleep(10* 1000);
                         end else
                         begin
@@ -3187,8 +3210,9 @@ begin
                       end;
         "withdrawWildItems": begin
                         if not shouldRunOneOff then
-                        begin     
+                        begin
                           writeln('No new action, sleeping');
+                          writelnEx('No new action, sleeping');
                           sleep(10* 1000);
                         end else
                         begin
@@ -3198,11 +3222,13 @@ begin
                       end;
         "pause":      begin
                         writeLn("PAUSE");
+                        writeLnEx("PAUSE");
                         sleep(10* 1000);
                       end;
         else
         begin
           WriteLn("NO VALID ACTION FOUND");
+          WriteLnEx("NO VALID ACTION FOUND");
           TerminateScript;
         end;
       end;
