@@ -111,7 +111,6 @@ begin
   for i := 0 to high(debugLines) do
   begin
     y := (i * 14) + 340;
-    debugLines[i] := debugLines[i+1];
     bmp.Rectangle([7, y, 494, y + 16], 9812684);
     bmp.DrawText(debugLines[i], Point(7, y), $11);
   end;
