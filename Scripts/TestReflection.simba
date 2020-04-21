@@ -439,25 +439,7 @@ var
   bmp: TMufasaBitmap;
   w, h: Int32;
 begin
-  r_WithdrawItem(995);
-  terminatescript;
-  GetClientDimensions(W, H);
-  EIOS_SetGraphicsDebugging(R_EIOS, True);
 
-  Bmp.Init;
-  Bmp.SetPersistentMemory(PtrUInt(EIOS_GetDebugImageBuffer(R_EIOS)), w, h);
-
-  Bmp.Rectangle([0, 0, w - 1, h - 1], $00);
-
-  client.GetMBitmaps().AddBMP(bmp);
-  bmp.DrawText("Hola", Point(130,460), $11);
-  //bmp.DrawTPA(TPAFromText("holas", "/StatChars07", w, h), $FFFFFF);
-
-  bmp.free;
-  //bmp.drawText("Holasss", Point(100,100), PROGGY_FONT, $FFFFFF, 0, False, 4);
-  //client.GetMBitmaps().AddBMP(bmp);
-
-  terminatescript;
   writeln('log: '+inttostr(RSCLient.LoginState));  //24 = disconnected (370,300) - ,    Point(3212, 3206),    Point(3232, 3226),
   writeln('gst: '+inttostr(RSCLient.GameState));   //12 = banned ( ) -
   writeln('lsc: '+inttostr(RSCLient.loopcycle));

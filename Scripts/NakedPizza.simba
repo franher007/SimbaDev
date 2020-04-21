@@ -679,7 +679,7 @@ end;
 
 Function LoginPlayer:Boolean;
 var
-  i, tries: Integer;
+  tries: Integer;
   timer: Timer;
 begin
   writelnEx("["+CurrentUser+"]Logging in: " + CurrentUser);
@@ -1096,7 +1096,7 @@ end;
 Function openClosestBank(name: String = "Bank booth"; offset: Integer = 10; upText: String = "Bank"): Boolean;
 var
   bankBooth: RSObject;
-  tries, clickTries: Integer;
+  tries: Integer;
 begin
   tries := 0;
   while not R_BankScreen do
@@ -1180,9 +1180,8 @@ end
 Function R_TutorialIsland(name: String = ""): Boolean;
 var
   widget: RSWidget;
-  guideDoor, genericObject: RSObject;
-  gNPC: RSNPC;
-  i, j, y, tries: Integer;
+  genericObject: RSObject;
+  i, j, tries: Integer;
   attributes: array of RWidget;
 Begin
   if not R_InTutorialIsland then Exit(False);
@@ -1837,8 +1836,6 @@ begin
 end;
 
 procedure withdrawGrandExchangeItems(buyGrains, sellPizzas: boolean);
-var
-  currentGrains, currentPizzas: Integer;
 begin
   openClosestBank("Grand Exchange booth", 10, "Bank Grand");
 
@@ -1858,7 +1855,6 @@ begin
 end;
 
 procedure withdrawWildItems;
-var
 begin
   writelnex("Opening bank");
   if not openClosestBank then Exit;
@@ -1873,7 +1869,6 @@ begin
 end;
 
 procedure depositGrains;
-var
 begin
   writelnex("Opening bank");
  if not openClosestBank then Exit;
@@ -2593,7 +2588,7 @@ begin
       end;
       timer.Reset;
       //sleep(random(500,700));
-      if (RMouse_CountInventoryItem(flourPotID) > 0) then
+      if (R_CountInventoryItem(flourPotID) > 0) then
       begin
         writelnex('OptionFailsafe');
         Mouse.click(flourPot[0].MidPoint, MOUSE_LEFT);
@@ -2905,10 +2900,6 @@ begin
 end;
 
 procedure testProcedure;
-var
-  obj: RSObject;  
-  bmp: TMufasaBitmap;
-  w, h: Int32;
 begin
   writeln("testing");
   sleep(1000);
