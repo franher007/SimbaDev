@@ -1085,16 +1085,19 @@ begin
     inc(tries);
     writelnex("Opening bank");
     bankBooth := R_GetClosestObjectByName(name, offset, upText);
-    if (bankBooth.ref = nil) or (tries > 15) then
+    if (tries > 15) then
     begin
       writelnex("Bank not found");
       bankBooth.Free;
       Exit(False);
     end;
-    Mouse.Click(bankBooth.MidPoint, 3, MOUSE_LEFT);
-    condWait(@R_BankScreen, 5000, true);
-    bankbooth.Free;
-  end;
+    if bankBooth.ref <> nil then
+    begin
+      Mouse.Click(bankBooth.MidPoint, 3, MOUSE_LEFT);
+      condWait(@R_BankScreen, 5000, true);
+    end;
+  end;           
+  bankbooth.Free;
   Result := True;
 end;
 
@@ -1109,16 +1112,19 @@ begin
     inc(tries);
     writelnex("Opening GE");
     exchangeBooth := R_GetClosestObjectByName("Grand Exchange booth", 10, "Exchange Grand");
-    if (exchangeBooth.ref = nil) or (tries > 15) then
+    if (tries > 15) then
     begin
-      writelnex("Bank not found");
+      writelnex("GE not found");
       exchangeBooth.Free;
       Exit(False);
     end;
-    Mouse.Click(exchangeBooth.MidPoint, 3, MOUSE_LEFT);
-    condWait(@R_GrandExchangeScreen, 5000, true);
-    exchangeBooth.Free;
-  end;
+    if exchangeBooth.ref <> nil then
+    begin
+      Mouse.Click(exchangeBooth.MidPoint, 3, MOUSE_LEFT);
+      condWait(@R_GrandExchangeScreen, 5000, true);
+    end;
+  end;  
+  exchangeBooth.Free;
   Result := True;
 end;
 
@@ -1197,6 +1203,8 @@ Begin
       widget.Free;
     end;
   end;
+
+  SetPlayerOnline(RSPlayer.me.Name);
 
   //PICK CHAR
   while R_ChooseCharacterScreen do
@@ -1813,18 +1821,7 @@ var
   bankBooth: RSObject;
   currentGrains, currentPizzas: Integer;
 begin
-  writelnex("Opening bank");
-  bankBooth := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3162, 3489);
-  if (bankBooth.ref = nil) then
-  begin
-    writelnex("Bank not found");
-    Exit;
-  end;
-  while not R_BankScreen do
-  begin
-    Mouse.Click(bankBooth.MidPoint, 15, MOUSE_LEFT);
-    sleep(random(2000,2500));
-  end;
+  openClosestBank;
 
   R_DepositAll_Items;
   sleep(random(850,1050));
