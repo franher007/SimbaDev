@@ -2923,7 +2923,7 @@ begin
     writelnex("Getting that cooking up");
     if player.inWestBank then
     begin
-      checkCurrentResources("Bank booth");
+      checkCurrentResources("Bank booth", "Bank Bank");
       if (cShrimps < 150) or (cTrouts < 170) or (cSalmons < 170) then
       begin
         if cCoins < calculateEstimatedCashNeeded then
