@@ -1114,9 +1114,9 @@ begin
     begin
       Mouse.Click(bankBooth.MidPoint, 3, MOUSE_LEFT);
       condWait(@R_BankScreen, 5000, true);
-    end;
-  end;           
-  bankbooth.Free;
+    end;  
+    bankbooth.Free;
+  end;
   Result := True;
 end;
 
@@ -1141,9 +1141,9 @@ begin
     begin
       Mouse.Click(exchangeBooth.MidPoint, 3, MOUSE_LEFT);
       condWait(@R_GrandExchangeScreen, 5000, true);
-    end;
-  end;  
-  exchangeBooth.Free;
+    end; 
+    exchangeBooth.Free;
+  end;
   Result := True;
 end;
 

@@ -488,7 +488,7 @@ var
 begin
 
   if not R_BankScreen then
-    Exit;
+    Exit(True);
 
   Widget := RSWidget.Get(R_BANK_CLOSE.Group, R_BANK_CLOSE.Child, R_BANK_CLOSE.Index);
 
