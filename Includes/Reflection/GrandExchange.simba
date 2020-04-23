@@ -264,8 +264,8 @@ end;
 Function R_GrandExchange_CountItem(itemName:String; totalSlots: Int32 = 3): Integer;
 var
   i: Integer;
-  offerTitle, offerItem: RSWidget;
-  titleVars, itemNameVars: Array of RWidget;
+  offerTitle, offerItemName, offerItem: RSWidget;
+  titleVars, itemNameVars, itemVars: Array of RWidget;
 begin
 
   if not R_GrandExchangeScreen then
@@ -284,6 +284,11 @@ begin
                 R_GRAND_EXCHANGE_SLOT_ITEM_NAME_5, R_GRAND_EXCHANGE_SLOT_ITEM_NAME_6,
                 R_GRAND_EXCHANGE_SLOT_ITEM_NAME_7, R_GRAND_EXCHANGE_SLOT_ITEM_NAME_8];
 
+  itemVars :=  [R_GRAND_EXCHANGE_SLOT_ITEM_1, R_GRAND_EXCHANGE_SLOT_ITEM_2,
+                R_GRAND_EXCHANGE_SLOT_ITEM_3, R_GRAND_EXCHANGE_SLOT_ITEM_4,
+                R_GRAND_EXCHANGE_SLOT_ITEM_5, R_GRAND_EXCHANGE_SLOT_ITEM_6,
+                R_GRAND_EXCHANGE_SLOT_ITEM_7, R_GRAND_EXCHANGE_SLOT_ITEM_8];
+
   for i := 0 to totalSlots-1 do
   begin
     offerTitle := RSWidget.Get(titleVars[i].Group, titleVars[i].Child, titleVars[i].Index);
@@ -292,18 +297,21 @@ begin
       offerTitle.Free;
       Continue;
     end;
-    offerItem := RSWidget.Get(itemNameVars[i].Group, itemNameVars[i].Child, itemNameVars[i].Index);
-    if offerItem.Text <> itemName then
+    offerItemName := RSWidget.Get(itemNameVars[i].Group, itemNameVars[i].Child, itemNameVars[i].Index);
+    if offerItemName.Text <> itemName then
     begin
-      offerITem.Free;
+      offerITemName.Free;
       Continue;
     end;
-    Result := offerItem.ItemAmount;
+    offerItem := RSWidget.Get(itemVars[i].Group, itemVars[i].Child, itemVars[i].Index);
+    if offerItem.ref <> nil then Result := offerItem.ItemAmount;
+    offerItem.Free;
     offerTitle.Free;
     Break;
   end;
   offerItem.Free;
   RSTypeArray(titleVars).Free;
+  RSTypeArray(itemVars).Free;
   RSTypeArray(itemNameVars).Free;
 end;
 

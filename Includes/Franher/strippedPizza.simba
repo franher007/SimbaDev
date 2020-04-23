@@ -1166,7 +1166,7 @@ var
   attributes: array of RWidget;
 Begin
   if not R_InTutorialIsland then Exit(False);
-  //if not R_ChooseDisplayNameScreen then Exit(False);
+  //if not R_ChooseDisplaypizzasInGENameScreen then Exit(False);
 
   RInitializeTileSettings;
   RInitializeTileHeights;
@@ -2900,7 +2900,11 @@ procedure testProcedure;
 begin
   writeln("testing");
   sleep(1000);
-  progressreport;
+  countGrandExchangeItems;
+  writeln(inttostr(pizzasInGe));
+  writeln(inttostr(R_GrandExchange_CountItem("Pizza base")));
+  writeln(inttostr(R_GrandExchange_CountItem("Sapphire")));
+  writeln(inttostr(R_GrandExchange_CountItem("Bucket")));
   terminatescript;
 end;
 
