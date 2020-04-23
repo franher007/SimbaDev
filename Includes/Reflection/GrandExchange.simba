@@ -131,7 +131,7 @@ begin
   begin
     if T.ElapsedTime > 1000 then
       Exit(False);
-    Wait(50, Random(50));
+    Wait(Random(50, 100));
   end;
   Result := R_CurrentGrandExchangeSlot = Index;
 end;
@@ -264,7 +264,7 @@ end;
 Function R_GrandExchange_CountItem(itemName:String; totalSlots: Int32 = 3): Integer;
 var
   i: Integer;
-  abortWidget, offerTitle, offerItem: RSWidget;
+  offerTitle, offerItem: RSWidget;
   titleVars, itemNameVars: Array of RWidget;
 begin
 
@@ -328,7 +328,9 @@ begin
       Mouse.Click(Button.Bounds, MOUSE_LEFT);
       Button.Free;
       sleep(random(2000,2500));
-      Keyboard.send(IntToStr(XAmount), VK_ENTER);
+      SendKeys(IntToStr(XAmount), Random(30, 60),Random(30, 60));
+      PressKey(13);
+      sleep(Random(30, 60));
       Exit(True);
     end;
   end;
@@ -363,7 +365,9 @@ begin
       Mouse.Click(Button.Bounds, MOUSE_LEFT);
       Button.Free;
       sleep(random(2000,2500));
-      Keyboard.send(IntToStr(XAmount), VK_ENTER);
+      SendKeys(IntToStr(XAmount), Random(30, 60),Random(30, 60));
+      PressKey(13);
+      sleep(Random(30, 60));
       Exit(True);
     end;
   end;
@@ -381,7 +385,6 @@ Function R_GrandExchange_Sell(itemID: int32; Mode: TRSOfferQuantity = TRSOfferQu
 var
   confirmWidget: RSWidget;
   items: Array of TRSInventoryItem;
-
 begin
   if not R_GrandExchangeScreen then
     Exit(False);
@@ -463,7 +466,7 @@ begin
     Mouse.Click(MOUSE_LEFT);
     buySpriteWidget.Free;
     sleep(random(1500, 2500));
-    Keyboard.Send(itemName);
+    SendKeys(itemName, Random(30, 60), Random(30, 60));
     sleep(random(2000, 2500));
     chatboxItems := RSWidget.Get(R_GRAND_EXCHANGE_CHATBOX_ITEMS.Group, R_GRAND_EXCHANGE_CHATBOX_ITEMS.Child).Children;
     for j := 0 to high(chatboxItems) do
@@ -486,7 +489,7 @@ begin
       end;
     end;
   end;
-  Result = False;
+  Result := False;
   RSTypeArray(chatboxITems).Free;
   RSTypeArray(buyVars).Free;
   RSTypeArray(spriteVars).Free;

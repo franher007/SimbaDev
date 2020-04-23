@@ -1,8 +1,47 @@
 {$include_once Internal/Reflection.simba}
 {$include_once Constants.simba}
-{$include_once srl/shared.simba}
 
+function TPointArray.Find(const Value: TPoint): Integer; constref;
+begin
+  for Result := 0 to High(Self) do
+    if (Value.X = Self[Result].X) and (Value.Y = Self[Result].Y) then
+      Exit;
 
+  Result := -1;
+end;
+
+function TPointArray.FindAll(const Value: TPoint): TIntegerArray; constref;
+var
+  i,top: UInt32;
+begin
+  for i := 0 to High(Self) do
+    if Self[i] = Value then
+    begin
+      SetLength(Result, top+1);
+      Result[Inc(top)-1] := i;
+    end;
+end;
+
+procedure TPointArray.Del(const Index: Integer; const Count: Integer = 1);
+begin
+  Delete(Self, Index, Count);
+end;
+
+procedure TPointArray.Remove(const Value: TPoint; const All: Boolean = False);
+var
+  Arr: TIntegerArray;
+  i: Integer;
+begin
+  if (All) then
+    Arr := Self.FindAll(Value)
+  else begin
+    SetLength(Arr, 1);
+    Arr[0] := Self.Find(Value);
+  end;
+
+  for i := 0 to High(Arr) do
+    Self.Del(Arr[i]);
+end;
 
 Function PointInPolygon(p: TPoint; const poly: array of TPoint): boolean;
 var

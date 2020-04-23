@@ -4,6 +4,8 @@
 {$include_once Inventory.simba}
 {$include_once Mouse.simba}
 {$include_once Timing.simba}
+{$include_once franher/shared.simba}
+
 
 const
   R_BANK_ITEM_SLOT_INDEX = 11;
@@ -153,7 +155,7 @@ begin
   begin
     if T.ElapsedTime > 1000 then
       Exit(False);
-    Wait(50, Random(50));
+    Wait(Random(50, 100));
   end;
   Result := R_CurrentBankTab = Index;
 end;
@@ -187,7 +189,7 @@ end;
 
 Function R_BankSlotToBox(Index: Int32): TBox;
 var
-  ItemContainer, Slot: RSWidget;
+  ItemContainer: RSWidget;
 begin
   if not R_BankScreen then
     Exit(Box(-1, -1, -1, -1));
@@ -417,11 +419,6 @@ begin
   Garbage.Free;
 end;
 
-Function R_IsBankSlotVisible(Index: Int32): Boolean;
-begin
-  //R_BANK_ITEM_CONTAINER
-end;
-
 Function R_DepositAll_Items: Boolean;
 var
   Widget: RSWidget;
@@ -484,7 +481,6 @@ end;
 Function R_BankScreen_Close: Boolean;
 var
   Widget: RSWidget;
-  i: Integer;
 begin
 
   if not R_BankScreen then
@@ -570,19 +566,19 @@ begin
     begin
       if InputFull.Text <> '*' then
       begin
-        Keyboard.KeyDown(VK_BACK);
+        KeyDown(VK_BACK);
         while InputFull.Text <> '*' do
         begin
           Wait(50 + RandomRange(50, 100));
         end;
-        Keyboard.KeyUp(VK_BACK);
+        KeyUp(VK_BACK);
       end;
 
-      Keyboard.Send(IntToStr(Amount));
+      SendKeys(IntToStr(Amount), Random(30, 60),Random(30, 60));
       Result := InputFull.Text = IntToStr(Amount) + '*';
       if Result then
       begin
-        Keyboard.PressKey(VK_ENTER);
+        PressKey(13);
         Exit(True);
       end;
 

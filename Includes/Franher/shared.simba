@@ -1,0 +1,65 @@
+
+
+type
+  TRectangle = record
+    Top, Right, Btm, Left: TPoint;
+  end;
+  TRectArray = array of TRectangle;
+
+
+function TRectangle.Contains(Pt: TPoint): Boolean; constref;
+var
+  Vec: TPoint;
+  Dot: Double;
+begin
+  Vec := Point(Self.Top.x-Self.Right.x, Self.Top.y-Self.Right.y);
+  Dot := ((Self.Top.x-Pt.x) * Vec.x) + ((Self.Top.y-Pt.y) * Vec.y);
+  if not((0 <= Dot) and (Dot <= (Sqr(Vec.x) + Sqr(Vec.y)))) then
+    Exit(False);
+  Vec := Point(Self.Top.x-Self.Left.x, Self.Top.y-Self.Left.y);
+  Dot := ((Self.Top.x-Pt.x) * Vec.x) + ((Self.Top.y-Pt.y) * Vec.y);
+  if not((0 <= Dot) and (Dot <= (Sqr(Vec.x) + Sqr(Vec.y)))) then
+    Exit(False);
+  Result := True;
+end;
+
+
+function Box(X1,Y1,X2,Y2: Int32): TBox;
+begin
+  Result := [X1, Y1, X2, Y2];
+end;
+
+
+function TBox.Contains(Other: TPoint): Boolean; constref;
+begin
+  Result := InRange(Other.x, self.x1,self.x2) and
+            InRange(Other.y, self.y1,self.y2);
+end;
+
+function TBox.Contains(Other: TBox): Boolean; constref; overload;
+begin
+  Result := InRange(Other.x1, self.x1,self.x2) and
+            InRange(Other.x2, self.x1,self.x2) and
+            InRange(Other.y1, self.y1,self.y2) and
+            InRange(Other.y2, self.y1,self.y2);
+end;
+
+function TBox.Contains(Other: TRectangle): Boolean; constref; overload;
+begin
+  Result := Self.Contains(Other.Top) and Self.Contains(Other.Left) and Self.Contains(Other.Btm) and Self.Contains(Other.Right);
+end;
+
+
+function TBox.Middle(): TPoint; constref;
+begin
+  Result := Point((Self.X2 + Self.X1) div 2, (Self.Y2 + Self.Y1) div 2);
+end;
+
+function TPoint.InBox(Box: TBox): Boolean; constref;
+begin
+  Result := PointInBox(Self, Box);
+end;
+function TPoint.Equals(Other: TPoint): Boolean; constref; {deprecated;}
+begin
+  Result := (self.X = other.X) and (self.Y = other.Y);
+end;

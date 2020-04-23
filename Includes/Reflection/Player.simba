@@ -1,6 +1,5 @@
 {$include_once Internal/Reflection.simba}
 {$include_once Constants.simba}
-{$include_once srl/shared.simba}
 
 type
   TRSPlayer = record

@@ -1,4 +1,5 @@
 {$include_once reflection/GrandExchange.simba}
+{$include_once franher/shared.simba}
 
 type
   TWebPlayer = record
@@ -56,6 +57,11 @@ begin
 
   Bmp.Rectangle([0, 0, w - 1, h - 1], $00);
   client.GetMBitmaps().AddBMP(bmp);
+end;
+
+procedure TMufasaBitmap.DrawText(txt: String; pt: TPoint; Color: TColor); overload;
+begin
+  Self.DrawText(txt, 'StatChars07', pt, False, Color);
 end;
 
 procedure writeStatus(text:string);
@@ -323,6 +329,11 @@ begin
   end;
 
   Exit(True);
+end;
+
+function Distance(const p1, p2: TPoint): Integer; overload;
+begin
+  Result := Distance(p1.x, p1.y, p2.x, p2.y);
 end;
 
 function RSPlayer.WalkPathMM(Path: array of RSTile; Randomness, FlagDist: Integer; Inverted: Boolean): Boolean;
@@ -811,7 +822,7 @@ end;
 
 Function getSpiralTiles(playerX, playerY: Integer; Distance: integer = 0; Direction: Boolean = True): Array of TPoint;
 var
-  x, y, i, resultIndex: Integer
+  x, y, i, resultIndex: Integer;
 begin
   resultIndex := ceil(pow((2*Distance+1),2))-1;
   x := 0;
@@ -1929,7 +1940,7 @@ begin
     end;
     sleep(random(600,850));
   end;
-end
+end;
 
 procedure cookFish;
 var
@@ -2018,7 +2029,7 @@ begin
   sleep(random(550,650));
   R_BankScreen_Close;
   sleep(random(600,850));
-end
+end;
 
 function StrInArray(const Value : String;const ArrayOfString : Array of String) : Boolean;
 var
@@ -2345,6 +2356,8 @@ begin
       end;
     end else
     begin
+      Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
+      sleep(random(500,700));
       emptyWaterBucket;
       emptyFlourPot;
       climbToFloor(2);
@@ -2484,7 +2497,9 @@ begin
       if (R_CountInventoryItem(potID) <= 0) then
       begin
         writelnex("No empty pot");
-        //Exit;
+        //Exit;  
+        Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
+        sleep(random(500,700));
         if not emptyFlourPot then Exit;
       end;
 
@@ -2492,7 +2507,9 @@ begin
       if (Length(emptyBucket) <= 0) then
       begin
         writelnex("No empty bucket");
-        //Exit;
+        //Exit;              
+        Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
+        sleep(random(500,700));
         if not emptyWaterBucket then Exit;
         emptyBucket := R_GetInventoryItem(bucketID);
       end;
@@ -2726,7 +2743,9 @@ begin
     begin
       writelnEx("NotInGuild - cookToBank");
       player.walkTo("cookToBank");
-      //sleep(random(700, 1000));
+      //sleep(random(700, 1000));  
+      Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
+      sleep(random(500,700));
       if emptyWaterBucket then sleep(random(700, 1000));
       if emptyFlourPot then ;sleep(random(700, 1000));
       sleep(random(700, 1000));
@@ -2808,7 +2827,7 @@ begin
     writelnEx("InGuild");
     climbToFloor(0);
     cookGuildDoor(False);
-  end
+  end;
   player.walkto("cookToBank");
   sleep(random(700, 1000));
   withdrawWildItems;
@@ -2947,8 +2966,6 @@ begin
   pickWheat := True;
   sellPizzas := False;
   runs := 0;
-  srl.Setup([]);
-  Mouse.Setup();
   Sleep(50);
   ClearDebug;
   shouldRunOneOff := true;

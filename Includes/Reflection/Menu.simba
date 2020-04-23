@@ -1,6 +1,7 @@
 {$include_once Internal/Reflection.simba}
 {$include_once Mouse.simba}
 {$include_once Timing.simba}
+{$include_once franher/shared.simba}
 
 Function R_MenuItems: Array of String;
 var
