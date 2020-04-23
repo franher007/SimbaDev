@@ -256,7 +256,55 @@ begin
   offerItem.Free;   
   sleep(random(1200, 1400));
   R_GrandExchangeCollectAll;
-  sleep(random(1200, 1400));
+  sleep(random(1200, 1400));  
+  RSTypeArray(titleVars).Free;
+  RSTypeArray(itemNameVars).Free;
+end;
+
+Function R_GrandExchange_CountItem(itemName:String; totalSlots: Int32 = 3): Integer;
+var
+  i: Integer;
+  abortWidget, offerTitle, offerItem: RSWidget;
+  titleVars, itemNameVars: Array of RWidget;
+begin
+
+  if not R_GrandExchangeScreen then
+    Exit;
+
+  //R_GrandExchangeCollectAll;
+  //sleep(random(1200, 1400));
+
+  titleVars :=  [R_GRAND_EXCHANGE_SLOT_TITLE_1, R_GRAND_EXCHANGE_SLOT_TITLE_2,
+                R_GRAND_EXCHANGE_SLOT_TITLE_3, R_GRAND_EXCHANGE_SLOT_TITLE_4,
+                R_GRAND_EXCHANGE_SLOT_TITLE_5, R_GRAND_EXCHANGE_SLOT_TITLE_6,
+                R_GRAND_EXCHANGE_SLOT_TITLE_7, R_GRAND_EXCHANGE_SLOT_TITLE_8];
+
+  itemNameVars :=  [R_GRAND_EXCHANGE_SLOT_ITEM_NAME_1, R_GRAND_EXCHANGE_SLOT_ITEM_NAME_2,
+                R_GRAND_EXCHANGE_SLOT_ITEM_NAME_3, R_GRAND_EXCHANGE_SLOT_ITEM_NAME_4,
+                R_GRAND_EXCHANGE_SLOT_ITEM_NAME_5, R_GRAND_EXCHANGE_SLOT_ITEM_NAME_6,
+                R_GRAND_EXCHANGE_SLOT_ITEM_NAME_7, R_GRAND_EXCHANGE_SLOT_ITEM_NAME_8];
+
+  for i := 0 to totalSlots-1 do
+  begin
+    offerTitle := RSWidget.Get(titleVars[i].Group, titleVars[i].Child, titleVars[i].Index);
+    if ((offerTitle.ref = nil) or offerTitle.IsHidden or (offerTitle.Text = "Empty")) then
+    begin
+      offerTitle.Free;
+      Continue;
+    end;
+    offerItem := RSWidget.Get(itemNameVars[i].Group, itemNameVars[i].Child, itemNameVars[i].Index);
+    if offerItem.Text <> itemName then
+    begin
+      offerITem.Free;
+      Continue;
+    end;
+    Result := offerItem.ItemAmount;
+    offerTitle.Free;
+    Break;
+  end;
+  offerItem.Free;
+  RSTypeArray(titleVars).Free;
+  RSTypeArray(itemNameVars).Free;
 end;
 
 Function R_GrandExchange_Offer_Add_Quantity(Mode: TRSOfferQuantity; XAmount: Int32 = -1): Boolean;
