@@ -1914,7 +1914,7 @@ begin
   end;
   sleep(random(350,150));
   R_BankScreen_Close;
-  sleep(random(600,850));
+  sleep(random(1000,1250));
   if not R_IsEquipped(chefHatID) then
   begin
     Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
@@ -1923,7 +1923,10 @@ begin
     if length(chefHatInv) > 0 then
       Mouse.Click(chefHatinv[0].midpoint, 2, MOUSE_LEFT)
     else
+    begin
+      writeLnEx("Hat not equipped and not in inv, F");
       TerminateScript;
+    end;
     sleep(random(600,850));
   end;
 end
