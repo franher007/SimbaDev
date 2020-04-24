@@ -187,10 +187,8 @@ begin
   Widget := RSWidget.Get(R_INTERFACE_SKILL_OPTIONS, 14 + (Option - 1), 38);
   if Widget.ref <> nil then
   begin
-    writeln("CSCO x: " + inttostr(widget.Bounds.Middle.x) + " y: " + inttostr(widget.Bounds.Middle.y));
     if (widget.Bounds.Middle.x < 0) or (widget.Bounds.Middle.x > 10000) or (widget.Bounds.Middle.y < 0) or (widget.Bounds.Middle.y > 10000) then
     begin
-      writeln('Option coords are incorrect, not clicking');
       widget.Free;
       Exit(False);
     end;

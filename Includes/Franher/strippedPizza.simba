@@ -81,8 +81,9 @@ begin
   end;
 end;
 
-Procedure writelnex(text: String);
+Procedure writelnex(text: String; both: Boolean = False);
 begin
+  if both then writeln("["+tabID+"]" + text);
   try
     if useDebug then writeln("["+tabID+"]["+scriptID+"]["+player.name+"]: " + text) else writeStatus(text);
   Except
@@ -694,7 +695,7 @@ begin
     //for i:= 0 to 29 do
     //  PressKey(VK_BACK);
     SendKeys(CurrentUser, 0, 0);
-    wait(100 + random(100,200));
+    wait(200 + random(100,200));
     PressKey(13);
     //for i:= 0 to 29 do
     //  PressKey(VK_BACK);
@@ -2048,7 +2049,7 @@ end;
 Function grainsGate(enter: Boolean): Boolean;
 var
   openGate, closedGate: RSObject;
-  tries:    Integer;
+  tries, gateTries:    Integer;
 begin
   closedGate := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3142, 3457);
   openGate := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3141, 3458);
@@ -2058,6 +2059,7 @@ begin
     Exit(False);
   end;
   tries := 0;
+  gateTries := 0;
   //openCookDoor;
   if enter then
   begin
@@ -2079,12 +2081,14 @@ begin
         Exit(False);
       end;
       //if player.Tile.Y >= 3457 then Break;
-      while closedGate.ref <> nil do
+      gateTries := 0;
+      while (closedGate.ref <> nil) and (gateTries < 10) do
       begin
         Mouse.Click(closedGate.MidPoint, 2, MOUSE_LEFT);
         sleep(1000 + random(200,300));
         closedGate := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3142, 3457);
         openGate := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3141, 3458);
+        inc(gateTries);
       end;
       //sleep(random(2000,2500) + lag);
       inc(tries);
@@ -2105,12 +2109,14 @@ begin
     begin
       if tries > 10 then Exit(False);
       //if player.Tile.Y < 3444 then Break;
-      while closedGate.ref <> nil do
+      gateTries := 0;
+      while (closedGate.ref <> nil) and (gateTries < 10) do
       begin
         Mouse.Click(closedGate.MidPoint, 2, MOUSE_LEFT);
         sleep(1000 + random(200,300));
         closedGate := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3142, 3457);
-        openGate := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3141, 3458);
+        openGate := RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3141, 3458);    
+        inc(gateTries);
       end;
       player.WalkTo("grainEnterSpot");
       //sleep(random(2000, 2500) + lag);
@@ -2901,7 +2907,7 @@ begin
   writeln("testing");
   sleep(1000);
   countGrandExchangeItems;
-  writeln(inttostr(pizzasInGe));
+  writelnEx(inttostr(pizzasInGe), true);
   writeln(inttostr(R_GrandExchange_CountItem("Pizza base")));
   writeln(inttostr(R_GrandExchange_CountItem("Sapphire")));
   writeln(inttostr(R_GrandExchange_CountItem("Bucket")));
@@ -2990,8 +2996,7 @@ begin
       currentPassword := webPlayer.password;
   end else
   begin
-    Writeln("No USER set and can't get one from the site, sleeping 5 min and retrying");
-    WritelnEx("No USER set and can't get one from the site, sleeping 5 min and retrying");
+    WritelnEx("No USER set and can't get one from the site, sleeping 5 min and retrying", true);
     sleep(5 * 60 * 1000);
     goto TryAgain;
   end;
@@ -3041,8 +3046,7 @@ begin
         "walkToGe":   begin
                         if not shouldRunOneOff then
                         begin
-                          writeln('No new action, sleeping');
-                          writelnEx('No new action, sleeping');
+                          writelnEx('No new action, sleeping', true);
                           sleep(10* 1000);
                         end else
                         begin
@@ -3066,8 +3070,7 @@ begin
         "walkToBank":   begin
                         if not shouldRunOneOff then
                         begin
-                          writeln('No new action, sleeping');
-                          writelnEx('No new action, sleeping');
+                          writelnEx('No new action, sleeping', true);
                           sleep(10* 1000);
                         end else
                         begin
@@ -3091,8 +3094,7 @@ begin
         "walkToWild":  begin
                         if not shouldRunOneOff then
                         begin
-                          writeln('No new action, sleeping');
-                          writelnEx('No new action, sleeping');
+                          writelnEx('No new action, sleeping', true);
                           sleep(10* 1000);
                         end else
                         begin
@@ -3117,8 +3119,7 @@ begin
         "sellPizzas": begin
                         if not shouldRunOneOff then
                         begin
-                          writeln('No new action, sleeping');
-                          writelnEx('No new action, sleeping');
+                          writelnEx('No new action, sleeping', true);
                           sleep(10* 1000);
                         end else
                         begin
@@ -3129,8 +3130,7 @@ begin
         "buyGrains": begin
                         if not shouldRunOneOff then
                         begin
-                          writeln('No new action, sleeping');
-                          writelnEx('No new action, sleeping');
+                          writelnEx('No new action, sleeping', true);
                           sleep(10* 1000);
                         end else
                         begin
@@ -3141,8 +3141,7 @@ begin
         "buyResources": begin
                         if not shouldRunOneOff then
                         begin
-                          writeln('No new action, sleeping');
-                          writelnEx('No new action, sleeping');
+                          writelnEx('No new action, sleeping', true);
                           sleep(10* 1000);
                         end else
                         begin
@@ -3153,8 +3152,7 @@ begin
         "withdrawWildItems": begin
                         if not shouldRunOneOff then
                         begin
-                          writeln('No new action, sleeping');
-                          writelnEx('No new action, sleeping');
+                          writelnEx('No new action, sleeping', true);
                           sleep(10* 1000);
                         end else
                         begin
@@ -3163,24 +3161,22 @@ begin
                         end;
                       end;
         "pause":      begin
-                        writeLn("PAUSE");
-                        writeLnEx("PAUSE");
+                        writeLnEx("PAUSE", true);
                         sleep(10* 1000);
                       end;
         else
         begin
-          WriteLn("NO VALID ACTION FOUND");
-          WriteLnEx("NO VALID ACTION FOUND");
+          WriteLnEx("NO VALID ACTION FOUND", true);
           TerminateScript;
         end;
       end;
     RInitializeTileSettings;
     RInitializeTileHeights;
-    writeln('Reinitialized reflection');
+    writelnEx('Reinitialized reflection', true);
     Except
       //E: Exception do writelnex("ERROR "+ E.message);
-      writelnex('error');
       progressReport;
+      WriteLnEx(GetExceptionMessage, true);
     end;
   end;
   player.Free;
