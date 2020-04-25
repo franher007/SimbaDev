@@ -1,6 +1,5 @@
 {$i Reflection/Reflection.simba}
 {$i Reflection/GrandExchange.simba}
-{$i SRL/osr.simba}
 
 procedure clickMe;
 var
@@ -129,7 +128,7 @@ begin
   begin
     if T.ElapsedTime > 1000 then
       Exit(False);
-    Wait(50, Random(50));
+    Wait(Random(50));
   end;
   Result := R_CurrentGrandExchangeSlot = Index;
 end;
@@ -181,7 +180,7 @@ begin
   Mouse.Click(widgeta.Bounds, MOUSE_LEFT);
   widgeta.Free;
   sleep(random(1000,1200));
-  Keyboard.send(IntToStr(XAmount), VK_ENTER);
+
   Exit(True);
 
   writeln('Setting offer quantity2');
@@ -431,19 +430,39 @@ var
   PROGGY_FONT := TFont.Create('Tahoma', 7, [fsBold], fqCleartype);
 
 var
-  mibool: Boolean;
+  mibool, write: Boolean;
   iskey: Boolean;
   obj: RSOBject;
   widget: RSWidget;
   dif, clickX, clickY: integer;
   bmp: TMufasaBitmap;
   w, h: Int32;
+  xx, y, p: Integer;
 begin
-
-  writeln('log: '+inttostr(RSCLient.LoginState));  //24 = disconnected (370,300) - ,    Point(3212, 3206),    Point(3232, 3226),
-  writeln('gst: '+inttostr(RSCLient.GameState));   //12 = banned ( ) -
-  writeln('lsc: '+inttostr(RSCLient.loopcycle));
-  Mouse.Move(360,320);
+  
+  xx := RSCLient.BaseX;
+  y := RSCLient.basey;
+  p := RSCLient.Plane; 
+  writeln('x: '+inttostr(xx));  //24 = disconnected (370,300) - ,    Point(3212, 3206),    Point(3232, 3226),
+  writeln('y: '+inttostr(y));   //12 = banned ( ) -
+  writeln('p: '+inttostr(p));
+  while true do
+  begin
+    write := false;
+    if xx <> RSCLient.BaseX then write := true;
+    if y <> RSCLient.Basey then write := true;
+    if p <> RSCLient.plane then write := true;
+    xx := RSCLient.BaseX;
+    y := RSCLient.basey;
+    p := RSCLient.Plane;
+    if write then
+    begin
+      writeln('x: '+inttostr(xx));  //24 = disconnected (370,300) - ,    Point(3212, 3206),    Point(3232, 3226),
+      writeln('y: '+inttostr(y));   //12 = banned ( ) -
+      writeln('p: '+inttostr(p));
+    end;
+    sleep(1000);
+  end;
   TerminateScript;
   RInitializeTileSettings;
   RInitializeTileHeights;

@@ -45,6 +45,8 @@ var
   bmp: TMufasaBitmap;
   w, h: Int32;
   debugLines: TStringArray;
+  currentPlane, currentBaseX, currentBaseY : Integer;
+
 
 procedure setupDrawing;
 begin
@@ -100,6 +102,19 @@ begin
     y := (i * 10) + 20;
     bmp.Rectangle([20, y, w - 1, y + 16], $00);
     bmp.DrawText(strings[i], Point(20, y), $FFFFFF);
+  end;
+end;
+
+procedure reinitializeReflection;
+begin
+  if (currentBaseX <> RSCLient.BaseX) or (currentBaseY <> RSCLient.Basey) or (currentPlane <> RSCLient.plane) then
+  begin
+    WriteLnEx("Reinitialized reflection", true);
+    RInitializeTileSettings;
+    RInitializeTileHeights;
+    currentBaseX := RSCLient.BaseX;
+    currentBaseY := RSCLient.basey;
+    currentPlane := RSCLient.Plane;
   end;
 end;
 
@@ -725,9 +740,7 @@ begin
     KeyDown(VK_UP);
     sleep(3000);
     KeyUp(VK_UP);
-    RInitializeTileSettings;
-    RInitializeTileHeights;
-    writelnEx('Reinitialized reflection');
+    reinitializeReflection;
     SetPlayerUsername(RSPlayer.me.Name, currentUser);
     sleep(500);
     SetPlayerOnline(RSPlayer.me.Name);
@@ -1169,9 +1182,7 @@ Begin
   if not R_InTutorialIsland then Exit(False);
   //if not R_ChooseDisplaypizzasInGENameScreen then Exit(False);
 
-  RInitializeTileSettings;
-  RInitializeTileHeights;
-  writelnEx('Reinitialized reflection');
+  reinitializeReflection;
 
   while R_ChooseDisplayNameScreen do
   begin
@@ -1294,9 +1305,7 @@ Begin
 
     //getOutOfGuide
 
-    RInitializeTileSettings;
-    RInitializeTileHeights;
-    writelnEx('Reinitialized reflection');
+    reinitializeReflection;
     genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3098, 3107);
     player.WalkToTileMM(genericObject.Tile, 0, 0);
     sleep(3000 + random(100, 200));
@@ -1482,9 +1491,7 @@ Begin
     end;
   end;
 
-  RInitializeTileSettings;
-  RInitializeTileHeights;
-  writelnEx('Reinitialized reflection');
+  reinitializeReflection;
 
   //walkToMiningInstructor
   while (R_GetTutorialProgress = 127) do
@@ -1643,9 +1650,7 @@ Begin
     end;
   end;
   //goBank
-  RInitializeTileSettings;
-  RInitializeTileHeights;
-  writelnEx('Reinitialized reflection');
+  reinitializeReflection;
   while (R_GetTutorialProgress = 223) do
   begin
     player.WalkTo("tToBank");
@@ -1741,9 +1746,7 @@ Begin
   while (R_GetTutorialProgress = 287) do
   begin
     player.WalkTo("tToMagic");
-    RInitializeTileSettings;
-    RInitializeTileHeights;
-    writelnEx('Reinitialized reflection');
+    reinitializeReflection;
     ClickNPCUntilTalk(3309);
     talkToNpc(" ");
     Mouse.Click(R_GameTabBounds(6), MOUSE_LEFT);  //open magic tab
@@ -2759,9 +2762,7 @@ begin
       ProgressReport;
       if (timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) and useGe then
       begin
-        RInitializeTileSettings;
-        RInitializeTileHeights;
-        writelnEx('Reinitialized reflection');
+        reinitializeReflection;
         writelnEx("DOING GE");
         inc(geVisits);
         timeSinceLastGeVisit.Reset;
@@ -3035,6 +3036,9 @@ begin
       progressReport;
       inc(runs);
       if not loginPlayer then goto TryAgain;
+      currentBaseX := RSCLient.BaseX;
+      currentBaseY := RSCLient.basey;
+      currentPlane := RSCLient.Plane;
       player := RSPlayer.Me;
       startPos := player.Tile;
       player.ToggleRun(True);
@@ -3170,9 +3174,7 @@ begin
           TerminateScript;
         end;
       end;
-    RInitializeTileSettings;
-    RInitializeTileHeights;
-    writelnEx('Reinitialized reflection', true);
+      reinitializeReflection;
     Except
       //E: Exception do writelnex("ERROR "+ E.message);
       progressReport;
