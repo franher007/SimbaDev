@@ -1842,7 +1842,7 @@ end;
 procedure withdrawWildItems;
 begin
   writelnex("Opening bank");
-  if not openClosestBank then Exit;
+  if not openClosestBank("Grand Exchange booth", 10, "Bank Grand") then Exit;
 
   R_DepositAll_Items;
   sleep(random(50,150));
