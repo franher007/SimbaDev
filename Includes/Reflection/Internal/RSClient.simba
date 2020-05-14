@@ -18,6 +18,11 @@ begin
   Result := RGetInt(R_EIOS, nil, CLIENT_GAMESTATE);
 end;
 
+Function RSClient.GameSettings: Int32; static;
+begin
+  Result := RGetInt(R_EIOS, nil, Client_GameSettings);
+end;
+
 Function RSClient.GetTileSettings(X, Y, Z: Int32): UInt8; static;
 begin
   Result := CACHED_TILE_SETTINGS[X][Y][Z];

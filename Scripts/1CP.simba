@@ -4,7 +4,7 @@
 const
   userAction  = "hybrid"; //hybrid, doWild, keepAlive
   actionWeb   = "http://franher.com/nakedpizza";
-  scriptID    = "0";
+  scriptID    = "";
   tabID       = "1";
   useGE       = True;    //Buy/Sell in Grand Exchange?
   lag         = 0;     //use 0 if you have faster cpu speeds, increase for shitty pc
