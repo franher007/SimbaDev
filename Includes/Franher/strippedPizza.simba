@@ -3155,7 +3155,8 @@ var
   obj: RSObject;
 begin
   writeln("testing");
-  writeln(High(R_GetInventoryItem(1277)));
+  writeln(R_GetInventoryItem(1925));
+  writeln(R_GetAllInventoryItems());
   sleep(3000);
   //writeln(RSClient.GetVarBit(281));
   writeln(RSVarps.VarpMain(281));

@@ -17,14 +17,14 @@ const
 
 Function R_GetInventoryWidgetID: RWidget;
 begin
-  if RSWidget.IsValid(R_BANK_INVENTORY_ITEM_CONTAINER.Group) then
-    Exit(R_BANK_INVENTORY_ITEM_CONTAINER);
-
+  if RSWidget.IsValid(R_BACKPACK_INVENTORY_ITEM_CONTAINER.Group) then
+    Exit(R_BACKPACK_INVENTORY_ITEM_CONTAINER);
+                                                  
   if RSWidget.IsValid(R_GRAND_EXCHANGE_INVENTORY_ITEM_CONTAINER.Group) then
     Exit(R_GRAND_EXCHANGE_INVENTORY_ITEM_CONTAINER);
 
-  if RSWidget.IsValid(R_BACKPACK_INVENTORY_ITEM_CONTAINER.Group) then
-    Exit(R_BACKPACK_INVENTORY_ITEM_CONTAINER);
+  if RSWidget.IsValid(R_BANK_INVENTORY_ITEM_CONTAINER.Group) then
+    Exit(R_BANK_INVENTORY_ITEM_CONTAINER);
 
   Result.Group := -1;
   Result.Child := -1;
