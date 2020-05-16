@@ -10,8 +10,8 @@ const
   lag         = 0;     //use 0 if you have faster cpu speeds, increase for shitty pc
   useDebug    = False; //write shit to the debug window?
 
-  P_USERNAME = "";
-  P_PASSWORD = "";
+  P_USERNAME = "a";
+  P_PASSWORD = "a";
 
   PIZZA_PRICE  = 350;
   GRAIN_PRICE  = 35;
