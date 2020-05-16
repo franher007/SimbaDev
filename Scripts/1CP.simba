@@ -2,7 +2,7 @@
 
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
-  userAction  = "doTest"; //hybrid, doWild, keepAlive
+  userAction  = "hybrid"; //hybrid, doWild, keepAlive
   actionWeb   = "http://franher.com/nakedpizza";
   scriptID    = "";
   tabID       = "1";
@@ -10,8 +10,8 @@ const
   lag         = 0;     //use 0 if you have faster cpu speeds, increase for shitty pc
   useDebug    = False; //write shit to the debug window?
 
-  P_USERNAME = "1";
-  P_PASSWORD = "1";
+  P_USERNAME = "";
+  P_PASSWORD = "";
 
   PIZZA_PRICE  = 350;
   GRAIN_PRICE  = 35;

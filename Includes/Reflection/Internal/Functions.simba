@@ -2,6 +2,68 @@
 {$IFNDEF FUNCTIONS}
 {$DEFINE FUNCTIONS}
 
+//Used to check for leaks in the include..
+{type
+  MemoryPointer = Array of Pointer;
+
+var
+  MemoryTracker: MemoryPointer;
+
+procedure MemoryPointer.DeleteIndex(index: integer);
+var
+  i: Integer;
+begin
+  if (index >= 0) and (index < Length(self)) then
+  begin
+    for i := index + 1 to high(self) do
+    begin
+      self[i - 1] := self[i];
+    end;
+
+    SetLength(self, Length(self) - 1);
+  end;
+end;
+
+function MemoryPointer.IndexOf(value: pointer): Int32;
+var
+  i: Integer;
+begin
+  for i := 0 to high(self) do
+    if self[i] = value then
+      exit(i);
+
+  exit(-1);
+end;
+
+Procedure MemoryPointer.Add(ptr: Pointer);
+begin
+  self += ptr;
+end;
+
+Procedure MemoryPointer.Add(ptr: Array of Pointer); overload;
+begin
+  self += ptr;
+end;
+
+Procedure MemoryPointer.Remove(ptr: Pointer);
+var
+  J: Integer;
+begin
+  J := self.IndexOf(ptr);
+  if J >= 0 then
+    Delete(self, J, 1);
+end;
+
+Procedure MemoryPointer.Remove(ptrs: Array of Pointer); overload;
+var
+  I: Integer;
+begin
+  for i := 0 to high(ptrs) do
+  begin
+    self.Remove(ptrs[I]);
+  end;
+end;}
+
 // MARK: - OBJECT
 
 Function RGetObject(eios: Pointer; instance: Pointer; constref hook: THook): Pointer;
@@ -95,10 +157,10 @@ begin
   result := RIGetArraySize(eios, instance);
 end;
 
-{Function RGetArraySize(eios: Pointer; instance: Pointer; index: SizeUInt): SizeUInt; overload;
+Function RGetArraySize(eios: Pointer; instance: Pointer; index: SizeUInt): SizeUInt; overload;
 begin
   result := RIGetArraySize(eios, instance, index);
-end;}
+end;
 
 
 // MARK: - Array of 1-Dimension
@@ -176,11 +238,25 @@ begin
   Result := TBooleanArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_BOOLEAN, index, count));
 end;
 
+Function RGetBoolArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of Boolean; overload;
+type
+  TBooleanArray = array of Boolean;
+begin
+  Result := TBooleanArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_BOOLEAN, indices));
+end;
+
 Function RGetCharArray(eios: Pointer; instance: Pointer; index: SizeUInt; count: SizeUInt): array of Char; overload;
 type
   TCharArray = array of Char;
 begin
   Result := TCharArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_CHAR, index, count));
+end;
+
+Function RGetCharArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of Char; overload;
+type
+  TCharArray = array of Char;
+begin
+  Result := TCharArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_CHAR, indices));
 end;
 
 Function RGetByteArray(eios: Pointer; instance: Pointer; index: SizeUInt; count: SizeUInt): array of Byte; overload;
@@ -190,11 +266,25 @@ begin
   Result := TByteArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_BYTE, index, count));
 end;
 
+Function RGetByteArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of Byte; overload;
+type
+  TByteArray = array of Byte;
+begin
+  Result := TByteArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_BYTE, indices));
+end;
+
 Function RGetShortArray(eios: Pointer; instance: Pointer; index: SizeUInt; count: SizeUInt): array of Int16; overload;
 type
   TShortArray = array of Int16;
 begin
   Result := TShortArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_SHORT, index, count));
+end;
+
+Function RGetShortArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of Int16; overload;
+type
+  TShortArray = array of Int16;
+begin
+  Result := TShortArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_SHORT, indices));
 end;
 
 Function RGetIntArray(eios: Pointer; instance: Pointer; index: SizeUInt; count: SizeUInt): array of Int32; overload;
@@ -204,11 +294,25 @@ begin
   Result := TIntArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_INT, index, count));
 end;
 
+Function RGetIntArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of Int32; overload;
+type
+  TIntArray = array of Int32;
+begin
+  Result := TIntArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_INT, indices));
+end;
+
 Function RGetLongArray(eios: Pointer; instance: Pointer; index: SizeUInt; count: SizeUInt): array of Int64; overload;
 type
   TIntArray = array of Int64;
 begin
   Result := TIntArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_LONG, index, count));
+end;
+
+Function RGetLongArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of Int64; overload;
+type
+  TIntArray = array of Int64;
+begin
+  Result := TIntArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_LONG, indices));
 end;
 
 Function RGetFloatArray(eios: Pointer; instance: Pointer; index: SizeUInt; count: SizeUInt): array of Single; overload;
@@ -218,11 +322,25 @@ begin
   Result := TFloatArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_FLOAT, index, count));
 end;
 
+Function RGetFloatArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of Single; overload;
+type
+  TFloatArray = array of Single;
+begin
+  Result := TFloatArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_FLOAT, indices));
+end;
+
 Function RGetDoubleArray(eios: Pointer; instance: Pointer; index: SizeUInt; count: SizeUInt): array of Double; overload;
 type
   TDoubleArray = array of Double;
 begin
   Result := TDoubleArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_DOUBLE, index, count));
+end;
+
+Function RGetDoubleArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of Double; overload;
+type
+  TDoubleArray = array of Double;
+begin
+  Result := TDoubleArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_DOUBLE, indices));
 end;
 
 Function RGetStringArray(eios: Pointer; instance: Pointer; index: SizeUInt; count: SizeUInt): array of String; overload;
@@ -232,11 +350,25 @@ begin
   Result := TStringArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_STRING, index, count));
 end;
 
+Function RGetStringArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of String; overload;
+type
+  TStringArray = array of String;
+begin
+  Result := TStringArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_STRING, indices));
+end;
+
 Function RGetObjectArray(eios: Pointer; instance: Pointer; index: SizeUInt; count: SizeUInt): array of Pointer; overload;
 type
   TObjectArray = array of Pointer;
 begin
   Result := TObjectArray(RIGetArrayElement(eios, instance, ReflectionArrayType.RI_OBJECT, index, count));
+end;
+
+Function RGetObjectArray(eios: Pointer; instance: Pointer; indices: Array of Int32): array of Pointer; overload;
+type
+  TObjectArray = array of Pointer;
+begin
+  Result := TObjectArray(RIGetArrayElements(eios, instance, ReflectionArrayType.RI_OBJECT, indices));
 end;
 
 

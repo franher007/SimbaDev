@@ -63,3 +63,12 @@ function TPoint.Equals(Other: TPoint): Boolean; constref; {deprecated;}
 begin
   Result := (self.X = other.X) and (self.Y = other.Y);
 end;
+
+function TIntegerArray.Find(const Value: Integer): Integer; constref;
+begin
+  for Result := 0 to High(Self) do
+    if (Value = Self[Result]) then
+      Exit;
+
+  Result := -1;
+end;

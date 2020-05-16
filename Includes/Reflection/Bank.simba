@@ -40,6 +40,11 @@ begin
   Result := RSWidget.IsValid(R_INTERFACE_BANK);
 end;
 
+Function R_BankHelp: Boolean;
+begin
+  Result := RSWidget.IsValid(R_INTERFACE_BANK_HELP);
+end;
+
 Function R_WaitBankScreen(timeout: UInt32): Boolean;
 begin
   Result := R_WaitFunction(timeout, 50, @R_BankScreen);

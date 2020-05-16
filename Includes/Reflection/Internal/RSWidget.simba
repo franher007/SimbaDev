@@ -1,4 +1,5 @@
 {$include_once RSStructures.simba}
+{$include_once RSHashTable.simba}
 {$include_once RSIterableHashTable.simba}
 {$include_once RSWidgetNode.simba}
 {$include_once RSText.simba}
@@ -21,7 +22,7 @@ end;
 Function RSWidget.ParentID: Int32; constref;
 var
   I: Int32;
-  HashTable: RSIterableHashTable;
+  HashTable: RSHashTable;
   Head, Current: RSNode;
   HeadUID, CurrentUID: Int64;
   Garbage: RSTypeArray;
@@ -422,6 +423,35 @@ begin
   if Index < WidgetsSize then
   begin
     Result := RGetBoolArray(R_EIOS, Widgets, Index);
+  end;
+  RFreeObject(R_EIOS, Widgets);
+end;
+
+Function RSWidget.IsValid(Group, Child: Int32): Boolean; static; overload;
+var
+  Widgets: Pointer;
+  WidgetsSize: SizeUInt;
+  WidgetInterfaces: Pointer;
+  Widget: RSWidget;
+begin
+  WidgetsSize := 0;
+  Widgets := RGetArray(R_EIOS, nil, WidgetsSize, CLIENT_WIDGETS);
+  if Widgets = nil then
+    Exit;
+
+  if Group < WidgetsSize then
+  begin
+    WidgetInterfaces := RGetObjectArray(R_EIOS, Widgets, Group);
+    if WidgetInterfaces <> nil then
+    begin
+      Widget.ref := RGetObjectArray(R_EIOS, WidgetInterfaces, Child);
+      if Widget.ref <> nil then
+      begin
+        Result := not Widget.IsHidden;
+        Widget.Free;
+      end;
+      RFreeObject(R_EIOS, WidgetInterfaces);
+    end;
   end;
   RFreeObject(R_EIOS, Widgets);
 end;
