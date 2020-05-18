@@ -754,6 +754,7 @@ begin
     sleep(3000);
     KeyUp(VK_UP);
     reinitializeReflection;
+    player := RSPlayer.Me;
     SetPlayerUsername(RSPlayer.me.Name, currentUser);
     sleep(500);
     SetPlayerOnline(RSPlayer.me.Name);
