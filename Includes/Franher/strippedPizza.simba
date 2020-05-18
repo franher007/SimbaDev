@@ -3585,6 +3585,7 @@ begin
     begin
       WritelnEx("No USER set and can't get one from the site [ScriptID:"+ScriptID[currentSet]+"], sleeping 5 min and retrying", true);
       SleepAndPrintProgressReport(5 * 60 * 1000);
+      if shouldChangeSet(setMinutes + Random(15)) then Exit;
       goto TryAgain;
     end;
 
