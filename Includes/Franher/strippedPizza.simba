@@ -25,7 +25,7 @@ var
   CurrentSprintTimer                : Timer;
   CurrentSet                        : Integer;
   startTime                         : TDateTime;
-  antibanMark                       : TDateTime;
+  antibanMark                       : Timer;
   isMillEmpty                       : Boolean;
   player                            : RSPlayer;
   startPos                          : TPoint;
@@ -2236,10 +2236,7 @@ begin
     currentSprintTimer.Reset;
     currentSprintTimer.Start;
   end;
-  writeln('ab');
-  writeln(now):
-  writeln(antiBanMark);
-  if (now - antibanMark) < (60000 + Random(30000)) then Exit;
+  if (antiBanMark.ElapsedTime < (60000 + Random(30000))) then Exit;
   Chance := Random(40) + 1;
   WritelnEx('Antiban chance: ' + inttostr(Chance));
   case (Chance) of
@@ -2343,7 +2340,8 @@ begin
 
     else Exit;
   end;
-  antibanMark := Now;
+  antibanMark.Reset;
+  antibanMark.Start;
 end;
 
 procedure checkCurrentResources(bankName: String = "Grand Exchange booth"; upText: String = "Bank Grand");
@@ -3809,7 +3807,7 @@ begin
   end;   }
   timerTrack.Start;
   startTime := Now;
-  antibanMark := Now;
+  antibanMark.Start;
   pizzasDone := 0;
   floursDone := 0;
   geVisits := 0;
