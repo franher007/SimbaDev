@@ -257,8 +257,8 @@ begin
   sleep(random(1200, 1400));
   R_GrandExchangeCollectAll;
   sleep(random(1200, 1400));  
-  RSTypeArray(titleVars).Free;
-  RSTypeArray(itemNameVars).Free;
+  //RSTypeArray(titleVars).Free;
+  //RSTypeArray(itemNameVars).Free;
 end;
 
 Function R_GrandExchange_CountItem(itemName:String; totalSlots: Int32 = 3): Integer;
@@ -310,9 +310,9 @@ begin
     Break;
   end;
   offerItem.Free;
-  RSTypeArray(titleVars).Free;
-  RSTypeArray(itemVars).Free;
-  RSTypeArray(itemNameVars).Free;
+  //RSTypeArray(titleVars).Free;
+  //RSTypeArray(itemVars).Free;
+  //RSTypeArray(itemNameVars).Free;
 end;
 
 Function R_GrandExchange_Offer_Add_Quantity(Mode: TRSOfferQuantity; XAmount: Int32 = -1): Boolean;
@@ -483,7 +483,7 @@ begin
       begin
         Mouse.Click(chatboxItems[j].Bounds.Middle, 3, MOUSE_LEFT); 
         sleep(random(1200, 1500));
-        RSTypeArray(chatboxITems).Free;
+        //RSTypeArray(chatboxITems).Free;
         R_GrandExchange_Offer_Add_Quantity(Mode, XAmount);
         sleep(random(1200,1500));
         R_GrandExchange_Offer_Set_Price(PriceMode, XPrice);
@@ -498,7 +498,7 @@ begin
     end;
   end;
   Result := False;
-  RSTypeArray(chatboxITems).Free;
-  RSTypeArray(buyVars).Free;
-  RSTypeArray(spriteVars).Free;
+  //RSTypeArray(chatboxITems).Free;
+  //RSTypeArray(buyVars).Free;
+  //RSTypeArray(spriteVars).Free;
 end;

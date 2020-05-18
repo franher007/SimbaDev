@@ -20,7 +20,12 @@ var
   totalCoins, totalPizzas, totalGrains, pizzasInGE, grainsInGE : Integer;
   timerTrack                        : Timer;
   timeSinceLastGeVisit              : Timer;
+  CurrentSetTimer                   : Timer;
+  CurrentAccountTimer               : Timer;
+  CurrentSprintTimer                : Timer;
+  CurrentSet                        : Integer;
   startTime                         : TDateTime;
+  antibanMark                       : TDateTime;
   isMillEmpty                       : Boolean;
   player                            : RSPlayer;
   startPos                          : TPoint;
@@ -45,6 +50,7 @@ var
   bmp: TMufasaBitmap;
   w, h: Int32;
   debugLines: TStringArray;
+  //ScriptID: TStringArray;
   currentPlane, currentBaseX, currentBaseY : Integer;
 
 
@@ -79,7 +85,7 @@ begin
   begin
     y := (i * 14) + 340;
     bmp.Rectangle([7, y, 494, y + 16], 9812684);
-    bmp.DrawText(debugLines[i], Point(7, y), $11);
+    bmp.DrawText("[" + FormatDateTime('hh:nn',now) + "]" + debugLines[i], Point(7, y), $11);
   end;
 end;
 
@@ -87,9 +93,9 @@ Procedure writelnex(text: String; both: Boolean = False);
 begin
   if both then writeln("["+tabID+"]" + text);
   try
-    if useDebug then writeln("["+tabID+"]["+scriptID+"]["+player.name+"]: " + text) else writeStatus(text);
+    if useDebug then writeln("["+tabID+"]["+scriptID[currentSet]+"]["+player.name+"]: " + text) else writeStatus(text);
   Except
-    if useDebug then writeln("["+tabID+"]["+scriptID+"]["+currentUser+"]: " + text) else writeStatus(text);
+    if useDebug then writeln("["+tabID+"]["+scriptID[currentSet]+"]["+currentUser+"]: " + text) else writeStatus(text);
   end;
 end;
 
@@ -125,6 +131,14 @@ begin
   for i:= 0 to (5 - length(str)) do Result += " ";
 end;
 
+Function MStoFormattedTime(M:Integer): String;
+var   
+  hh,mm,ss: Integer;
+begin
+  ConvertTime(M, hh, mm, ss);
+  Result := FormatDateTime('hh:nn:ss',EncodeTime(hh, mm, ss, 0));
+end;
+
 procedure ProgressReport;
 var
   debugStrings: TStringArray;
@@ -134,6 +148,9 @@ begin
     writelnex('##########  PROGRESS  ##########');
     writelnex('## CURRENT TIME: ' + FormatDateTime('hh:nn:ss',now));
     writelnex('## Time Running: ' + FormatDateTime('hh:nn:ss',now-startTime));
+    writelnex('## Set Runtime:  ' + MStoFormattedTime(CurrentSetTimer.ElapsedTime));
+    writelnex('## Account time: ' + MStoFormattedTime(CurrentAccountTimer.ElapsedTime));
+    writelnex('## Sprint time : ' + MStoFormattedTime(CurrentSprintTimer.ElapsedTime));
     writelnex('## RUNS        : ' + intToStr(runs));
     writelnex('## Flours      : ' + intToStr(floursDone));
     writelnex('## Pizzas      : ' + intToStr(pizzasDone));
@@ -149,8 +166,8 @@ begin
     writelnex('GTR: ' + inttostr(GetTimeRunning));
     writelnex('TSLGEV: ' + inttostr(TimeSinceLastGeVisit.ElapsedTime));
   end;
-  debugStrings := [ CurrentUser + ': TabID: ' + TabID + ' - ScriptID: ' + scriptID + ' - Action: ' + action,
-                    'Time running: ' + FormatDateTime('hh:nn:ss',now-startTime),
+  debugStrings := [ CurrentUser + ': TabID: ' + TabID + ' - ScriptID: ' + scriptID[currentSet] + ' - Action: ' + action,
+                    'Time running: ' + FormatDateTime('hh:nn:ss',now-startTime) + ' Set: ' + MStoFormattedTime(CurrentSetTimer.ElapsedTime) + ' Acc: ' + MStoFormattedTime(CurrentAccountTimer.ElapsedTime) + ' Sprint: ' + MStoFormattedTime(CurrentSprintTimer.ElapsedTime),
                     'Runs       : ' + intToStr(runs) + debugTabulator(intToStr(runs)) + " | " + inttostr( Round(60 / (GetTimeRunning/1000/60) * runs)),
                     'Pizzas    : ' + intToStr(pizzasDone) + debugTabulator(intToStr(pizzasDone)) + " | " + inttostr( Round(60 / (GetTimeRunning/1000/60) * pizzasDone)),
                     'Pizzas in bank: ' + intToStr(totalPizzas) + ' | Pizzas in GE: ' + intToStr(pizzasInGe),
@@ -662,8 +679,6 @@ begin
   GetPage(actionWeb + "/enviar.php?setbanned=" + email);
 end;
 
-
-
 Function LoginPlayer:Boolean;
 var
   tries: Integer;
@@ -744,6 +759,29 @@ begin
     SetPlayerOnline(RSPlayer.me.Name);
     Exit(True);
   end;
+end;
+
+Function LogoutPlayer: Boolean;
+var
+  widget: RSWidget;
+begin
+  writelnEx("["+CurrentUser+"]Logging out: " + CurrentUser);
+  if not ((RSCLient.LoginState = 2) and (RSClient.GameState > 10)) then
+    Exit(True);
+
+  Mouse.Click(R_GameTabBounds(10), MOUSE_LEFT);
+  sleep(random(500, 800));
+  widget := RSWidget.Get(R_LOGOUT_BUTTON.Group, R_LOGOUT_BUTTON.Child);
+  if widget.ref = nil then
+    widget := RSWidget.Get(R_WORLD_SWITCHER_LOGOUT.Group, R_WORLD_SWITCHER_LOGOUT.Child);
+  if widget.ref = nil then
+    Exit(False);
+  Mouse.Click(widget.bounds, MOUSE_LEFT);
+  widget.Free;
+  sleep(random(3000, 5000));
+  if not ((RSCLient.LoginState = 2) and (RSClient.GameState > 10)) then
+    Exit(True);
+  Exit(False);
 end;
 
 Function RSPlayer.ToggleRun(run: boolean): Boolean;
@@ -2151,6 +2189,158 @@ procedure withdrawCoins;
 begin
   if not openClosestBank("Grand Exchange booth", 10, "Bank Grand") then Exit;
   R_WithdrawItem(coinsID);
+end;     
+
+Function shouldSleep(minutes: int32): boolean;
+begin
+   Result := (CurrentSprintTimer.ElapsedTime >= (minutes * 60 * 1000));
+end;
+
+Function shouldChangeAccount(minutes: int32): boolean;
+begin
+   Result := (CurrentAccountTimer.ElapsedTime >= (minutes * 60 * 1000));
+end;
+
+Function shouldChangeSet(minutes: int32): boolean;
+begin
+   Result := (CurrentSetTimer.ElapsedTime >= (minutes * 60 * 1000));
+end;
+
+procedure SleepAndPrintProgressReport(milis:Uint32);
+var
+  i: Integer;
+begin
+  for i := 0 to milis div 1000 do
+  begin
+    ProgressReport;
+    sleep(1000);
+  end;
+  ProgressReport;
+  sleep(milis mod 1000);
+end;
+
+procedure AntibanAndBreak;
+var
+  i, breakTotalMinutes, breakTotalSeconds, Chance, x, y: Integer;
+begin
+  if not LoginPlayer then Exit;
+
+  if shouldSleep(accountPlayBeforeBreakMinutes) then
+  begin
+    breakTotalMinutes := breakMinutes + Random(-5, 5);
+    breakTotalSeconds := breakTotalMinutes * 60;
+    writelnEx('Been running for ' + IntToStr(CurrentSprintTimer.ElapsedTime div 1000 div 60) + ' minutes, taking a ' + IntToStr(breakTotalMinutes) + ' mins sleep');
+    LogoutPlayer;
+    sleepAndPrintProgressReport(breakTotalMinutes * 60 * 1000);
+    LoginPlayer;
+    currentSprintTimer.Reset;
+    currentSprintTimer.Start;
+  end;
+
+  if (now - antibanMark < 60000 + Random(30000)) then Exit;
+  Chance := Random(40) + 1;
+  case (Chance) of
+    1:  begin
+          WriteLnEx('Antiban 1');
+          GetClientDimensions(x, y);
+          Mouse.Move(Random(x), Random(y));
+          Wait(200 + random(100));
+          if (R_IsUpText(['ption'])) then
+          begin
+            Mouse.Click(MOUSE_RIGHT);
+            Wait(200 + random(100));
+            R_ChooseOptions(['xamine']);
+          end;
+          Wait(1000 + Random(500));
+        end;
+    2:  begin
+          if (Random(5) = 1) then
+          begin
+            WriteLnEx('Antiban 2');
+            Mouse.Click(R_GameTabBounds(1), MOUSE_LEFT);
+            sleep(500 + random(100, 200));
+            Mouse.Move(Random(550, 730), Random(250, 500));
+            sleep(1000 + random(100, 200));
+            Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);
+            sleep(200 + random(100, 200));
+          end;
+        end;
+    3:  begin
+          if (Random(5) = 1) then
+          begin
+            WriteLnEx('Antiban 3');
+            Mouse.Click(R_GameTabBounds(1), MOUSE_LEFT);
+            sleep(500 + random(100, 200));
+            Mouse.Move(Random(670, 730), Random(347, 369));
+            sleep(1000 + random(100, 200));
+            Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);
+            sleep(200 + random(100, 200));
+          end;
+        end;
+    4:  begin
+          if (R_InventoryCount < 1) then Exit;
+          Mouse.Click(R_GetInventorySlotItem(Random(1,R_InventoryCount)-1).Bounds, MOUSE_RIGHT);
+          Wait(200 + random(100));
+          R_ChooseOptions(['xamine']);
+          Wait(1000 + Random(500));
+        end;
+    5:  begin
+          WriteLnEx('Antiban 5');
+          Mouse.Click(R_GameTabBounds(Random(13)), MOUSE_LEFT);
+          sleep(500 + random(100, 200));
+          Mouse.Move(Random(550, 730), Random(250, 500));
+          sleep(1000 + random(100, 200));
+          Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);
+          sleep(200 + random(100, 200));
+          Wait(500 + Random(500));
+        end;
+    6:  begin
+          WriteLnEx('Antiban 6');
+          GetClientDimensions(x, y);
+          Mouse.Move(Random(x), Random(y));
+          Wait(200 + random(100));
+        end;
+    7:  begin
+          GetMousePos(x, y);
+          Mouse.Move(x - Random(10), y - Random(10));
+          Wait(200 + random(100));
+        end;
+    8:  begin
+          WriteLnEx('Antiban 8');
+          GetMousePos(x, y);
+          Mouse.Move(x - Random(10), y - Random(10));
+          sleep(Random(500));
+          GetMousePos(x, y);
+          Mouse.Move(x - Random(10), y - Random(10));
+          sleep(Random(500));
+          GetMousePos(x, y);
+          Mouse.Move(x - Random(10), y - Random(10));
+          sleep(Random(500));
+        end;
+    9: begin
+          WriteLnEx('Antiban 9');
+          SleepAndPrintProgressReport(Random(3000, 15000));
+       end;
+    10: begin
+          if Random(3) <> 2 then Exit;
+          WriteLnEx('Antiban 10');
+          SleepAndPrintProgressReport(Random(6000, 30000));
+       end;
+    11: begin
+          if Random(6) <> 3 then Exit;
+          WriteLnEx('Antiban 11');
+          SleepAndPrintProgressReport(Random(10000, 60000));
+        end;
+    12: begin
+          player.ToggleRun(True);
+        end;
+    13: begin
+          player.ToggleRun(False);
+        end;
+
+    else Exit;
+  end;
+  antibanMark := Now;
 end;
 
 procedure checkCurrentResources(bankName: String = "Grand Exchange booth"; upText: String = "Bank Grand");
@@ -2329,6 +2519,7 @@ begin
 
   while (R_CountInventoryItem(currentFishID) > 0) do
   begin
+    AntibanAndBreak;
     writelnex('Using range');
     Mouse.Click(julietRange.MidPoint, MOUSE_LEFT);
     timer.Start;
@@ -2343,6 +2534,7 @@ begin
     writelnex("Choosing Option");
     R_ChatSkillChooseOptions(1);
     sleep(random(1000,1100));
+    AntibanAndBreak;
     timer.Start;
     while (player.isAnimating) do
     begin
@@ -2350,7 +2542,8 @@ begin
         Break;
       Wait(50 + Random(50));
     end;
-    timer.Reset;
+    timer.Reset;  
+    AntibanAndBreak;
   end;
   julietRange.Free;
 
@@ -2698,6 +2891,7 @@ var
 begin
   loginPlayer;
   writelnex('Making flourToPizza!');
+  AntibanAndBreak;
   fails := 0;
 
   //CheckMill;
@@ -2726,6 +2920,7 @@ begin
       Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
       sleep(random(500,700));
       emptyWaterBucket;
+      AntibanAndBreak;
       emptyFlourPot;
       climbToFloor(2);
 
@@ -2751,7 +2946,7 @@ begin
       end;
       timer.Reset;
       sleep(random(400,600) + lag);
-
+      AntibanAndBreak;
       writelnex('Activating Hopper');
       hopperControl := RSObject.Get(RSObjectType.GAME_OBJECT, 3141, 3453);
       if (hopperControl.ref = nil) then
@@ -2783,6 +2978,7 @@ begin
           writelnEx("At top flor - No more grains");
           Break;
         end;
+        if (i mod 10 = 0) then AntibanAndBreak;
         Mouse.Click(hopper.MidPoint, 2, MOUSE_LEFT);
         timer.Start;
         while(not (currentGrains <> R_CountInventoryItem(grainID))) do
@@ -2854,6 +3050,8 @@ begin
         Break;
       end;
 
+      if (Random(8) = 3) then AntibanAndBreak;
+
       //Check if inventory full but grains left
       if (R_InventoryCount > 27) AND (R_CountInventoryItem(grainID) > 1) then
       begin
@@ -2894,6 +3092,8 @@ begin
       end;
       timer.Reset;
 
+      if (Random(10) = 3) then AntibanAndBreak;
+
       //sleep(random(1000,1000));
 
       //fill flour
@@ -2914,6 +3114,7 @@ begin
       end;
       timer.Reset;
 
+      if (Random(10) = 3) then AntibanAndBreak;
       //sleep(random(1000,1500));
 
       //makePizza
@@ -2959,6 +3160,7 @@ begin
         writelnex('Past failsafe');
         sleep(random(1500,2000));
       end
+      if (Random(10) = 3) then AntibanAndBreak;
 
     end;
     cookPump.Free;
@@ -2985,7 +3187,9 @@ var
   timer: Timer;
 begin
   loginPlayer;
+  AntibanAndBreak;
   grainsGate(true);
+  AntibanAndBreak;
   if isMillEmpty then
   begin
     while (R_InventoryCount < 28)  and (tries < 50) do
@@ -3003,6 +3207,7 @@ begin
         Wait(50 + Random(50));
       end;
       timer.Reset;
+      AntibanAndBreak;
     end;
   end else
   begin
@@ -3021,8 +3226,10 @@ begin
         Wait(50 + Random(50));
       end;
       timer.Reset;
+      AntibanAndBreak;
     end;
   end;
+  wheatObj.Free;
   sleep(random(700, 1000));
   grainsGate(false);
 end;
@@ -3089,6 +3296,7 @@ begin
     wheatProcedure;
     player.WalkTo("grainsToCook");
     sleep(random(700, 1000));
+    AntibanAndBreak;
   end;
   if player.InGuild then
   begin
@@ -3097,6 +3305,7 @@ begin
     climbToFloor(0);
     makeFlourToPizza;
     cookGuildDoor(False);
+    AntibanAndBreak;
   end else
   begin
     if (R_CountInventoryItem(grainID) > 0) and (R_CountInventoryItem(PotID) > 0) and (R_CountInventoryItem(BucketID) > 0) then
@@ -3118,7 +3327,7 @@ begin
       sleep(random(700, 1000));
       withdrawFlourToPizzaItems;
       ProgressReport;
-      if (timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) and useGe then
+      if ((timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) or ((runs = 0) and GEonFirstRun)) and useGe then
       begin
         reinitializeReflection;
         writelnEx("DOING GE");
@@ -3156,6 +3365,7 @@ end;
 procedure cookingProcedure;
 begin
   rangeDoor(False);
+  AntibanAndBreak;
   sleep(random(700, 1000));
   player.walkTo("bankToEast");
   sleep(random(700, 1000));
@@ -3163,6 +3373,7 @@ begin
   sleep(random(700, 1000));
   withdrawCookingItems;
   progressReport;
+  AntibanAndBreak;
   sleep(random(700, 1000));
   player.walkTo("eastToHouse");
   sleep(random(700, 1000));
@@ -3209,7 +3420,8 @@ begin
 end;
 
 procedure hybridProcedure;
-begin
+begin             
+  AntibanAndBreak;
   if R_InTutorialIsland then
   begin
     writelnEx("InTutIsland");
@@ -3230,7 +3442,8 @@ begin
 
   if player.me.SkillLevel(7) < 32 then
   begin
-    writelnex("Getting that cooking up");
+    writelnex("Getting that cooking up");    
+    AntibanAndBreak;
     if player.inWestBank then
     begin
       checkCurrentResources("Bank booth", "Bank Bank");
@@ -3244,11 +3457,13 @@ begin
           Exit;
         end else
         begin
-          player.walkTo('bankToGe');
+          player.walkTo('bankToGe'); 
+          AntibanAndBreak;
           buyResources;
           player.WalkTo('geToBank');
           openClosestBank;
           R_DepositAll_Items;
+          AntibanAndBreak;
           sleep(random(1000,1500));
           R_BankScreen_Close;
         end;
@@ -3269,6 +3484,8 @@ var
   testPoint: TPoint;
 begin
   writeln("testing");
+  LOGOUTPLAYER;
+  TerminateScript;
   writeln(R_BankScreen);
   writeln(R_BankHelp);
   openClosestBank();
@@ -3295,8 +3512,8 @@ Function getWebPlayer: TWebPlayer;
 var
   response: String;
 begin
-  if scriptID = "" then Exit;
-  response := GetPage(actionWeb + "/enviar.php?getuserfromscript=" + scriptID);
+  if scriptID[currentSet] = "" then Exit;
+  response := GetPage(actionWeb + "/enviar.php?getuserfromscript=" + scriptID[currentSet]);
   if response <> "" then
   begin
     Result.email := substring(response, "email:'.", ".':email");
@@ -3313,11 +3530,11 @@ Function getWebScript: TWebScript;
 var
   response: String;
 begin
-  if scriptID = "" then Exit;
-  response := GetPage(actionWeb + "/" + scriptID + ".txt");
+  if scriptID[currentSet] = "" then Exit;
+  response := GetPage(actionWeb + "/" + scriptID[currentSet] + ".txt");
   if response <> "" then
   begin
-    Result.ID           := strtoint(scriptID);
+    Result.ID           := strtoint(scriptID[currentSet]);
     Result.action       := substring(response, "action:'.", ".':action");
     Result.grainPrice   := strtoint(substring(response, "grainprice:'.", ".':grainprice"));
     Result.pizzaPrice   := strtoint(substring(response, "pizzaprice:'.", ".':pizzaprice"));
@@ -3332,221 +3549,273 @@ end;
 
 label TryAgain;
 
-procedure workBitch
+procedure setLoop
 begin
+  currentAccountTimer.Reset;
+  currentAccountTimer.Start;
+  while not shouldChangeAccount(accountMinutes) do
+  begin                   
+    TryAgain:
+    timeSinceLastGeVisit.Reset;
+    timeSinceLastGeVisit.Start;
+    currentSprintTimer.Reset;
+    currentSprintTimer.Start;
+    webPlayer := getWebPlayer;
+    if (P_USERNAME <> "") and (P_PASSWORD <> "") then
+    begin
+      currentUser := P_USERNAME;
+      currentPassword := P_PASSWORD;
+    end else
+    if (webPlayer.email <> "") and (webPlayer.password <> "") and (not webPlayer.online) then
+      begin
+        currentUser := webPlayer.email;
+        currentPassword := webPlayer.password;
+    end else
+    begin
+      WritelnEx("No USER set and can't get one from the site [ScriptID:"+ScriptID[currentSet]+"], sleeping 5 min and retrying", true);
+      SleepAndPrintProgressReport(5 * 60 * 1000);
+      goto TryAgain;
+    end;
+
+    while True do
+    begin
+      Try
+        if scriptID[currentSet] <> "" then webScript := getWebScript;
+        writeln(webScript);
+        if isWebActionValid(webScript.action) then
+        begin
+          if action <> webScript.action then shouldRunOneOff := True;
+          action              := webScript.Action;
+          currentGrainPrice   := webScript.grainPrice;
+          currentPizzaPrice   := webScript.pizzaPrice;
+          currentShrimpPrice  := webScript.shrimpPrice;
+          currentTroutPrice   := webScript.troutPrice;
+          currentSalmonPrice  := webScript.salmonPrice;
+          currentHatPrice     := webScript.hatPrice;
+          currentPotPrice     := webScript.potPrice;
+          currentBucketPrice  := webScript.bucketPrice;
+        end else
+        begin
+          action              := userAction;
+          currentGrainPrice   := GRAIN_PRICE;
+          currentPizzaPrice   := PIZZA_PRICE;
+          currentShrimpPrice  := SHRIMP_PRICE;
+          currentTroutPrice   := TROUT_PRICE;
+          currentSalmonPrice  := SALMON_PRICE;
+          currentHatPrice     := HAT_PRICE;
+          currentPotPrice     := POT_PRICE;
+          currentBucketPrice  := BUCKET_PRICE;
+        end;
+
+        player.Free;
+        progressReport;
+        if shouldChangeSet(setMinutes + Random(15)) then
+        begin
+          logoutPlayer;
+          Exit;
+        end;
+        if shouldChangeAccount(accountMinutes + Random(15)) then
+        begin
+          logoutPlayer;
+          Break;
+        end;
+        if (not loginPlayer) then goto TryAgain;
+        currentBaseX := RSCLient.BaseX;
+        currentBaseY := RSCLient.basey;
+        currentPlane := RSCLient.Plane;
+        player := RSPlayer.Me;
+        startPos := player.Tile;
+        player.ToggleRun(True);
+
+        case action of
+          "keepAlive": begin keepAliveProcedure end;
+          "doTest":   begin testProcedure; end;
+          "doWild":   begin wildProcedure; end;
+          "hybrid":   begin if shouldRunOneOff then hybridProcedure end;
+          "walkToGe":   begin
+                          if not shouldRunOneOff then
+                          begin
+                            writelnEx('No new action, sleeping', true);
+                            SleepAndPrintProgressReport(10 * 1000);
+                          end else
+                          begin
+                            shouldRunOneOff := false;
+                            if player.InLumby then
+                            begin
+                              writelnEx("InLumby");
+                              player.walkTo("lumbyToVarrock");
+                            end;
+
+                            if player.InGuild then
+                            begin
+                              writelnEx("InGuild");
+                              climbToFloor(0);
+                              cookGuildDoor(False);
+                            end;
+                            player.WalkTo("cookToBank");
+                            player.WalkTo("bankToGe");
+                          end;
+                        end;
+          "walkToBank":   begin
+                          if not shouldRunOneOff then
+                          begin
+                            writelnEx('No new action, sleeping', true);
+                            SleepAndPrintProgressReport(10 * 1000);
+                          end else
+                          begin
+                            shouldRunOneOff := false;
+                            if player.InLumby then
+                            begin
+                              writelnEx("InLumby");
+                              player.walkTo("lumbyToVarrock");
+                            end;
+
+                            if player.InGuild then
+                            begin
+                              writelnEx("InGuild");
+                              climbToFloor(0);
+                              cookGuildDoor(False);
+                            end;
+                            player.WalkTo("cookToBank");
+                            writeln('a');
+                            player.WalkTo("geToBank");
+                            writeln('b');
+                          end;
+                        end;
+          "walkToWild":  begin
+                          if not shouldRunOneOff then
+                          begin
+                            writelnEx('No new action, sleeping', true);
+                            SleepAndPrintProgressReport(10 * 1000);
+                          end else
+                          begin
+                            shouldRunOneOff := false;
+                            if player.InLumby then
+                            begin
+                              writelnEx("InLumby");
+                              player.walkTo("lumbyToVarrock");
+                            end;
+
+                            if player.InGuild then
+                            begin
+                              writelnEx("InGuild");
+                              climbToFloor(0);
+                              cookGuildDoor(False);
+                            end;
+                            player.WalkTo("cookToBank");
+                            player.WalkTo("geToBank");
+                            player.WalkTo("bankToWild");
+                          end;
+                        end;
+          "sellPizzas": begin
+                          if not shouldRunOneOff then
+                          begin
+                            writelnEx('No new action, sleeping', true);
+                            SleepAndPrintProgressReport(10 * 1000);
+                          end else
+                          begin
+                            shouldRunOneOff := false;
+                            grandExchange(false, true);
+                          end;
+                        end;
+          "buyGrains": begin
+                          if not shouldRunOneOff then
+                          begin
+                            writelnEx('No new action, sleeping', true);
+                            SleepAndPrintProgressReport(10 * 1000);
+                          end else
+                          begin
+                            shouldRunOneOff := false;
+                            grandExchange(true, false);
+                          end;
+                        end;
+          "buyResources": begin
+                          if not shouldRunOneOff then
+                          begin
+                            writelnEx('No new action, sleeping', true);
+                            SleepAndPrintProgressReport(10 * 1000);
+                          end else
+                          begin
+                            shouldRunOneOff := false;
+                            buyResources;
+                          end;
+                        end;
+          "withdrawWildItems": begin
+                          if not shouldRunOneOff then
+                          begin
+                            writelnEx('No new action, sleeping', true);
+                            SleepAndPrintProgressReport(10 * 1000);
+                          end else
+                          begin
+                            shouldRunOneOff := false;
+                            withdrawWildItems;
+                          end;
+                        end;
+          "pause":      begin
+                          writeLnEx("PAUSE", true);
+                            SleepAndPrintProgressReport(10 * 1000);
+                        end;
+          else
+          begin
+            WriteLnEx("NO VALID ACTION FOUND", true);
+            TerminateScript;
+          end;
+        end;
+        inc(runs);
+        reinitializeReflection;
+      Except
+        //E: Exception do writelnex("ERROR "+ E.message);
+        progressReport;
+        WriteLnEx(GetExceptionMessage, true);
+      end;
+    end;
+    player.Free;
+  end;
+  writelnEx('Switching to new account', true);
+
+end;
+
+procedure nextSet;
+var
+  maxSets: Integer;
+begin
+  maxSets := Length(ScriptID);
+  inc(currentSet);
+  if currentSet > maxSets then
+    currentSet := 0;
+end;
+
+procedure workbitch;
+begin
+  currentSet := 0;
+  {SetLength(ScriptID, Length(Scripts));
+  ScriptID := Scripts;
+  if (High(ScriptID) < 0) then
+  begin
+    SetLength(ScriptID, 1);
+    ScriptID[currentSet] := "";
+  end;   }
   timerTrack.Start;
-  timeSinceLastGeVisit.Start;
-  startTime  := Now;
+  startTime := Now;
+  antibanMark := Now;
   pizzasDone := 0;
   floursDone := 0;
   geVisits := 0;
   pickWheat := True;
   sellPizzas := False;
   runs := 0;
-  Sleep(50);
   ClearDebug;
-  shouldRunOneOff := true;
-  TryAgain:
-  webPlayer := getWebPlayer;
-
-  //setup Drawing
+  shouldRunOneOff := true;  
   setupDrawing;
-
-  if (P_USERNAME <> "") and (P_PASSWORD <> "") then
-  begin
-    currentUser := P_USERNAME;
-    currentPassword := P_PASSWORD;
-  end else
-  if (webPlayer.email <> "") and (webPlayer.password <> "") and (not webPlayer.online) then
-    begin
-      currentUser := webPlayer.email;
-      currentPassword := webPlayer.password;
-  end else
-  begin
-    WritelnEx("No USER set and can't get one from the site, sleeping 5 min and retrying", true);
-    sleep(5 * 60 * 1000);
-    goto TryAgain;
-  end;
-
   while True do
-  begin
-    Try
-      if scriptID <> "" then webScript := getWebScript;
-      writeln(webScript);
-      if isWebActionValid(webScript.action) then
-      begin
-        if action <> webScript.action then shouldRunOneOff := True;
-        action              := webScript.Action;
-        currentGrainPrice   := webScript.grainPrice;
-        currentPizzaPrice   := webScript.pizzaPrice;
-        currentShrimpPrice  := webScript.shrimpPrice;
-        currentTroutPrice   := webScript.troutPrice;
-        currentSalmonPrice  := webScript.salmonPrice;
-        currentHatPrice     := webScript.hatPrice;
-        currentPotPrice     := webScript.potPrice;
-        currentBucketPrice  := webScript.bucketPrice;
-      end else
-      begin
-        action              := userAction;
-        currentGrainPrice   := GRAIN_PRICE;
-        currentPizzaPrice   := PIZZA_PRICE;
-        currentShrimpPrice  := SHRIMP_PRICE;
-        currentTroutPrice   := TROUT_PRICE;
-        currentSalmonPrice  := SALMON_PRICE;
-        currentHatPrice     := HAT_PRICE;
-        currentPotPrice     := POT_PRICE;
-        currentBucketPrice  := BUCKET_PRICE;
-      end;
-
-      player.Free;
-      progressReport;
-      inc(runs);
-      if not loginPlayer then goto TryAgain;
-      currentBaseX := RSCLient.BaseX;
-      currentBaseY := RSCLient.basey;
-      currentPlane := RSCLient.Plane;
-      player := RSPlayer.Me;
-      startPos := player.Tile;
-      player.ToggleRun(True);
-
-      case action of
-        "keepAlive": begin keepAliveProcedure end;
-        "doTest":   begin testProcedure; end;
-        "doWild":   begin wildProcedure; end;
-        "hybrid":   begin if shouldRunOneOff then hybridProcedure end;
-        "walkToGe":   begin
-                        if not shouldRunOneOff then
-                        begin
-                          writelnEx('No new action, sleeping', true);
-                          sleep(10* 1000);
-                        end else
-                        begin
-                          shouldRunOneOff := false;
-                          if player.InLumby then
-                          begin
-                            writelnEx("InLumby");
-                            player.walkTo("lumbyToVarrock");
-                          end;
-
-                          if player.InGuild then
-                          begin
-                            writelnEx("InGuild");
-                            climbToFloor(0);
-                            cookGuildDoor(False);
-                          end;
-                          player.WalkTo("cookToBank");
-                          player.WalkTo("bankToGe");
-                        end;
-                      end;
-        "walkToBank":   begin
-                        if not shouldRunOneOff then
-                        begin
-                          writelnEx('No new action, sleeping', true);
-                          sleep(10* 1000);
-                        end else
-                        begin
-                          shouldRunOneOff := false;
-                          if player.InLumby then
-                          begin
-                            writelnEx("InLumby");
-                            player.walkTo("lumbyToVarrock");
-                          end;
-
-                          if player.InGuild then
-                          begin
-                            writelnEx("InGuild");
-                            climbToFloor(0);
-                            cookGuildDoor(False);
-                          end;
-                          player.WalkTo("cookToBank");
-                          player.WalkTo("GeToBank");
-                        end;
-                      end;
-        "walkToWild":  begin
-                        if not shouldRunOneOff then
-                        begin
-                          writelnEx('No new action, sleeping', true);
-                          sleep(10* 1000);
-                        end else
-                        begin
-                          shouldRunOneOff := false;
-                          if player.InLumby then
-                          begin
-                            writelnEx("InLumby");
-                            player.walkTo("lumbyToVarrock");
-                          end;
-
-                          if player.InGuild then
-                          begin
-                            writelnEx("InGuild");
-                            climbToFloor(0);
-                            cookGuildDoor(False);
-                          end;
-                          player.WalkTo("cookToBank");
-                          player.WalkTo("geToBank");
-                          player.WalkTo("bankToWild");
-                        end;
-                      end;
-        "sellPizzas": begin
-                        if not shouldRunOneOff then
-                        begin
-                          writelnEx('No new action, sleeping', true);
-                          sleep(10* 1000);
-                        end else
-                        begin
-                          shouldRunOneOff := false;
-                          grandExchange(false, true);
-                        end;
-                      end;
-        "buyGrains": begin
-                        if not shouldRunOneOff then
-                        begin
-                          writelnEx('No new action, sleeping', true);
-                          sleep(10* 1000);
-                        end else
-                        begin
-                          shouldRunOneOff := false;
-                          grandExchange(true, false);
-                        end;
-                      end;
-        "buyResources": begin
-                        if not shouldRunOneOff then
-                        begin
-                          writelnEx('No new action, sleeping', true);
-                          sleep(10* 1000);
-                        end else
-                        begin
-                          shouldRunOneOff := false;
-                          buyResources;
-                        end;
-                      end;
-        "withdrawWildItems": begin
-                        if not shouldRunOneOff then
-                        begin
-                          writelnEx('No new action, sleeping', true);
-                          sleep(10* 1000);
-                        end else
-                        begin
-                          shouldRunOneOff := false;
-                          withdrawWildItems;
-                        end;
-                      end;
-        "pause":      begin
-                        writeLnEx("PAUSE", true);
-                        sleep(10* 1000);
-                      end;
-        else
-        begin
-          WriteLnEx("NO VALID ACTION FOUND", true);
-          TerminateScript;
-        end;
-      end;
-      reinitializeReflection;
-    Except
-      //E: Exception do writelnex("ERROR "+ E.message);
-      progressReport;
-      WriteLnEx(GetExceptionMessage, true);
+  begin             
+    currentSetTimer.Reset;
+    currentSetTimer.Start;
+    while not ShouldChangeSet(setMinutes) do
+    begin
+      setLoop;
     end;
+    WritelnEx("Switching to next set");
+    nextSet;
   end;
-  player.Free;
 end;
