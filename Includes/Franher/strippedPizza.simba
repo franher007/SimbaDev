@@ -2236,7 +2236,9 @@ begin
     currentSprintTimer.Reset;
     currentSprintTimer.Start;
   end;
-
+  writeln('ab');
+  writeln(now):
+  writeln(antiBanMark);
   if (now - antibanMark) < (60000 + Random(30000)) then Exit;
   Chance := Random(40) + 1;
   WritelnEx('Antiban chance: ' + inttostr(Chance));
