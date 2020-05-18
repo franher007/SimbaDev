@@ -684,12 +684,12 @@ var
   tries: Integer;
   timer: Timer;
 begin
-  writelnEx("["+CurrentUser+"]Logging in: " + CurrentUser);
   if (RSCLient.LoginState = 2) and (RSClient.GameState > 10) then
   begin
     SetPlayerOnline(RSPlayer.me.Name);
     Exit(True);
-  end;
+  end;         
+  writelnEx("["+CurrentUser+"]Logging in: " + CurrentUser);
   tries := 0;
   while (RSClient.LoginState = 24) and (tries < 10) do
   begin
@@ -2237,8 +2237,9 @@ begin
     currentSprintTimer.Start;
   end;
 
-  if (now - antibanMark < 60000 + Random(30000)) then Exit;
+  if (now - antibanMark) < (60000 + Random(30000)) then Exit;
   Chance := Random(40) + 1;
+  WritelnEx('Antiban chance: ' + inttostr(Chance));
   case (Chance) of
     1:  begin
           WriteLnEx('Antiban 1');
@@ -2905,7 +2906,8 @@ begin
   //TODO check if not at cook then die
   while (R_CountInventoryItem(pizzaBaseID) < 26) do
   begin
-    if not LoginPlayer then Exit;
+    if not LoginPlayer then Exit; 
+    ProgressReport;
     if (R_CountInventoryItem(grainID) < 1) then
     begin
       writelnex('Not going up because we aint got grains left');
@@ -2920,6 +2922,7 @@ begin
       Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
       sleep(random(500,700));
       emptyWaterBucket;
+      ProgressReport;
       AntibanAndBreak;
       emptyFlourPot;
       climbToFloor(2);
@@ -2947,6 +2950,7 @@ begin
       timer.Reset;
       sleep(random(400,600) + lag);
       AntibanAndBreak;
+      ProgressReport;
       writelnex('Activating Hopper');
       hopperControl := RSObject.Get(RSObjectType.GAME_OBJECT, 3141, 3453);
       if (hopperControl.ref = nil) then
@@ -2967,12 +2971,13 @@ begin
       end;
       timer.Reset;
       sleep(random(400,600) + lag);
-
+      ProgressReport;
       currentGrains := R_CountInventoryItem(grainID);
       //TODO better check while shouldAddGrains do
       breakHopperCounter := 0;
       for i := 0 to 35 do
       begin
+        ProgressReport;
         if (currentGrains < 1) then
         begin
           writelnEx("At top flor - No more grains");
@@ -3014,6 +3019,7 @@ begin
     writelnex('Going down');
     climbToFloor(0);
     sleep(random(300,350));
+    ProgressReport;
     //aca check mill antes
 
     player.walkTo("cookWaterSpot", True);
@@ -3041,6 +3047,7 @@ begin
 
     while (R_CountInventoryItem(pizzaBaseID) < 26) do
     begin
+      ProgressReport;
       //mill failsafe
 
       if fails > 3 then
@@ -3104,6 +3111,7 @@ begin
         Break;
         inc(fails);
       end;
+      ProgressReport;
       Mouse.Click(cookMill.MidPoint, MOUSE_LEFT);
       timer.Start;
       while(not (R_CountInventoryItem(flourPotID) > 0)) do
@@ -3125,7 +3133,7 @@ begin
         writelnex("MISSING flourToPizza flourPot or waterBucket ITEMS, looping to se if we can empty some");
         Break;  // change to exit
       end;
-
+      ProgressReport;
       Mouse.click(flourPot[0].MidPoint, MOUSE_LEFT);
       sleep(random(50,100));
       Mouse.Click(waterBucket[0].MidPoint, MOUSE_LEFT);
@@ -3194,6 +3202,7 @@ begin
   begin
     while (R_InventoryCount < 28)  and (tries < 50) do
     begin
+      ProgressReport;
       inc(tries);
       currentGrains := R_CountInventoryItem(GrainID);
       wheatObj := R_GetClosestObjectByName("Wheat", 10);
@@ -3213,6 +3222,7 @@ begin
   begin
     while (R_CountInventoryItem(GrainID) < 10) and (tries < 50) do
     begin
+      ProgressReport;
       inc(tries);
       currentGrains := R_CountInventoryItem(GrainID);
       wheatObj := R_GetClosestObjectByName("Wheat", 10);
