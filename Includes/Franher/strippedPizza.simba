@@ -2226,9 +2226,9 @@ var
 begin
   if not LoginPlayer then Exit;
 
-  if shouldSleep(accountPlayBeforeBreakMinutes + Random(-10, 30)) then
+  if shouldSleep(accountPlayBeforeBreakMinutes + Random(-randomAccountPlayBeforeBreakMinutes, randomAccountPlayBeforeBreakMinutes)) then
   begin
-    breakTotalMinutes := breakMinutes + Random(-3, 10);
+    breakTotalMinutes := breakMinutes + Random(-randomBreakMinutes, randomBreakMinutes);
     breakTotalSeconds := breakTotalMinutes * 60;
     writelnEx('Been running for ' + IntToStr(CurrentSprintTimer.ElapsedTime div 1000 div 60) + ' minutes, taking a ' + IntToStr(breakTotalMinutes) + ' mins sleep');
     LogoutPlayer;
@@ -3338,7 +3338,7 @@ begin
       sleep(random(700, 1000));
       withdrawFlourToPizzaItems;
       ProgressReport;
-      if ((timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) or ((runs = 0) and GEonFirstRun)) and useGe then
+      if ((timeSinceLastGeVisit.ElapsedTime > (60 * 60 * 1000)) or ((runs < 1) and GEonFirstRun)) and useGe then
       begin
         reinitializeReflection;
         writelnEx("DOING GE");
@@ -3585,7 +3585,7 @@ begin
     begin
       WritelnEx("No USER set and can't get one from the site [ScriptID:"+ScriptID[currentSet]+"], sleeping 5 min and retrying", true);
       SleepAndPrintProgressReport(5 * 60 * 1000);
-      if shouldChangeSet(setMinutes + Random(15)) then Exit;
+      if shouldChangeSet(setMinutes + Random(randomSetMinutes)) then Exit;
       goto TryAgain;
     end;
 
@@ -3621,12 +3621,12 @@ begin
 
         player.Free;
         progressReport;
-        if shouldChangeSet(setMinutes + Random(15)) then
+        if shouldChangeSet(setMinutes + Random(randomSetMinutes)) then
         begin
           logoutPlayer;
           Exit;
         end;
-        if shouldChangeAccount(accountMinutes + Random(15)) then
+        if shouldChangeAccount(accountMinutes + Random(randomAccountMinutes)) then
         begin
           logoutPlayer;
           Break;
