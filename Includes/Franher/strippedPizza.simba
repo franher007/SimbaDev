@@ -2225,7 +2225,7 @@ var
 begin
   if not LoginPlayer then Exit;
 
-  if shouldSleep(accountPlayBeforeBreakMinutes) then
+  if shouldSleep(accountPlayBeforeBreakMinutes + Random(-10, 30)) then
   begin
     breakTotalMinutes := breakMinutes + Random(-5, 5);
     breakTotalSeconds := breakTotalMinutes * 60;
