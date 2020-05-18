@@ -2228,7 +2228,7 @@ begin
 
   if shouldSleep(accountPlayBeforeBreakMinutes + Random(-10, 30)) then
   begin
-    breakTotalMinutes := breakMinutes + Random(-5, 5);
+    breakTotalMinutes := breakMinutes + Random(-3, 10);
     breakTotalSeconds := breakTotalMinutes * 60;
     writelnEx('Been running for ' + IntToStr(CurrentSprintTimer.ElapsedTime div 1000 div 60) + ' minutes, taking a ' + IntToStr(breakTotalMinutes) + ' mins sleep');
     LogoutPlayer;
