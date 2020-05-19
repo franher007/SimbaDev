@@ -3791,7 +3791,7 @@ procedure nextSet;
 var
   maxSets: Integer;
 begin
-  maxSets := Length(ScriptID);
+  maxSets := High(ScriptID);
   inc(currentSet);
   if currentSet > maxSets then
     currentSet := 0;

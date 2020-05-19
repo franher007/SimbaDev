@@ -3,17 +3,25 @@
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
   userAction    = "hybrid"; //hybrid, doWild, keepAlive
-  actionWeb     = "http://franher.com/nakedpizza";
-
-  scriptID      = ["0"];     //your sets here entre comillas ["1","2","24"]
-  tabID         = "6";
-  setMinutes    = 240;       //how many minutes for each set
-  accountMinutes = 240;      //how many minutes for each account
-  accountPlayBeforeBreakMinutes = 60;  //how many minutes to play before taking a break
-  breakMinutes  = 5;         //how many minutes to break for (min 5)
-
+  actionWeb     = "http://franher.com/nakedpizza";   
   useGE         = True;   //Buy/Sell in Grand Exchange?
   GEonFirstRun  = True;   //Go to GE on first run?
+
+  scriptID                            = ["0"]; //your sets here entre comillas ["1","2","24"]
+  tabID                               = "6";
+
+  setMinutes                          = 240; //how many minutes for each set
+  randomSetMinutes                    = 0;
+
+  accountMinutes                      = 240; //how many minutes for each account
+  randomAccountMinutes                = 10;
+
+  accountPlayBeforeBreakMinutes       = 30;  //how many minutes to play before taking a break
+  randomAccountPlayBeforeBreakMinutes = 3;
+
+  breakMinutes                        = 3;   //how many minutes to break for
+  randomBreakMinutes                  = 3;
+
   lag           = 0;      //use 0 if you have faster cpu speeds, increase for shitty pc
   useDebug      = False;  //write shit to the debug window?
 
