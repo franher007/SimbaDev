@@ -1,0 +1,87 @@
+{$include_once reflection/internal/Static.simba}
+
+var
+  PIDS: Array of Int32;
+  x, y, i: Integer;
+
+Procedure RSetup;
+var
+  PID: Int32;
+  I,J, ClientCount: SizeUInt;
+begin
+
+  {$IFDEF WINDOWS}
+  RIInject('JagexLauncher.exe');
+  {$ENDIF}
+
+  PID := -1;
+  J := 0;
+  ClientCount := EIOS_GetClients(true);
+  for I := 0 to ClientCount - 1 do
+  begin
+    PID := EIOS_GetClientPID(I);
+    if PID <> -1 then
+    begin
+      SetLength(PIDS, J+1);
+      PIDS[J] := PID;
+      inc(J);
+    end;
+  end;
+end;
+
+procedure SelectEios(PID:int32);
+begin
+  {$IFDEF WINDOWS}
+  SetEIOSTarget('LibRemoteInput', IntToStr(PID));
+  {$ELSE}
+  SetEIOSTarget('LibRemoteInput', IntToStr(PID));
+  {$ENDIF}
+
+  R_EIOS := EIOS_PairClient(PID);
+  if R_EIOS = nil then
+    RaiseException(erCustomError, 'Reflection Not Setup - No EIOS Target');
+end;
+
+var
+  pressLeftMouse, pressRightMouse, pressEsc, pressLeft, pressRight, pressUp, pressDown: boolean;
+
+begin
+  RSetup;
+  while true do
+  begin
+    pressLeftMouse := false;
+    pressRightMouse := false;
+    pressLeft := false;
+    pressRight := false;
+    pressUp := false;
+    pressDown := false;
+    pressEsc := false;
+    SelectEios(PIDS[0]);
+    EIOS_GetRealMousePosition(R_EIOS, x, y);
+    SetKeyMouseTarget(0);
+    if isMouseButtonDown(1) then pressLeftMouse := true;
+    if isMouseButtonDown(0) then pressRightMouse := true;
+    if isKeyDown(VK_ESCAPE) then pressEsc := true;
+    if isKeyDown(VK_LEFT) then pressLeft := true;
+    if isKeyDown(VK_RIGHT) then pressRight := true;
+    if isKeyDown(VK_UP) then pressUp := true;
+    if isKeyDown(VK_DOWN) then pressDown := true;
+    status(inttostr(x) + ' ' + inttostr(y));
+    //SelectEios(PIDS[1]);
+    //MoveMouse(x,y);
+    for i := 1 to High(PIDS) do
+    begin
+      SelectEios(PIDS[i]);
+      MoveMouse(x,y);
+      if pressLeftMouse then HoldMouse(x, y, 1) else ReleaseMouse(x, y, 1);
+      if pressRightMouse then HoldMouse(x, y, 0) else ReleaseMouse(x, y, 0);
+      if pressEsc then PressKey(VK_ESCAPE);
+      if pressLeft then PressKey(VK_LEFT);
+      if pressRight then PressKey(VK_RIGHT);
+      if pressUp then PressKey(VK_UP);
+      if pressDown then PressKey(VK_DOWN);
+      //if (pressLeftMouse or pressRightMouse or pressEsc or pressLeft or pressRight or pressUp or pressDown) then sleep(30);
+    end;
+    sleep(1);
+  end;
+end.
