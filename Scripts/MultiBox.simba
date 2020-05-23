@@ -1,8 +1,64 @@
 {$include_once reflection/internal/Static.simba}
+{$include_once reflection/internal/RSClient.simba}
+{$include_once reflection/internal/RSWidget.simba}
+{$include_once franher/shared.simba}
+
+type
+  Timer = record
+    Tick: Int64;
+  end;
 
 var
   PIDS: Array of Int32;
-  x, y, i: Integer;
+  x, y, i, w, h: Integer;
+  bmp: TMufasaBitmap;
+  b, currentStaminaVarbit: Int32;
+  staminaStartTime: Timer;
+  foremanStartTime: Timer;
+
+
+
+Procedure Timer.Start;
+begin
+  tick := GetTickCount();
+end;
+
+Function Timer.ElapsedTime: Int64;
+begin
+  Result := GetTickCount() - self.Tick;
+end;
+
+Function R_ChatIsOptionVisible(options: Array of String; caseSensitive: Boolean = True): Boolean;
+var
+  I, J: Int32;
+  Dialog: RSWidget;
+  Items: Array of RSWidget;
+  Title: String;
+begin
+  Dialog := RSWidget.Get(219, 1);
+  if Dialog.ref = nil then
+    Exit(False);
+
+  Items := Dialog.Children;
+  Dialog.Free;
+
+  For I := 1 to High(Items) do
+  begin
+    Title := Items[I].Text;
+    if Title <> '' then
+    begin
+      For J := 0 to High(Options) do
+      begin
+        if (caseSensitive and (Pos(Options[J], Title) > 0)) or (not caseSensitive and (Pos(Lowercase(Options[J]), Lowercase(Title)) > 0)) then
+        begin
+          //Mouse.Click(Items[I].Bounds, MOUSE_LEFT);
+          RSTypeArray(Items).Free;
+          Exit(True);
+        end;
+      end;
+    end;
+  end;
+end;
 
 Procedure RSetup;
 var
@@ -42,13 +98,73 @@ begin
     RaiseException(erCustomError, 'Reflection Not Setup - No EIOS Target');
 end;
 
+Function timerToTime(timer: Int32): String;
+var
+  totalSeconds, seconds, minutes: Int32;
+begin
+  totalSeconds := timer div 1000;
+  minutes := totalSeconds div 60;
+  seconds := totalSeconds - (minutes * 60);
+  if minutes < 10 then
+    Result := "0" + inttostr(minutes)
+  else Result := inttostr(minutes);
+  if seconds < 10 then
+    Result += ":0" + inttostr(seconds)
+  else Result += ":" + inttostr(seconds);
+end;
+
 var
   pressLeftMouse, pressRightMouse, pressEsc, pressLeft, pressRight, pressUp, pressDown: boolean;
 
 begin
   RSetup;
-  while true do
+  SelectEios(PIDS[0]);
+  GetClientDimensions(w, h);
+  EIOS_SetGraphicsDebugging(R_EIOS, true);
+
+  bmp.Init;
+  bmp.SetPersistentMemory(PtrUInt(EIOS_GetDebugImageBuffer(R_EIOS)), W, H);
+  bmp.Rectangle([0, 0, W - 1, H - 1], $00);
+  currentStaminaVarbit := RSClient.GetVarBit(25);
+  //staminaStartTime = -1;
+  //foremanStartTime = -1;
+  while true do     //pay 5983 varbit
   begin
+    if (R_ChatIsOptionVisible(["Yes"])) then
+    begin
+      foremanStartTime.Start;
+    end;
+
+    if (foremanStartTime.ElapsedTime < (10 * 60 * 1000)) then
+    begin
+      bmp.Rectangle([440, 35, 515 , 61], $00);
+      if (foremanStartTime.ElapsedTime ) > (9 * 60 * 1000) then   //paint red
+        bmp.Rectangle([440, 35, 515 , 61], $ff);
+      b := BitmapFromText('FM: ' + timerToTime(foremanStartTime.ElapsedTime), 'SmallChars07');
+      bmp.DrawBitmap(b, Point(450, 40));
+      FreeBitmap(b);
+    end;
+
+    if RSClient.GetVarBit(25) <> currentStaminaVarbit then
+    begin
+      currentStaminaVarbit := RSClient.GetVarBit(25);
+      if currentStaminaVarbit = 1 then
+      begin
+        staminaStartTime.Start;
+      end else
+      begin
+        bmp.Rectangle([440, 5, 515 , 31], $00);  //clear when varbit is 0
+      end;
+    end;
+    if currentStaminaVarbit = 1 then
+    begin
+      bmp.Rectangle([440, 5, 515 , 31], $00);
+      if (StaminaStartTime.ElapsedTime ) > (100 * 1000) then   //paint red
+        bmp.Rectangle([440, 5, 515 , 31], $ff);
+      b := BitmapFromText('SP: ' + timerToTime(StaminaStartTime.ElapsedTime), 'SmallChars07');
+      bmp.DrawBitmap(b, Point(450, 10));
+      FreeBitmap(b);
+    end;
     pressLeftMouse := false;
     pressRightMouse := false;
     pressLeft := false;
@@ -84,4 +200,5 @@ begin
     end;
     sleep(1);
   end;
+  bmp.Free;
 end.

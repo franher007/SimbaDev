@@ -133,6 +133,38 @@ begin
   end;
 end;
 
+Function R_ChatIsOptionVisible(options: Array of String; caseSensitive: Boolean = True): Boolean;
+var
+  I, J: Int32;
+  Dialog: RSWidget;
+  Items: Array of RSWidget;
+  Title: String;
+begin
+  Dialog := RSWidget.Get(R_CHATBOX_NPC_DIALOG_OPTION.Group, R_CHATBOX_NPC_DIALOG_OPTION.Child);
+  if Dialog.ref = nil then
+    Exit(False);
+
+  Items := Dialog.Children;
+  Dialog.Free;
+
+  For I := 1 to High(Items) do
+  begin
+    Title := Items[I].Text;
+    if Title <> '' then
+    begin
+      For J := 0 to High(Options) do
+      begin
+        if (caseSensitive and (Pos(Options[J], Title) > 0)) or (not caseSensitive and (Pos(Lowercase(Options[J]), Lowercase(Title)) > 0)) then
+        begin
+          //Mouse.Click(Items[I].Bounds, MOUSE_LEFT);
+          RSTypeArray(Items).Free;
+          Exit(True);
+        end;
+      end;
+    end;
+  end;
+end;
+
 Function R_ClickToContinue: Boolean;
 var
   NPCContinue, PlayerContinue: RSWidget;

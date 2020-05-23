@@ -930,7 +930,6 @@ begin
   Tiles := getSpiralTiles(X, Y, Offset, True);
   TilesLeft := getSpiralTiles(X, Y, Offset, False);
   objectTypes := [RSObjectType.GAME_OBJECT, RSObjectType.BOUNDARY_OBJECT, RSObjectType.FLOOR_DECORATION, RSObjectType.WALL_DECORATION];
-
   for otIndex := 0 to High(objectTypes) do
   begin
     for i := 0 to High(Tiles) do
@@ -952,6 +951,73 @@ begin
           badUptext := False;
           currentObjectLeft := RSObject.Get(objectTypes[otIndex], TilesLeft[j].X, TilesLeft[j].Y);
           if currentObjectLeft.Definition.Name = Name then
+          begin
+            if upText <> "" then
+            begin
+              Mouse.Move(currentObjectLeft.MidPoint, 3);
+              sleep(100 + random(100, 200));
+              if not R_IsUpText([upText], false) then badUptext := True;
+            end;
+            if badUptext then Continue;
+            distanceLeft := abs(currentObjectLeft.Tile.X - X) + abs(currentObjectLeft.Tile.Y - Y);
+            break;
+          end;
+        end;
+        if distanceLeft > distance then
+        begin
+          Result := currentObject;
+          currentObjectLeft.Free;
+          Exit;
+        end else
+        begin
+          Result := currentObjectLeft;
+          currentObject.Free;
+          Exit;
+        end;
+        Break;
+      end;
+    end;
+  end;
+end;
+
+Function R_GetClosestObjectByID(ID: Int32; Offset: Integer = 10; upText: String = ""): RSObject;
+var
+  X, Y, i, j, otIndex, distance, distanceLeft: Int32;
+  Tiles, TilesLeft: Array of TPoint;
+  currentObject, currentObjectLeft: RSObject;
+  badUptext: Boolean;
+  objectTypes: Array of RSObjectType;
+begin
+  Y := RSPlayer.Me.Tile.Y;
+  X := RSPlayer.Me.Tile.X;
+  Tiles := getSpiralTiles(X, Y, Offset, True);
+  TilesLeft := getSpiralTiles(X, Y, Offset, False);
+  objectTypes := [RSObjectType.GAME_OBJECT, RSObjectType.BOUNDARY_OBJECT, RSObjectType.FLOOR_DECORATION, RSObjectType.WALL_DECORATION];
+  for otIndex := 0 to High(objectTypes) do
+  begin
+    for i := 0 to High(Tiles) do
+    begin
+      badUptext := False;
+      currentObject := RSObject.Get(objectTypes[otIndex], Tiles[i].X, Tiles[i].Y);
+      if currentObject.ref <> nil then
+      begin
+        writeln(currentobject.Definition.Name + " " + inttostr(currentobject.Definition.ID));
+      end;
+      if currentObject.Definition.ID = ID then
+      begin
+        if upText <> "" then
+        begin
+          Mouse.Move(currentObject.MidPoint, 3);
+          sleep(100 + random(100, 200));
+          if not R_IsUpText([upText], false) then badUptext := True;
+        end;
+        if badUptext then Continue;
+        distance := abs(currentObject.Tile.X - X) + abs(currentObject.Tile.Y - Y);
+        for j := 0 to High(TilesLeft) do
+        begin
+          badUptext := False;
+          currentObjectLeft := RSObject.Get(objectTypes[otIndex], TilesLeft[j].X, TilesLeft[j].Y);
+          if currentObjectLeft.Definition.ID = ID then
           begin
             if upText <> "" then
             begin
@@ -3495,7 +3561,8 @@ var
   testPoint: TPoint;
 begin
   writeln("testing");
-  LOGOUTPLAYER;
+  obj := R_GetClosestObjectByID(34816, 5);
+  Mouse.Click(obj.MidPoint, MOUSE_RIGHT);
   TerminateScript;
   writeln(R_BankScreen);
   writeln(R_BankHelp);
