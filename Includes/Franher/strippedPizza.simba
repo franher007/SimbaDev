@@ -3822,7 +3822,7 @@ begin
   setBotWebMessage(player.Name, 'going to wild border', player.CombatLevel);
 
   writelnEx("Waiting for Mule to start going to border");
-  if not isMuleMessage("going to wild border", 30) then
+  if not isMuleMessage(["going to wild border", "arrived at wild border"], 30) then
   begin         
     writelnEx("Mule is not going to wild border");
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
