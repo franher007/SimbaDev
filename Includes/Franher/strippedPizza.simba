@@ -3648,6 +3648,28 @@ begin
   Result := False;
 end;
 
+Function isMuleMessage(messages: Array of String; tries: Integer): boolean; overload;
+var
+  i, j: integer;
+  wm: TWebMessage;
+begin
+  i := 0;
+  while (i < tries) do
+  begin
+    wm := getMuleWebMessage;
+    for j := 0 to high(messages) do
+    begin
+      if wm.message = messages[j] then
+      begin
+        Exit(True);
+      end;
+    end;
+    sleepAndPrintProgressReport(500);
+    inc(i);
+  end;
+  Result := False;
+end;
+
 Function isBotMessage(message: String; tries: Integer): boolean;
 var
   i: integer;
