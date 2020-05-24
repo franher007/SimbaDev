@@ -3799,7 +3799,11 @@ begin
   if enemy.ref = nil then
     Exit(False);
   if enemy.IsVisible then
+  begin
+    enemy.Free;
+    RSTypeARray(players).Free;
     Exit(True);
+  end;
 end;
 
 procedure muleItems;
