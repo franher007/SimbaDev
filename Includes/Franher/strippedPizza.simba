@@ -3796,6 +3796,7 @@ begin
 
   setBotWebMessage(player.Name, 'going to wild border', player.CombatLevel);
 
+  writelnEx("Waiting for Mule to start going to border");
   if not isMuleMessage("going to wild border", 30) then
   begin         
     writelnEx("Mule is not going to wild border");
@@ -3807,7 +3808,8 @@ begin
   sleep(Random(1500,3000));
   setBotWebMessage(player.Name, 'arrived at wild border', player.CombatLevel);
 
-  if not isMuleMessage("arrived at wild border", 150) then
+  writelnEx("Waiting for Mule to arrive at border");
+  if not isMuleMessage(["arrived at wild border", "crossed ditch"], 150) then
   begin      
     writelnEx("Mule never arrived at wild border");
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
@@ -3830,6 +3832,7 @@ begin
     widget.Free;
   end;
 
+  writelnEx("Crossing ditch");
   if not CrossDitch(true) then
   begin
     WritelnEx('Couldnt cross ditch');
@@ -3840,7 +3843,8 @@ begin
 
   setBotWebMessage(player.Name, 'crossed ditch', player.CombatLevel);
 
-  if not isMuleMessage("crossed ditch", 30) then
+  writelnEx("Waiting for Mule to cross ditch");
+  if not isMuleMessage(["crossed ditch", "arrived at wild level"], 30) then
   begin
     writelnEx("Mule never crossed the ditch");
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
@@ -3861,6 +3865,7 @@ begin
 
   setBotWebMessage(player.Name, 'arrived at wild level', player.CombatLevel);
 
+  writelnEx("Waiting for Mule to arrive at wild level");
   if not isMuleMessage("arrived at wild level", 30) then
   begin
     writelnEx("Mule never arrived at wild level");
@@ -3910,6 +3915,7 @@ begin
   if (not isBotMessage(["getting gold", "going to wild border"], 30)) then
     LogoutPlayer;
 
+  writelnEx("Waiting for Bot to start going to border");
   for tries := 0 to 50 do
   begin
     if isBotMessage(["getting gold", "going to wild border"], 1) then
@@ -3934,6 +3940,7 @@ begin
   player.WalkTo("bankToWild");
   setMuleWebMessage(player.Name, 'arrived at wild border', player.CombatLevel);
 
+  writelnEx("Waiting for Bot to arrive at border");
   if not isBotMessage(["arrived at wild border", "crossed ditch"], 150) then
   begin
     writelnEx("Bot never arrived at wild border");
@@ -3957,6 +3964,7 @@ begin
     widget.Free;
   end;
 
+  writelnEx("Crossing Ditch");
   if not CrossDitch(true) then
   begin
     WritelnEx('Couldnt cross ditch');
@@ -3967,6 +3975,7 @@ begin
 
   setMuleWebMessage(player.Name, 'crossed ditch', player.CombatLevel);
 
+  writelnEx("Waiting for Bot to cross ditch");
   if not isBotMessage(["crossed ditch", "arrived at wild level"], 30) then
   begin
     writelnEx("Bot never crossed the ditch");
@@ -3988,6 +3997,7 @@ begin
 
   setMuleWebMessage(player.Name, 'arrived at wild level', player.CombatLevel);
 
+  writelnEx("Waiting for Bot to arrive at wild level");
   if not isBotMessage(["arrived at wild level", "attacked"], 30) then
   begin
     writelnEx("Bot never arrived at wild level");
@@ -3998,6 +4008,7 @@ begin
     Exit;
   end;
 
+  writelnEx("Waiting for Bot to attack us");
   if not isBotMessage("attacked", 30) then
   begin
     writelnEx("Bot never attacked");
