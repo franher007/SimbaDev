@@ -100,10 +100,11 @@ end;
 
 Function timerToTime(timer: Int32): String;
 var
-  totalSeconds, seconds, minutes: Int32;
+  totalSeconds, seconds, minutes, hours: Int32;
 begin
   totalSeconds := timer div 1000;
-  minutes := totalSeconds div 60;
+  hours := totalSeconds div 3600;
+  minutes := totalSeconds - (3600 * hours);
   seconds := totalSeconds - (minutes * 60);
   if minutes < 10 then
     Result := "0" + inttostr(minutes)

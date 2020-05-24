@@ -13,6 +13,12 @@ type
   ID, pizzaPrice, grainPrice, shrimpPrice, troutPrice, salmonPrice, hatPrice, potPrice, bucketPrice: Integer;
   end;
 
+type
+  TWebMessage = record
+  name, message: String;
+  combat: Integer;
+  end;
+
 
 var
   pizzasDone, runs, floursDone, fishesDone, geVisits              : Integer;
@@ -46,6 +52,7 @@ var
   webScript                         : TWebScript;
   grainsInBank                      : Integer;
   shouldRunOneOff                   : Boolean;
+  tradeMode                         : Boolean;
 
   bmp: TMufasaBitmap;
   w, h: Int32;
@@ -124,6 +131,25 @@ begin
   end;
 end;
 
+Function timerToTime(timer: Int32): String;
+var
+  totalSeconds, seconds, minutes, hours: Int32;
+begin
+  totalSeconds := timer div 1000;
+  hours := totalSeconds div 3600;
+  minutes := (totalSeconds - (3600 * hours)) div 60;
+  seconds := totalSeconds - (minutes * 60) - (hours * 3600);
+  if hours < 10 then
+    Result := "0" + inttostr(hours)
+  else Result := inttostr(hours);
+  if minutes < 10 then
+    Result += ":0" + inttostr(minutes)
+  else Result += ":" + inttostr(minutes);
+  if seconds < 10 then
+    Result += ":0" + inttostr(seconds)
+  else Result += ":" + inttostr(seconds);
+end;
+
 function debugTabulator(str:String):String
 var
   i: integer;
@@ -167,7 +193,8 @@ begin
     writelnex('TSLGEV: ' + inttostr(TimeSinceLastGeVisit.ElapsedTime));
   end;
   debugStrings := [ CurrentUser + ': TabID: ' + TabID + ' - ScriptID: ' + scriptID[currentSet] + ' - Action: ' + action,
-                    'Time running: ' + FormatDateTime('hh:nn:ss',now-startTime) + ' Set: ' + MStoFormattedTime(CurrentSetTimer.ElapsedTime) + ' Acc: ' + MStoFormattedTime(CurrentAccountTimer.ElapsedTime) + ' Sprint: ' + MStoFormattedTime(CurrentSprintTimer.ElapsedTime),
+                    //'Time running: ' + FormatDateTime('dd:hh:nn:ss',now-startTime) + ' Set: ' + MStoFormattedTime(CurrentSetTimer.ElapsedTime) + ' Acc: ' + MStoFormattedTime(CurrentAccountTimer.ElapsedTime) + ' Sprint: ' + MStoFormattedTime(CurrentSprintTimer.ElapsedTime),
+                    'Time running: ' + TimerToTime(timerTrack.ElapsedTime) + ' Set: ' + MStoFormattedTime(CurrentSetTimer.ElapsedTime) + ' Acc: ' + MStoFormattedTime(CurrentAccountTimer.ElapsedTime) + ' Sprint: ' + MStoFormattedTime(CurrentSprintTimer.ElapsedTime),
                     'Runs       : ' + intToStr(runs) + debugTabulator(intToStr(runs)) + " | " + inttostr( Round(60 / (GetTimeRunning/1000/60) * runs)),
                     'Pizzas    : ' + intToStr(pizzasDone) + debugTabulator(intToStr(pizzasDone)) + " | " + inttostr( Round(60 / (GetTimeRunning/1000/60) * pizzasDone)),
                     'Pizzas in bank: ' + intToStr(totalPizzas) + ' | Pizzas in GE: ' + intToStr(pizzasInGe),
@@ -179,6 +206,27 @@ begin
 end;
 
 Function RSObject.MidPoint: TPoint;
+var
+  model: RSModel;
+  triangles: Array of T2DTriangle;
+  points: TPointArray;
+  i: Int32;
+begin
+  model := self.Model;
+  triangles := model.Project(localtile.X, localtile.Y, localtile.GetHeight(), -1);
+  model.Free;
+
+  for i := 0 to high(triangles) do
+  begin
+    points += triangles[i].A;
+    points += triangles[i].B;
+    points += triangles[i].C;
+  end;
+
+  Result := MiddleTPA(points);
+end;
+
+Function RSPlayer.MidPoint: TPoint;
 var
   model: RSModel;
   triangles: Array of T2DTriangle;
@@ -463,11 +511,11 @@ end;
 function RSPlayer.WalkTo(destination: String; precise: Boolean = False): Boolean;
 var
   geToBankTiles, bankToCookTiles, cookToBankTiles, bankToGETiles, cookWaterSpot, cookExitSpot,
-  lumbyToVarrock, bankToWild, wildToBank, bankToEast, eastToHouse, houseRange,
+  lumbyToVarrock, bankToWild, wildToBank, wildToEast, bankToEast, eastToHouse, houseRange,
   houseDoorInside, houseToEast, eastToBank, bankToGrains, grainsToCook, grainExitSpot,
   grainEnterSpot, tToFish, tToFishGate, tToChef, tExitChef,
   tToQuest, ttoMiningInstructor, tToMiningGate, tToRats, tToBank, tToPrayer,
-  tToMagic, choosenTile: Array of RSTile;
+  tToMagic, wild0, wild4, wild8, wild12, wild16, choosenTile: Array of RSTile;
   tries: Integer;
 begin
   geToBankTiles   := [Point(3165, 3483), Point(3165, 3486), Point(3166, 3471),
@@ -528,6 +576,19 @@ begin
                       Point(3194, 3442), Point(3191, 3448),
                       Point(3184, 3448), Point(3183, 3445)];
 
+    wildToEast      := [Point(3325, 3520),
+                      Point(3325, 3517), Point(3326, 3511),
+                      Point(3326, 3505), Point(3326, 3498),
+                      Point(3321, 3494), Point(3317, 3492),
+                      Point(3310, 3488), Point(3307, 3483),
+                      Point(3301, 3479), Point(3297, 3473),
+                      Point(3297, 3467), Point(3293, 3460),
+                      Point(3286, 3453), Point(3286, 3447),
+                      Point(3286, 3440), Point(3286, 3434),
+                      Point(3280, 3429), Point(3275, 3428),
+                      Point(3269, 3428), Point(3263, 3428),
+                      Point(3256, 3428), Point(3252, 3427),
+                      Point(3253, 3421), Point(3253, 3420)];
 
   lumbyToVarrock  := [Point(3222, 3218), Point(3227, 3218),
                       Point(3232, 3220), Point(3232, 3226),
@@ -616,6 +677,43 @@ begin
                         Point(3137, 3452), Point(3137, 3446),
                         Point(3143, 3442)];
 
+   wild4            := [Point(3325, 3524),
+                        Point(3328, 3532), Point(3330, 3539),
+                        Point(3331, 3546)];
+
+   wild8            := [Point(3325, 3524),
+                        Point(3328, 3532), Point(3330, 3539),
+                        Point(3331, 3546), Point(3333, 3555),
+                        Point(3334, 3562), Point(3333, 3571),
+                        Point(3335, 3579)];
+
+   wild12            := [Point(3325, 3524),
+                        Point(3328, 3532), Point(3330, 3539),
+                        Point(3331, 3546), Point(3333, 3555),
+                        Point(3334, 3562), Point(3333, 3571),
+                        Point(3335, 3579), Point(3336, 3587),
+                        Point(3339, 3595), Point(3336, 3605),
+                        Point(3332, 3612)];
+
+   wild16            := [Point(3325, 3524),
+                        Point(3328, 3532), Point(3330, 3539),
+                        Point(3331, 3546), Point(3333, 3555),
+                        Point(3334, 3562), Point(3333, 3571),
+                        Point(3335, 3579), Point(3336, 3587),
+                        Point(3339, 3595), Point(3336, 3605),
+                        Point(3332, 3612), Point(3332, 3621),
+                        Point(3333, 3627), Point(3334, 3635),
+                        Point(3339, 3643)];
+
+   wild0            := [Point(3339, 3643), Point(3334, 3635),
+                        Point(3333, 3627), Point(3332, 3621),
+                        Point(3332, 3612), Point(3336, 3605),
+                        Point(3339, 3595), Point(3336, 3587),
+                        Point(3335, 3579), Point(3333, 3571),
+                        Point(3334, 3562), Point(3333, 3555),
+                        Point(3331, 3546), Point(3330, 3539),
+                        Point(3328, 3532), Point(3325, 3524)];
+
    case destination of
     "bankToCook": begin choosenTile := bankToCookTiles end;
     "geToBank": begin choosenTile := geToBankTiles end;
@@ -647,6 +745,12 @@ begin
     "grainsToCook": begin choosenTile := grainsToCook end;
     "grainExitSpot": begin choosenTile := grainExitSpot end;
     "grainEnterSpot": begin choosenTile := grainEnterSpot end;
+    "wildToEast": begin choosenTile := wildToEast end;
+    "wild0": begin choosenTile := wild0 end;
+    "wild4": begin choosenTile := wild4 end;
+    "wild8": begin choosenTile := wild8 end;
+    "wild12": begin choosenTile := wild12 end;
+    "wild16": begin choosenTile := wild16 end;
    end;
 
   self.WalkPathMM(choosenTile, 0, 1, False);
@@ -677,6 +781,16 @@ end;
 procedure SetPlayerBanned(email: String);
 begin
   GetPage(actionWeb + "/enviar.php?setbanned=" + email);
+end;
+
+procedure SetBotWebMessage(name, message: String; combat: integer);
+begin
+  GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+end;
+
+procedure SetMuleWebMessage(name, message: String; combat: integer);
+begin
+  GetPage(actionWeb + Replace("/enviar.php?setmulemessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
 end;
 
 Function LoginPlayer:Boolean;
@@ -3439,6 +3553,492 @@ begin
   end;
 end;
 
+procedure acceptTrade;
+var
+  i, j, tries: integer;
+  Messages: Array of TRSChatMessage;
+  widget: RSWidget;
+begin
+  for i := 0 to 30 do
+  begin
+    Messages := R_ChatMessages(0);
+    For j := 0 to high(Messages) do
+    begin
+      if pos("wishes to trade", Messages[j].Message) > 0 then
+      begin
+        R_ClickChatMessage(Messages[j].LineNumber);
+        sleep(Random(3000,5000));
+        tries := 0;
+        while tries < 10 do
+        begin
+          widget := RSWidget.Get(R_TRADE_FIRST_ACCEPT.Group, R_TRADE_FIRST_ACCEPT.Child);
+          if widget.ref <> nil then
+          begin
+            Mouse.Click(widget.Bounds.Middle, 5, MOUSE_LEFT);
+            widget.Free;
+          end;
+
+          sleep(random(800,1200));
+          widget := RSWidget.Get(R_TRADE_SECOND_ACCEPT.Group, R_TRADE_SECOND_ACCEPT.Child);
+          if widget.ref <> nil then
+          begin
+            Mouse.Click(widget.Bounds.Middle, 5, MOUSE_LEFT);
+            widget.Free;
+            sleep(random(4000,5200));
+            widget := RSWidget.Get(R_TRADE_SECOND_ACCEPT.Group, R_TRADE_SECOND_ACCEPT.Child);
+            if widget.ref = nil then
+            begin
+              tradeMode := false;
+              exit;
+            end;
+            widget.Free;
+          end;
+          sleep(random(800,1200));
+          inc(tries);
+        end;
+      end;
+    end;
+    sleep(random(5000,6000));
+  end;
+end;
+
+
+Function getBotWebMessage: TWebMessage;
+var
+  response: String;
+begin
+  response := GetPage(actionWeb + "/botmessage.txt");
+  if response <> "" then
+  begin
+    Result.name := substring(response, "name:'.", ".':name");
+    Result.message := substring(response, "message:'.", ".':message");
+    Result.combat := StrToInt(substring(response, "combat:'.", ".':combat"));
+  end;
+end;
+
+Function getMuleWebMessage: TWebMessage;
+var
+  response: String;
+begin
+  response := GetPage(actionWeb + "/mulemessage.txt");
+  if response <> "" then
+  begin
+    Result.name := substring(response, "name:'.", ".':name");
+    Result.message := substring(response, "message:'.", ".':message");
+    Result.combat := StrToInt(substring(response, "combat:'.", ".':combat"));
+  end;
+end;
+
+Function isMuleMessage(message: String; tries: Integer): boolean;
+var
+  i: integer;
+  wm: TWebMessage;
+begin
+  i := 0;
+  while (i < tries) do
+  begin
+    wm := getMuleWebMessage;
+    if wm.message = message then
+    begin
+      Exit(True);
+    end;
+    sleepAndPrintProgressReport(500);
+    inc(i);
+  end;
+  Result := False;
+end;
+
+Function isBotMessage(message: String; tries: Integer): boolean;
+var
+  i: integer;
+  wm: TWebMessage;
+begin
+  i := 0;
+  while (i < tries) do
+  begin
+    wm := getBotWebMessage;
+    if wm.message = message then
+    begin
+      Exit(True);
+    end;
+    sleepAndPrintProgressReport(500);
+    inc(i);
+  end;
+  Result := False;
+end;
+
+Function isBotMessage(messages: Array of String; tries: Integer): boolean; overload;
+var
+  i, j: integer;
+  wm: TWebMessage;
+begin
+  i := 0;
+  while (i < tries) do
+  begin
+    wm := getBotWebMessage;
+    for j := 0 to high(messages) do
+    begin
+      if wm.message = messages[j] then
+      begin
+        Exit(True);
+      end;
+    end;
+    sleepAndPrintProgressReport(500);
+    inc(i);
+  end;
+  Result := False;
+end;
+
+Function CrossDitch(north: Boolean): Boolean;
+var
+  obj: RSObject;
+  widget: RSWidget;
+  tries: Integer;
+begin
+  tries := 0;
+  while (tries < 15) do
+  begin
+    if north and (player.Tile.y > 3522) then
+      Exit(True); 
+    if (not north) and (player.Tile.y < 3521) then
+      Exit(True);
+    obj := R_GetClosestObjectByName("Wilderness Ditch", 5);
+    if obj.ref = nil then
+    begin
+      WritelnEx('Couldnt get ditch');
+      setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
+      player.WalkTo("wildToBank");
+      Exit;
+    end;
+
+    Mouse.Click(obj.midpoint, "Cross", 5, MOUSE_LEFT);
+    sleep(Random(2500, 3500));
+    widget := RSWidget.Get(R_WILDERNESS_WARNING_ENTER.group, R_WILDERNESS_WARNING_ENTER.child);
+    if widget.ref <> nil then
+    begin
+      Mouse.Click(widget.Bounds.Middle, 5, MOUSE_LEFT);
+      widget.Free;
+      sleep(Random(2000,3000));
+    end;
+    sleep(Random(2000,3000));
+    inc(tries);
+  end;
+  Exit(False);
+end;
+
+Function attackPlayer(name: String): Boolean;
+var
+  enemy: RSPlayer;
+  players: Array of RSPlayer;
+  i: integer;
+begin
+  players := RSPlayer.AllPlayers;
+  for i := 0 to High(players) do
+  begin
+    writeln(players[i].Name);
+    if players[i].Name = name then
+    begin
+      enemy := players[i];
+      break;
+    end;
+  end;
+
+  if enemy.ref = nil then
+    Exit(False);
+
+  Mouse.Click(enemy.MidPoint, name, 5, MOUSE_RIGHT);
+  sleep(Random(100,200));
+  if R_ChooseOptions(['ttack ' + name]) then
+  begin
+    sleep(Random(300,500));
+    Exit(True);
+  end;
+  Exit(False);
+end;
+
+procedure muleItems;
+var
+  webMuleMessage: TWebMessage;
+  tries, desiredWildLevel: Integer;
+  widget: RSWidget;
+begin
+  writelnEx("MuleItems");
+  webMuleMessage := getMuleWebMessage;
+  if not isMuleMessage("available", 5) then
+  begin
+    WritelnEx("Mule not available");
+    Exit;
+  end;
+
+  setBotWebMessage(player.Name, 'getting gold', player.CombatLevel);
+
+  if not player.inGE then
+  begin
+    if player.InGuild then
+    begin
+      writelnEx("InGuild");
+      climbToFloor(0);
+      cookGuildDoor(False);
+    end;
+    player.WalkTo("cookToBank");
+    player.WalkTo("bankToGe");
+  end;
+
+  grandExchange(false, true);   //sell pizzas
+  sleep(Random(1500,3000));
+  withdrawWildItems;
+  sleep(Random(1500,3000));
+  if (High(R_GetInventoryItem(coinsID)) < 0) or (R_GetInventoryItem(coinsID)[0].Amount < 1) then
+  begin
+    setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
+    Exit;
+  end;
+
+  setBotWebMessage(player.Name, 'going to wild border', player.CombatLevel);
+
+  if not isMuleMessage("going to wild border", 30) then
+  begin         
+    writelnEx("Mule is not going to wild border");
+    setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
+    Exit;
+  end;
+  player.WalkTo("geToBank");
+  player.WalkTo("bankToWild");  
+  sleep(Random(1500,3000));
+  setBotWebMessage(player.Name, 'arrived at wild border', player.CombatLevel);
+
+  if not isMuleMessage("arrived at wild border", 150) then
+  begin      
+    writelnEx("Mule never arrived at wild border");
+    setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
+    player.WalkTo("wildToBank");
+    Exit;
+  end;
+
+  webMuleMessage := getMuleWebMessage;
+  desiredWildLevel := abs(player.CombatLevel - webMuleMessage.combat);
+  WritelnEx("should walk til wild lvl " + IntToStr(desiredWildLevel));
+
+  Mouse.Click(R_GameTabBounds(0), MOUSE_LEFT);
+  sleep(Random(1000,1500));
+  widget := RSWidget.Get(R_COMBAT_RETALIATE_TEXT.group, R_COMBAT_RETALIATE_TEXT.child);
+  if widget.ref <> nil then
+  begin
+    if pos("On",widget.Text) > 0 then
+      Mouse.Click(widget.Bounds.Middle, 5, MOUSE_LEFT);
+    sleep(500);
+    widget.Free;
+  end;
+
+  if not CrossDitch(true) then
+  begin
+    WritelnEx('Couldnt cross ditch');
+    setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
+    player.WalkTo("wildToBank");
+    Exit;
+  end;
+
+  setBotWebMessage(player.Name, 'crossed ditch', player.CombatLevel);
+
+  if not isMuleMessage("crossed ditch", 30) then
+  begin
+    writelnEx("Mule never crossed the ditch");
+    setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
+    crossDitch(false);
+    player.WalkTo("wildToBank");
+    Exit;
+  end;
+
+  case desiredWildLevel of
+    0..3: begin player.WalkTo("wild4") end;
+    4..7: begin player.WalkTo("wild8") end;
+    8..11: begin player.WalkTo("wild12") end;
+    12..15: begin player.WalkTo("wild16") end;
+    //16..19: begin player.WalkTo("wild20") end;
+    //20..23: begin player.WalkTo("wild24") end;
+    else begin WritelnEx('mucha diff') end;
+  end;
+
+  setBotWebMessage(player.Name, 'arrived at wild level', player.CombatLevel);
+
+  if not isMuleMessage("arrived at wild level", 30) then
+  begin
+    writelnEx("Mule never arrived at wild level");
+    setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
+    player.WalkTo("wild0");
+    crossDitch(false);
+    player.WalkTo("wildToBank");
+    Exit;
+  end;
+
+  for tries := 0 to 5 do
+  begin
+    if attackPlayer(webMuleMessage.name) then
+    begin
+      setBotWebMessage(player.Name, 'attacked', player.CombatLevel);
+      sleep(Random(1500, 2500));
+      player.WalkToTileMM(player.Tile, 2, 2);
+      break;
+    end;
+    if tries > 4 then
+    begin
+      writelnEx("Could not attack mule");
+      setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
+      player.WalkTo("wild0");
+      crossDitch(false);
+      player.WalkTo("wildToBank");
+      Exit;
+    end;
+  end;
+end;
+
+procedure muleProcedure;
+var
+  webBotMessage: TWebMessage;
+  tries, desiredWildLevel: Integer;
+  widget: RSWidget;
+  obj: RSObject;
+begin
+  WritelnEx("Starting mule procedure");
+  LoginPlayer;
+
+  player.WalkTo("geToBank");
+  player.WalkTo("bankToEast");
+  player.WalkTo("wildToEast");
+
+  setMuleWebMessage(player.Name, 'available', player.CombatLevel);
+  if (not isBotMessage(["getting gold", "going to wild border"], 30)) then
+    LogoutPlayer;
+
+  for tries := 0 to 50 do
+  begin
+    if isBotMessage(["getting gold", "going to wild border"], 1) then
+    begin
+      if not LoginPlayer then
+      begin
+        setMuleWebMessage("", 'cancel', 0);
+        Exit;
+      end;
+      setMuleWebMessage(player.Name, 'going to wild border', player.CombatLevel);
+      Break;
+    end;
+    sleep(10000);
+  end;
+
+  if tries > 49 then
+  begin
+    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    Exit;
+  end;
+
+  player.WalkTo("bankToWild");
+  setMuleWebMessage(player.Name, 'arrived at wild border', player.CombatLevel);
+
+  if not isBotMessage(["arrived at wild border", "crossed ditch"], 150) then
+  begin
+    writelnEx("Bot never arrived at wild border");
+    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    player.WalkTo("wildToEast");
+    Exit;
+  end;
+
+  webBotMessage := getBotWebMessage;
+  desiredWildLevel := abs(player.CombatLevel - webBotMessage.combat);
+  WritelnEx("should walk til wild lvl " + IntToStr(desiredWildLevel));
+
+  Mouse.Click(R_GameTabBounds(0), MOUSE_LEFT);
+  sleep(Random(1000,1500));
+  widget := RSWidget.Get(R_COMBAT_RETALIATE_TEXT.group, R_COMBAT_RETALIATE_TEXT.child);
+  if widget.ref <> nil then
+  begin
+    if pos("Off",widget.Text) > 0 then
+      Mouse.Click(widget.Bounds.Middle, 5, MOUSE_LEFT);
+    sleep(500);
+    widget.Free;
+  end;
+
+  if not CrossDitch(true) then
+  begin
+    WritelnEx('Couldnt cross ditch');
+    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    player.WalkTo("wildToEast");
+    Exit;
+  end;
+
+  setMuleWebMessage(player.Name, 'crossed ditch', player.CombatLevel);
+
+  if not isBotMessage(["crossed ditch", "arrived at wild level"], 30) then
+  begin
+    writelnEx("Bot never crossed the ditch");
+    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    crossDitch(false);
+    player.WalkTo("wildToEast");
+    Exit;
+  end;
+
+  case desiredWildLevel of
+    0..3: begin player.WalkTo("wild4") end;
+    4..7: begin player.WalkTo("wild8") end;
+    8..11: begin player.WalkTo("wild12") end;
+    12..15: begin player.WalkTo("wild16") end;
+    //16..19: begin player.WalkTo("wild20") end;
+    //20..23: begin player.WalkTo("wild24") end;
+    else begin WritelnEx('mucha diff') end;
+  end;
+
+  setMuleWebMessage(player.Name, 'arrived at wild level', player.CombatLevel);
+
+  if not isBotMessage(["arrived at wild level", "attacked"], 30) then
+  begin
+    writelnEx("Bot never arrived at wild level");
+    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    player.WalkTo("wild0");
+    crossDitch(false);
+    player.WalkTo("wildToEast");
+    Exit;
+  end;
+
+  if not isBotMessage("attacked", 30) then
+  begin
+    writelnEx("Bot never attacked");
+    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    player.WalkTo("wild0");
+    crossDitch(false);
+    player.WalkTo("wildToEast");
+    Exit;
+  end;
+
+  sleep(Random(1500, 2000));
+
+  tries := 0;
+  while tries < 60 do
+  begin
+    if not attackPlayer(webBotMessage.name) then
+    begin
+      WritelnEx("Bot is not here, maybe dead?");
+      obj := R_GetClosestObjectByName("Coins", 10);
+      while obj.ref <> nil do
+      begin
+        Mouse.Click(obj.MidPoint, 3, MOUSE_RIGHT);
+        sleep(Random(100,200));
+        if R_ChooseOptions(['ake Coin ']) then
+        begin
+          sleep(Random(1000,1500));
+        end;
+        obj := R_GetClosestObjectByName("Coins", 10);
+      end;
+      WritelnEx("No more coins or player, bye");
+      setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+      player.WalkTo("wild0");
+      crossDitch(false);
+      player.WalkTo("wildToEast");
+      Exit;
+    end;
+    sleep(Random(800,1200));
+    inc(tries);
+  end;
+end;
+
 procedure cookingProcedure;
 begin
   rangeDoor(False);
@@ -3523,26 +4123,35 @@ begin
     AntibanAndBreak;
     if player.inWestBank then
     begin
-      checkCurrentResources("Bank booth", "Bank Bank");
-      if (cShrimps < 150) or (cTrouts < 170) or (cSalmons < 170) then
+      if tradeMode then
       begin
-        if cCoins < calculateEstimatedCashNeeded then
+        acceptTrade;
+      end else
+      begin
+        checkCurrentResources("Bank booth", "Bank Bank");
+        if (cShrimps < 150) or (cTrouts < 170) or (cSalmons < 170) then
         begin
-          shouldRunOneOff := false;
-          writelnEx('No cooking level, no fish in bank, and no money, halt until we get dem fishes');
-          //acceptTradesMode
-          Exit;
-        end else
-        begin
-          player.walkTo('bankToGe'); 
-          AntibanAndBreak;
-          buyResources;
-          player.WalkTo('geToBank');
-          openClosestBank;
-          R_DepositAll_Items;
-          AntibanAndBreak;
-          sleep(random(1000,1500));
-          R_BankScreen_Close;
+          if cCoins < calculateEstimatedCashNeeded then
+          begin
+            //shouldRunOneOff := false;
+            tradeMode := true;
+            writelnEx('No cooking level, no fish in bank, and no money, halt until we get dem fishes');
+            //acceptTradesMode 
+            player.walkToTileMM(Point(3184, 3438), -3, 3);
+            sleep(random(2000,4000));
+            Exit;
+          end else
+          begin
+            player.walkTo('bankToGe');
+            AntibanAndBreak;
+            buyResources;
+            player.WalkTo('geToBank');
+            openClosestBank;
+            R_DepositAll_Items;
+            AntibanAndBreak;
+            sleep(random(1000,1500));
+            R_BankScreen_Close;
+          end;
         end;
       end;
     end;
@@ -3559,10 +4168,17 @@ var
   allNpcs: Array of RSNPC;
   widget: RSWidget;
   testPoint: TPoint;
+  Messages: Array of TRSChatMessage;
+  j: Integer;
 begin
   writeln("testing");
-  obj := R_GetClosestObjectByID(34816, 5);
-  Mouse.Click(obj.MidPoint, MOUSE_RIGHT);
+  //setMuleWebMessage('franehr007', 'cancel', 18);
+  while true do
+  begin
+    muleitems;
+    sleep(3000);
+
+  end;
   TerminateScript;
   writeln(R_BankScreen);
   writeln(R_BankHelp);
@@ -3709,6 +4325,7 @@ begin
         case action of
           "keepAlive": begin keepAliveProcedure end;
           "doTest":   begin testProcedure; end;
+          "doMule":   begin muleProcedure; end;
           "doWild":   begin wildProcedure; end;
           "hybrid":   begin if shouldRunOneOff then hybridProcedure end;
           "walkToGe":   begin

@@ -52,6 +52,19 @@ begin
   ChatWidget.Free;
 end;
 
+Function R_ClickChatMessage(Line: UInt32 = 0): Array of TRSChatMessage;
+var
+  ChatWidget: RSWidget;
+  Children: Array of RSWidget;
+begin
+  ChatWidget := RSWidget.Get(R_CHATBOX_MESSAGES_CHATLINES_TEXT.Group, R_CHATBOX_MESSAGES_CHATLINES_TEXT.Child);
+  if ChatWidget.ref = nil then
+    Exit;
+  Children := ChatWidget.Children;
+  Mouse.Click(Children[Line].Bounds.Middle.x + Random(-50, 50), Children[Line].Bounds.Middle.y + Random(-5, 5), MOUSE_LEFT);
+  ChatWidget.Free;
+end;
+
 Function R_ChatSkillOption(option: Int32): Boolean;
 var
   Dialog: RSWidget;
