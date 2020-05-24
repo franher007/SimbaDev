@@ -3784,11 +3784,14 @@ var
   tries, desiredWildLevel: Integer;
   widget: RSWidget;
 begin
-  writelnEx("MuleItems");
+  writelnEx("MuleItems");      
+  setBotWebMessage(player.Name, 'request mule', player.CombatLevel);
+
   webMuleMessage := getMuleWebMessage;
   if not isMuleMessage("available", 5) then
   begin
-    WritelnEx("Mule not available");
+    WritelnEx("Mule not available"); 
+    setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
     Exit;
   end;
 
@@ -3934,7 +3937,7 @@ begin
   player.WalkTo("wildToEast");
 
   setMuleWebMessage(player.Name, 'available', player.CombatLevel);
-  if (not isBotMessage(["getting gold", "going to wild border"], 30)) then
+  if (not isBotMessage(["request mule","getting gold", "going to wild border"], 30)) then
     LogoutPlayer;
 
   writelnEx("Waiting for Bot to start going to border");
