@@ -3767,7 +3767,8 @@ begin
 
   if enemy.ref = nil then
     Exit(False);
-
+  Mouse.Move(0, 0);
+  sleep(random(100,200));
   Mouse.Click(enemy.MidPoint, name, 5, MOUSE_RIGHT);
   sleep(Random(100,200));
   if R_ChooseOptions(['ttack ' + name]) then
@@ -3776,6 +3777,29 @@ begin
     Exit(True);
   end;
   Exit(False);
+end;
+
+Function isPlayerVisible(name: String): Boolean;
+var
+  enemy: RSPlayer;
+  players: Array of RSPlayer;
+  i: integer;
+begin
+  players := RSPlayer.AllPlayers;
+  for i := 0 to High(players) do
+  begin
+    writeln(players[i].Name);
+    if players[i].Name = name then
+    begin
+      enemy := players[i];
+      break;
+    end;
+  end;
+
+  if enemy.ref = nil then
+    Exit(False);
+  if enemy.IsVisible then
+    Exit(True);
 end;
 
 procedure muleItems;
@@ -4063,12 +4087,17 @@ begin
         end;
         obj := R_GetClosestObjectByName("Coins", 10);
       end;
-      WritelnEx("No more coins or player, bye");
-      setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
-      player.WalkTo("wild0");
-      crossDitch(false);
-      player.WalkTo("wildToEast");
-      Exit;
+      WritelnEx("No more coins");
+
+      if not isPlayerVisible(webBotMessage.name) then
+      begin
+        WritelnEx("No more coins or player, bye");
+        setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+        player.WalkTo("wild0");
+        crossDitch(false);
+        player.WalkTo("wildToEast");
+        Exit;
+      end;
     end;
     sleep(Random(800,1200));
     inc(tries);
