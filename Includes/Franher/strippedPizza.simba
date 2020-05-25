@@ -520,7 +520,7 @@ var
   houseDoorInside, houseToEast, eastToBank, bankToGrains, grainsToCook, grainExitSpot,
   grainEnterSpot, tToFish, tToFishGate, tToChef, tExitChef,
   tToQuest, ttoMiningInstructor, tToMiningGate, tToRats, tToBank, tToPrayer,
-  tToMagic, wild0, wild4, wild8, wild12, wild16, choosenTile: Array of RSTile;
+  tToMagic, wild0, wild4, wild8, wild12, wild16, wild20, wild24, choosenTile: Array of RSTile;
   tries: Integer;
 begin
   geToBankTiles   := [Point(3165, 3483), Point(3165, 3486), Point(3166, 3471),
@@ -710,7 +710,37 @@ begin
                         Point(3333, 3627), Point(3334, 3635),
                         Point(3339, 3643)];
 
-   wild0            := [Point(3339, 3643), Point(3334, 3635),
+   wild20            := [Point(3325, 3524),
+                        Point(3328, 3532), Point(3330, 3539),
+                        Point(3331, 3546), Point(3333, 3555),
+                        Point(3334, 3562), Point(3333, 3571),
+                        Point(3335, 3579), Point(3336, 3587),
+                        Point(3339, 3595), Point(3336, 3605),
+                        Point(3332, 3612), Point(3332, 3621),
+                        Point(3333, 3627), Point(3334, 3635),
+                        Point(3339, 3643), Point(3340, 3652),
+                        Point(3340, 3661), Point(3340, 3669),
+                        Point(3340, 3677)];
+
+   wild24            := [Point(3325, 3524),
+                        Point(3328, 3532), Point(3330, 3539),
+                        Point(3331, 3546), Point(3333, 3555),
+                        Point(3334, 3562), Point(3333, 3571),
+                        Point(3335, 3579), Point(3336, 3587),
+                        Point(3339, 3595), Point(3336, 3605),
+                        Point(3332, 3612), Point(3332, 3621),
+                        Point(3333, 3627), Point(3334, 3635),
+                        Point(3339, 3643), Point(3340, 3652),
+                        Point(3340, 3661), Point(3340, 3669),
+                        Point(3340, 3677), Point(3340, 3683),
+                        Point(3340, 3692), Point(3340, 3701),
+                        Point(3340, 3708)];
+
+   wild0            := [Point(3340, 3708), Point(3340, 3701),
+                        Point(3340, 3692), Point(3340, 3683),
+                        Point(3340, 3677), Point(3340, 3669),
+                        Point(3340, 3661), Point(3340, 3652),
+                        Point(3339, 3643), Point(3334, 3635),
                         Point(3333, 3627), Point(3332, 3621),
                         Point(3332, 3612), Point(3336, 3605),
                         Point(3339, 3595), Point(3336, 3587),
@@ -756,6 +786,8 @@ begin
     "wild8": begin choosenTile := wild8 end;
     "wild12": begin choosenTile := wild12 end;
     "wild16": begin choosenTile := wild16 end;
+    "wild20": begin choosenTile := wild20 end;
+    "wild24": begin choosenTile := wild24 end;
    end;
 
   self.WalkPathMM(choosenTile, 0, 1, False);
@@ -789,13 +821,31 @@ begin
 end;
 
 procedure SetBotWebMessage(name, message: String; combat: integer);
+var
+  response: String;
+  tries: Integer;
 begin
-  GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+  response := GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+  while Pos('nakedpizza', response) > 1 do
+  begin
+    if tries > 10 then
+      Exit;
+    response := GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+  end;
 end;
 
 procedure SetMuleWebMessage(name, message, target: String; combat: integer);
+var
+  response: String;
+  tries: Integer;
 begin
   GetPage(actionWeb + Replace("/enviar.php?setmulemessage=true&name=" + name + "&message=" + message + "&target=" + target + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+  while Pos('nakedpizza', response) > 1 do
+  begin
+    if tries > 10 then
+      Exit;
+    response := GetPage(actionWeb + Replace("/enviar.php?setmulemessage=true&name=" + name + "&message=" + message + "&target=" + target + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+  end;
 end;
 
 Function LoginPlayer:Boolean;
@@ -4004,8 +4054,8 @@ begin
     4..7: begin player.WalkTo("wild8") end;
     8..11: begin player.WalkTo("wild12") end;
     12..15: begin player.WalkTo("wild16") end;
-    //16..19: begin player.WalkTo("wild20") end;
-    //20..23: begin player.WalkTo("wild24") end;
+    16..19: begin player.WalkTo("wild20") end;
+    20..23: begin player.WalkTo("wild24") end;
     else begin WritelnEx('mucha diff') end;
   end;
 
