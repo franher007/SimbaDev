@@ -15,7 +15,7 @@ type
 
 type
   TWebMessage = record
-  name, message: String;
+  name, message, target: String;
   combat: Integer;
   end;
 
@@ -203,6 +203,11 @@ begin
                     'GE visits : ' + intToStr(geVisits) + debugTabulator(intToStr(geVisits)) + " | " + inttostr( Round(60 / (GetTimeRunning/1000/60) * geVisits)),
                     'Time since last GE visit: ' +  inttostr(TimeSinceLastGeVisit.ElapsedTime div 1000 div 60)];
   writeDebug(debugStrings);
+end;
+
+Function RSGroundItem.Midpoint: TPoint;
+begin
+  Result := self.Tile.TileToMS;
 end;
 
 Function RSObject.MidPoint: TPoint;
@@ -788,9 +793,9 @@ begin
   GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
 end;
 
-procedure SetMuleWebMessage(name, message: String; combat: integer);
+procedure SetMuleWebMessage(name, message, target: String; combat: integer);
 begin
-  GetPage(actionWeb + Replace("/enviar.php?setmulemessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+  GetPage(actionWeb + Replace("/enviar.php?setmulemessage=true&name=" + name + "&message=" + message + "&target=" + target + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
 end;
 
 Function LoginPlayer:Boolean;
@@ -1031,6 +1036,73 @@ begin
   end;
 end;
 
+Function R_GetClosestGroundItemByID(ID: Integer; Offset: Integer = 10; upText: String = ""): RSGroundItem;
+var
+  X, Y, i, j, otIndex, otIndex2, distance, distanceLeft: Int32;
+  Tiles, TilesLeft: Array of TPoint;
+  allObjectsAtTile: Array of RSGroundItem;
+  currentObject, currentObjectLeft: RSGroundItem;
+  badUptext: Boolean;
+begin
+  Y := RSPlayer.Me.Tile.Y;
+  X := RSPlayer.Me.Tile.X;
+  Tiles := getSpiralTiles(X, Y, Offset, True);
+  TilesLeft := getSpiralTiles(X, Y, Offset, False);
+  for i := 0 to High(Tiles) do
+  begin
+    badUptext := False;
+    allObjectsAtTile := RSGroundObject.GetAll;
+    writeln(allObjectsAtTile);
+    for otIndex := 0 to high(allObjectsAtTile) do
+    begin
+      currentObject := allObjectsAtTile[otIndex];
+      writeln(currentObject.ID);
+      if currentObject.ID = ID then
+      begin
+        if upText <> "" then
+        begin
+          Mouse.Move(currentObject.MidPoint, 3);
+          sleep(100 + random(100, 200));
+          if not R_IsUpText([upText], false) then badUptext := True;
+        end;
+        if badUptext then Continue;
+        distance := abs(currentObject.Tile.X - X) + abs(currentObject.Tile.Y - Y);
+        for j := 0 to High(TilesLeft) do
+        begin
+          badUptext := False;
+          allObjectsAtTile := RSGroundObject.GetAll;
+          for otIndex := 0 to high(allObjectsAtTile) do
+          begin
+            currentObjectLeft := allObjectsAtTile[otIndex];
+            if currentObjectLeft.ID = ID then
+            begin
+              if upText <> "" then
+              begin
+                Mouse.Move(currentObjectLeft.MidPoint, 3);
+                sleep(100 + random(100, 200));
+                If not R_IsUpText([upText], false) then badUptext := True;
+              end;
+              if badUptext then Continue;
+              distanceLeft := abs(currentObjectLeft.Tile.X - X) + abs(currentObjectLeft.Tile.Y - Y);
+              break;
+            end;
+          end;
+        end;
+        if distanceLeft > distance then
+        begin
+          Result := currentObject;
+          Exit;
+        end else
+        begin
+          Result := currentObjectLeft;
+          Exit;
+        end;
+        Break;
+      end;
+    end;
+  end;
+end;
+
 Function R_GetClosestObjectByName(Name: String; Offset: Integer = 10; upText: String = ""): RSObject;
 var
   X, Y, i, j, otIndex, distance, distanceLeft: Int32;
@@ -1050,6 +1122,8 @@ begin
     begin
       badUptext := False;
       currentObject := RSObject.Get(objectTypes[otIndex], Tiles[i].X, Tiles[i].Y);
+      writeln(currentObject.Definition.Name);
+      writeln(currentObject.Definition.ID);
       if currentObject.Definition.Name = Name then
       begin
         if upText <> "" then
@@ -3612,6 +3686,7 @@ begin
   begin
     Result.name := substring(response, "name:'.", ".':name");
     Result.message := substring(response, "message:'.", ".':message");
+    Result.target := "";
     Result.combat := StrToInt(substring(response, "combat:'.", ".':combat"));
   end;
 end;
@@ -3625,11 +3700,12 @@ begin
   begin
     Result.name := substring(response, "name:'.", ".':name");
     Result.message := substring(response, "message:'.", ".':message");
+    Result.target := substring(response, "target:'.", ".':target");
     Result.combat := StrToInt(substring(response, "combat:'.", ".':combat"));
   end;
 end;
 
-Function isMuleMessage(message: String; tries: Integer): boolean;
+Function isMuleMessage(message: String; tries: Integer; target: String): boolean;
 var
   i: integer;
   wm: TWebMessage;
@@ -3638,7 +3714,7 @@ begin
   while (i < tries) do
   begin
     wm := getMuleWebMessage;
-    if wm.message = message then
+    if (wm.message = message) and (wm.target = target) then
     begin
       Exit(True);
     end;
@@ -3648,7 +3724,7 @@ begin
   Result := False;
 end;
 
-Function isMuleMessage(messages: Array of String; tries: Integer): boolean; overload;
+Function isMuleMessage(messages: Array of String; tries: Integer; target: String): boolean; overload;
 var
   i, j: integer;
   wm: TWebMessage;
@@ -3659,7 +3735,7 @@ begin
     wm := getMuleWebMessage;
     for j := 0 to high(messages) do
     begin
-      if wm.message = messages[j] then
+      if (wm.message = messages[j]) and (wm.target = target) then
       begin
         Exit(True);
       end;
@@ -3816,7 +3892,7 @@ begin
   setBotWebMessage(player.Name, 'request mule', player.CombatLevel);
 
   webMuleMessage := getMuleWebMessage;
-  if not isMuleMessage("available", 5) then
+  if not isMuleMessage("available", 5, player.Name) then
   begin
     WritelnEx("Mule not available"); 
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
@@ -3850,7 +3926,7 @@ begin
   setBotWebMessage(player.Name, 'going to wild border', player.CombatLevel);
 
   writelnEx("Waiting for Mule to start going to border");
-  if not isMuleMessage(["going to wild border", "arrived at wild border"], 30) then
+  if not isMuleMessage(["going to wild border", "arrived at wild border"], 30, player.Name) then
   begin         
     writelnEx("Mule is not going to wild border");
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
@@ -3862,7 +3938,7 @@ begin
   setBotWebMessage(player.Name, 'arrived at wild border', player.CombatLevel);
 
   writelnEx("Waiting for Mule to arrive at border");
-  if not isMuleMessage(["arrived at wild border", "crossed ditch"], 150) then
+  if not isMuleMessage(["arrived at wild border", "crossed ditch"], 150, player.Name) then
   begin      
     writelnEx("Mule never arrived at wild border");
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
@@ -3897,7 +3973,7 @@ begin
   setBotWebMessage(player.Name, 'crossed ditch', player.CombatLevel);
 
   writelnEx("Waiting for Mule to cross ditch");
-  if not isMuleMessage(["crossed ditch", "arrived at wild level"], 30) then
+  if not isMuleMessage(["crossed ditch", "arrived at wild level"], 30, player.Name) then
   begin
     writelnEx("Mule never crossed the ditch");
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
@@ -3919,7 +3995,7 @@ begin
   setBotWebMessage(player.Name, 'arrived at wild level', player.CombatLevel);
 
   writelnEx("Waiting for Mule to arrive at wild level");
-  if not isMuleMessage("arrived at wild level", 30) then
+  if not isMuleMessage("arrived at wild level", 30, player.Name) then
   begin
     writelnEx("Mule never arrived at wild level");
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
@@ -3964,21 +4040,22 @@ begin
   player.WalkTo("bankToEast");
   player.WalkTo("wildToEast");
 
-  setMuleWebMessage(player.Name, 'available', player.CombatLevel);
   if (not isBotMessage(["request mule","getting gold", "going to wild border"], 30)) then
     LogoutPlayer;
 
   writelnEx("Waiting for Bot to start going to border");
   for tries := 0 to 50 do
   begin
-    if isBotMessage(["getting gold", "going to wild border"], 1) then
+    if isBotMessage(["request mule", "getting gold", "going to wild border"], 1) then
     begin
+      webBotMessage := getBotWebMessage;
+      setMuleWebMessage(player.Name, 'available', webBotMessage.target, player.CombatLevel);
       if not LoginPlayer then
       begin
-        setMuleWebMessage("", 'cancel', 0);
+        setMuleWebMessage("", 'cancel', webBotMessage.target, 0);
         Exit;
       end;
-      setMuleWebMessage(player.Name, 'going to wild border', player.CombatLevel);
+      setMuleWebMessage(player.Name, 'going to wild border', webBotMessage.target, player.CombatLevel);
       Break;
     end;
     sleep(10000);
@@ -3986,18 +4063,18 @@ begin
 
   if tries > 49 then
   begin
-    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    setMuleWebMessage(player.Name, 'cancel', webBotMessage.target, player.CombatLevel);
     Exit;
   end;
 
   player.WalkTo("bankToWild");
-  setMuleWebMessage(player.Name, 'arrived at wild border', player.CombatLevel);
+  setMuleWebMessage(player.Name, 'arrived at wild border', webBotMessage.target, player.CombatLevel);
 
   writelnEx("Waiting for Bot to arrive at border");
   if not isBotMessage(["arrived at wild border", "crossed ditch"], 150) then
   begin
     writelnEx("Bot never arrived at wild border");
-    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    setMuleWebMessage(player.Name, 'cancel', webBotMessage.target, player.CombatLevel);
     player.WalkTo("wildToEast");
     Exit;
   end;
@@ -4021,18 +4098,18 @@ begin
   if not CrossDitch(true) then
   begin
     WritelnEx('Couldnt cross ditch');
-    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    setMuleWebMessage(player.Name, 'cancel', webBotMessage.target, player.CombatLevel);
     player.WalkTo("wildToEast");
     Exit;
   end;
 
-  setMuleWebMessage(player.Name, 'crossed ditch', player.CombatLevel);
+  setMuleWebMessage(player.Name, 'crossed ditch', webBotMessage.target, player.CombatLevel);
 
   writelnEx("Waiting for Bot to cross ditch");
   if not isBotMessage(["crossed ditch", "arrived at wild level"], 30) then
   begin
     writelnEx("Bot never crossed the ditch");
-    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    setMuleWebMessage(player.Name, 'cancel', webBotMessage.target, player.CombatLevel);
     crossDitch(false);
     player.WalkTo("wildToEast");
     Exit;
@@ -4048,13 +4125,13 @@ begin
     else begin WritelnEx('mucha diff') end;
   end;
 
-  setMuleWebMessage(player.Name, 'arrived at wild level', player.CombatLevel);
+  setMuleWebMessage(player.Name, 'arrived at wild level', webBotMessage.target, player.CombatLevel);
 
   writelnEx("Waiting for Bot to arrive at wild level");
   if not isBotMessage(["arrived at wild level", "attacked"], 30) then
   begin
     writelnEx("Bot never arrived at wild level");
-    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    setMuleWebMessage(player.Name, 'cancel', webBotMessage.target, player.CombatLevel);
     player.WalkTo("wild0");
     crossDitch(false);
     player.WalkTo("wildToEast");
@@ -4065,7 +4142,7 @@ begin
   if not isBotMessage("attacked", 30) then
   begin
     writelnEx("Bot never attacked");
-    setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+    setMuleWebMessage(player.Name, 'cancel', webBotMessage.target, player.CombatLevel);
     player.WalkTo("wild0");
     crossDitch(false);
     player.WalkTo("wildToEast");
@@ -4096,7 +4173,7 @@ begin
       if not isPlayerVisible(webBotMessage.name) then
       begin
         WritelnEx("No more coins or player, bye");
-        setMuleWebMessage(player.Name, 'cancel', player.CombatLevel);
+        setMuleWebMessage(player.Name, 'cancel', webBotMessage.target, player.CombatLevel);
         player.WalkTo("wild0");
         crossDitch(false);
         player.WalkTo("wildToEast");
@@ -4234,6 +4311,7 @@ end;
 procedure testProcedure;
 var
   obj: RSObject;
+  groundItem: RSGroundItem;
   allNpcs: Array of RSNPC;
   widget: RSWidget;
   testPoint: TPoint;
@@ -4241,12 +4319,25 @@ var
   j: Integer;
 begin
   writeln("testing");
+  writeln(RSGroundObject.GetAll);
+  terminatescript;
   //setMuleWebMessage('franehr007', 'cancel', 18);
   while true do
   begin
-    muleitems;
+    groundItem := R_GetClosestGroundItemByID(995, 1);
+    while obj.ref <> nil do
+    begin
+      Mouse.Click(groundItem.MidPoint, 3, MOUSE_RIGHT);
+      sleep(Random(100,200));
+      if R_ChooseOptions(['ake Coin ']) then
+      begin
+        sleep(Random(1000,1500));
+      end;
+      groundItem := R_GetClosestGroundItemByID(995, 1);
+    end;
+    WritelnEx("No more coins");
     sleep(3000);
-
+    cleardebug;
   end;
   TerminateScript;
   writeln(R_BankScreen);
@@ -4266,7 +4357,7 @@ var
   i: Integer;
   validActions: TStringArray;
 begin
-  validActions := ["hybrid", "doWild", "doTest", "walkToGe", "walkToBank", "walkToWild", "pause", "buyGrains", "buyResources", "sellPizzas", "withdrawWildItems"];
+  validActions := ["hybrid", "doWild", "doBotMule", "doMule", "doTest", "walkToGe", "walkToBank", "walkToWild", "pause", "buyGrains", "buyResources", "sellPizzas", "withdrawWildItems"];
   for i := 0 to high(validActions) do
     if validActions[i] = action then Exit(true);
 end;
@@ -4395,6 +4486,7 @@ begin
           "keepAlive": begin keepAliveProcedure end;
           "doTest":   begin testProcedure; end;
           "doMule":   begin muleProcedure; end;
+          "doBotMule":   begin muleItems; end;
           "doWild":   begin wildProcedure; end;
           "hybrid":   begin if shouldRunOneOff then hybridProcedure end;
           "walkToGe":   begin

@@ -4,7 +4,147 @@
 {$include_once Inventory.simba}
 {$include_once Mouse.simba}
 {$include_once Timing.simba}
+type
+  TNPC = record
+    ID: Int32;
+    Name: String;
+    CombatLevel: Int32;
+    Actions: Array of String;
+    Tile: RSTile;
+    AnimationId: Int32;
+    Orientation: Int32;
+    Health: Int32;
+    InteractingIndex: Int32;
+    Visible: Boolean;
+  end;
 
+
+Function R_GetNPCs: Array of TNPC;
+var
+  I: Int32;
+  NPCs: Array of RSNPC;
+  Definition: RSNPCDefinition;
+begin
+  NPCs := RSNPC.AllNPCs;
+  SetLength(Result, Length(NPCs));
+
+  For I := 0 to High(NPCs) do
+  begin
+    Definition := NPCs[I].Definition;
+    Result[I].ID := Definition.ID;
+    Result[I].Name := Definition.Name;
+    Result[I].Actions := Definition.Actions;
+    Result[I].Tile := NPCs[I].Tile;
+    Result[I].AnimationID := NPCs[I].AnimationId;
+    Result[I].Orientation := NPCs[I].Orientation;
+    Result[I].Health := NPCs[I].Health;
+    Result[I].InteractingIndex := NPCs[I].InteractingIndex;
+    Result[I].Visible := Definition.IsVisible;
+    Definition.Free;
+  end;
+
+  RSTypeArray(NPCs).Free;
+end;
+
+Function R_GetNPCs(ID: Int32): Array of TNPC; overload;
+var
+  I, J: Int32;
+  NPCs: Array of RSNPC;
+  Definition: RSNPCDefinition;
+begin
+  NPCs := RSNPC.AllNPCs;
+  SetLength(Result, Length(NPCs));
+
+  For I := 0 to High(NPCs) do
+  begin
+    Definition := NPCs[I].Definition;
+    Result[J].ID := Definition.ID;
+
+    if Result[J].ID = ID then
+    begin
+      Result[J].Name := Definition.Name;
+      Result[J].Actions := Definition.Actions;
+      Result[J].Tile := NPCs[I].Tile;
+      Result[J].AnimationID := NPCs[I].AnimationId;
+      Result[J].Orientation := NPCs[I].Orientation;
+      Result[J].Health := NPCs[I].Health;
+      Result[J].InteractingIndex := NPCs[I].InteractingIndex;
+      Result[J].Visible := Definition.IsVisible;
+      Inc(J);
+    end;
+    Definition.Free;
+  end;
+
+  RSTypeArray(NPCs).Free;
+  SetLength(Result, J);
+end;
+
+Function R_GetNPCs(Name: String): Array of TNPC; overload;
+var
+  I, J: Int32;
+  NPCs: Array of RSNPC;
+  Definition: RSNPCDefinition;
+begin
+  NPCs := RSNPC.AllNPCs;
+  SetLength(Result, Length(NPCs));
+
+  For I := 0 to High(NPCs) do
+  begin
+    Definition := NPCs[I].Definition;
+    Result[J].Name := Definition.Name;
+
+    if Result[J].Name = Name then
+    begin
+      Result[J].ID := Definition.ID;
+      Result[J].Actions := Definition.Actions;
+      Result[J].Tile := NPCs[I].Tile;
+      Result[J].AnimationID := NPCs[I].AnimationId;
+      Result[J].Orientation := NPCs[I].Orientation;
+      Result[J].Health := NPCs[I].Health;
+      Result[J].InteractingIndex := NPCs[I].InteractingIndex;
+      Result[J].Visible := Definition.IsVisible;
+      Inc(J);
+    end;
+    Definition.Free;
+  end;
+
+  RSTypeArray(NPCs).Free;
+  SetLength(Result, J);
+end;
+
+Function R_GetNPCs(Tile: RSTile): Array of TNPC; overload;
+var
+  I, J: Int32;
+  NPCs: Array of RSNPC;
+  Definition: RSNPCDefinition;
+begin
+  NPCs := RSNPC.AllNPCs;
+  SetLength(Result, Length(NPCs));
+
+  For I := 0 to High(NPCs) do
+  begin
+    Result[J].Tile := NPCs[I].Tile;
+
+    if Result[J].Tile = Tile then
+    begin
+      Definition := NPCs[I].Definition;
+      Result[J].ID := Definition.ID;
+      Result[J].Name := Definition.Name;
+      Result[J].Actions := Definition.Actions;
+      Result[J].Tile := NPCs[I].Tile;
+      Result[J].AnimationID := NPCs[I].AnimationId;
+      Result[J].Orientation := NPCs[I].Orientation;
+      Result[J].Health := NPCs[I].Health;
+      Result[J].InteractingIndex := NPCs[I].InteractingIndex;
+      Result[J].Visible := Definition.IsVisible;
+      Definition.Free;
+      Inc(J);
+    end;
+  end;
+
+  RSTypeArray(NPCs).Free;
+  SetLength(Result, J);
+end;
 (*
 R_NPCIsVisible
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
