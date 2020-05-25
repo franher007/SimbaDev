@@ -828,6 +828,7 @@ begin
   response := GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
   while Pos('nakedpizza', response) > 1 do
   begin
+    sleep(1000);
     if tries > 10 then
       Exit;
     response := GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
@@ -3946,14 +3947,17 @@ Label
 begin
   writelnEx("MuleItems");      
   setBotWebMessage(player.Name, 'request mule', player.CombatLevel);
+  writelnex("MI2");
 
   webMuleMessage := getMuleWebMessage;
+  writelnex("MI3");
   if not isMuleMessage("available", 5, player.Name) then
   begin
     WritelnEx("Mule not available"); 
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
     Exit;
   end;
+  writelnex("MI4");
 
   if player.inWildDitch then
     GoTo alreadyInDitch;
