@@ -826,12 +826,13 @@ var
   tries: Integer;
 begin
   response := GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
-  while Pos('nakedpizza', response) > 1 do
+  while Pos('nakedpizza', response) < 1 do
   begin
     sleep(1000);
     if tries > 10 then
       Exit;
     response := GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+    inc(tries);
   end;
 end;
 
@@ -841,11 +842,12 @@ var
   tries: Integer;
 begin
   GetPage(actionWeb + Replace("/enviar.php?setmulemessage=true&name=" + name + "&message=" + message + "&target=" + target + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
-  while Pos('nakedpizza', response) > 1 do
+  while Pos('nakedpizza', response) < 1 do
   begin
     if tries > 10 then
       Exit;
     response := GetPage(actionWeb + Replace("/enviar.php?setmulemessage=true&name=" + name + "&message=" + message + "&target=" + target + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+    inc(tries);
   end;
 end;
 
