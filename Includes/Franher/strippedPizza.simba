@@ -1182,8 +1182,6 @@ begin
     begin
       badUptext := False;
       currentObject := RSObject.Get(objectTypes[otIndex], Tiles[i].X, Tiles[i].Y);
-      writeln(currentObject.Definition.Name);
-      writeln(currentObject.Definition.ID);
       if currentObject.Definition.Name = Name then
       begin
         if upText <> "" then
@@ -1247,10 +1245,6 @@ begin
     begin
       badUptext := False;
       currentObject := RSObject.Get(objectTypes[otIndex], Tiles[i].X, Tiles[i].Y);
-      if currentObject.ref <> nil then
-      begin
-        writeln(currentobject.Definition.Name + " " + inttostr(currentobject.Definition.ID));
-      end;
       if currentObject.Definition.ID = ID then
       begin
         if upText <> "" then
