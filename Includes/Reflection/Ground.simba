@@ -12,7 +12,6 @@ var
   Items: Array of RSTile;
 begin
   Items := RSGroundObject.GetTileByID(ItemID);
-  writeln(Items);
   if Length(Items) < 1 then
     Exit;
 
@@ -24,7 +23,7 @@ begin
       Result += ResultTile;
   end;
 
-  RSTypeArray(Items).Free;
+  //RSTypeArray(Items).Free;
 end;
 
 (*

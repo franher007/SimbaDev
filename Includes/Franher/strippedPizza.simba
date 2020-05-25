@@ -950,6 +950,16 @@ begin
   Result := self.Tile.InBox(Box(3180, 3433, 3190, 3447));
 end;
 
+Function RSPlayer.inEastBank: boolean;
+begin
+  Result := self.Tile.InBox(Box(3250, 3418, 3257, 3424));
+end;
+
+Function RSPlayer.inWildDitch: boolean;
+begin
+  Result := self.Tile.InBox(Box(3316, 3516, 3331, 3527));
+end;
+
 Function RT_inLumby: boolean;
 begin
   Result := RSPlayer.Me.Tile.InBox(Box(3212, 3206, 3252, 3261));
@@ -3887,6 +3897,8 @@ var
   webMuleMessage: TWebMessage;
   tries, desiredWildLevel: Integer;
   widget: RSWidget;
+Label
+  alreadyInDitch;
 begin
   writelnEx("MuleItems");      
   setBotWebMessage(player.Name, 'request mule', player.CombatLevel);
@@ -3898,6 +3910,9 @@ begin
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
     Exit;
   end;
+
+  if player.inWildDitch then
+    GoTo alreadyInDitch;
 
   setBotWebMessage(player.Name, 'getting gold', player.CombatLevel);
 
@@ -3935,6 +3950,8 @@ begin
   player.WalkTo("geToBank");
   player.WalkTo("bankToWild");  
   sleep(Random(1500,3000));
+
+  AlreadyInDitch:
   setBotWebMessage(player.Name, 'arrived at wild border', player.CombatLevel);
 
   writelnEx("Waiting for Mule to arrive at border");
@@ -4023,6 +4040,7 @@ begin
       player.WalkTo("wildToBank");
       Exit;
     end;
+    inc(tries);
   end;
 end;
 
@@ -4031,7 +4049,7 @@ var
   webBotMessage: TWebMessage;
   tries, desiredWildLevel: Integer;
   widget: RSWidget;
-  obj: RSObject;
+  coinsArray: Array of RSTile;
 begin
   WritelnEx("Starting mule procedure");
   LoginPlayer;
@@ -4152,21 +4170,22 @@ begin
   sleep(Random(1500, 2000));
 
   tries := 0;
-  while tries < 60 do
+  while tries < 120 do
   begin
     if not attackPlayer(webBotMessage.name) then
     begin
       WritelnEx("Bot is not here, maybe dead?");
-      obj := R_GetClosestObjectByName("Coins", 10);
-      while obj.ref <> nil do
+      coinsArray := R_GetMainscreenGroundItemByID(995);
+      while High(coinsArray) > -1 do
       begin
-        Mouse.Click(obj.MidPoint, 3, MOUSE_RIGHT);
+        Mouse.Move(0, 0);
+        Mouse.Click(coinsArray[0], MOUSE_RIGHT);
         sleep(Random(100,200));
-        if R_ChooseOptions(['ake Coin ']) then
+        if R_ChooseOptions(['ake Coin']) then
         begin
           sleep(Random(1000,1500));
         end;
-        obj := R_GetClosestObjectByName("Coins", 10);
+        coinsArray := R_GetMainscreenGroundItemByID(995);
       end;
       WritelnEx("No more coins");
 
@@ -4177,6 +4196,13 @@ begin
         player.WalkTo("wild0");
         crossDitch(false);
         player.WalkTo("wildToEast");
+        if player.inEastBank then
+        begin
+          openClosestBank;
+          R_DepositAll_Items;
+          sleep(random(1000,1500));
+          R_BankScreen_Close;
+        end;
         Exit;
       end;
     end;
@@ -4294,7 +4320,6 @@ begin
             player.WalkTo('geToBank');
             openClosestBank;
             R_DepositAll_Items;
-            AntibanAndBreak;
             sleep(random(1000,1500));
             R_BankScreen_Close;
           end;
@@ -4311,7 +4336,7 @@ end;
 procedure testProcedure;
 var
   obj: RSObject;
-  groundItem: RSGroundItem;
+  groundItem: Array of RSTile;
   allNpcs: Array of RSNPC;
   widget: RSWidget;
   testPoint: TPoint;
@@ -4319,21 +4344,19 @@ var
   j: Integer;
 begin
   writeln("testing");
-  writeln(RSGroundObject.GetAll);
-  terminatescript;
   //setMuleWebMessage('franehr007', 'cancel', 18);
   while true do
   begin
-    groundItem := R_GetClosestGroundItemByID(995, 1);
-    while obj.ref <> nil do
+    groundItem := R_GetMainscreenGroundItemByID(995);
+    if High(groundItem) > -1 then
     begin
-      Mouse.Click(groundItem.MidPoint, 3, MOUSE_RIGHT);
+      Mouse.Click(groundItem[0], 3, MOUSE_RIGHT);
       sleep(Random(100,200));
-      if R_ChooseOptions(['ake Coin ']) then
+      if R_ChooseOptions(['ake Coin']) then
       begin
         sleep(Random(1000,1500));
       end;
-      groundItem := R_GetClosestGroundItemByID(995, 1);
+      groundItem := R_GetMainscreenGroundItemByID(995);
     end;
     WritelnEx("No more coins");
     sleep(3000);
