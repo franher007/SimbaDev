@@ -3885,7 +3885,7 @@ Function attackPlayer(name: String): Boolean;
 var
   enemy: RSPlayer;
   players: Array of RSPlayer;
-  i: integer;
+  i, tries: integer;
 begin
   players := RSPlayer.AllPlayers;
   for i := 0 to High(players) do
@@ -3900,14 +3900,17 @@ begin
 
   if enemy.ref = nil then
     Exit(False);
-  Mouse.Move(0, 0);
-  sleep(random(100,200));
-  Mouse.Click(enemy.MidPoint, name, 5, MOUSE_RIGHT);
-  sleep(Random(100,200));
-  if R_ChooseOptions(['ttack ' + name]) then
+  for tries := 0 to 3 do
   begin
-    sleep(Random(300,500));
-    Exit(True);
+    Mouse.Move(0, 0);
+    sleep(random(100,200));
+    Mouse.Click(enemy.MidPoint, name, 5, MOUSE_RIGHT);
+    sleep(Random(100,200));
+    if R_ChooseOptions(['ttack ' + name]) then
+    begin
+      sleep(Random(300,500));
+      Exit(True);
+    end;
   end;
   Exit(False);
 end;
