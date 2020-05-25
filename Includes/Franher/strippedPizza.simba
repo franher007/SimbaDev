@@ -3950,7 +3950,9 @@ var
 Label
   alreadyInDitch;
 begin
-  writelnEx("MuleItems");      
+  writelnEx("MuleItems");
+  if not LoginPlayer then Exit;
+
   setBotWebMessage(player.Name, 'request mule', player.CombatLevel);
   writelnex("MI2");
 
@@ -3980,7 +3982,8 @@ begin
     player.WalkTo("cookToBank");
     player.WalkTo("bankToGe");
   end;
-
+   
+  reinitializeReflection;
   grandExchange(false, true);   //sell pizzas
   sleep(Random(1500,3000));
   withdrawWildItems;
@@ -4001,14 +4004,15 @@ begin
     Exit;
   end;
   player.WalkTo("geToBank");
-  player.WalkTo("bankToWild");  
+  player.WalkTo("bankToWild");
+  reinitializeReflection;
   sleep(Random(1500,3000));
 
   AlreadyInDitch:
   setBotWebMessage(player.Name, 'arrived at wild border', player.CombatLevel);
 
   writelnEx("Waiting for Mule to arrive at border");
-  if not isMuleMessage(["arrived at wild border", "crossed ditch"], 150, player.Name) then
+  if not isMuleMessage(["arrived at wild border", "crossed ditch", "arrived at wild level"], 150, player.Name) then
   begin      
     writelnEx("Mule never arrived at wild border");
     setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
@@ -4061,7 +4065,8 @@ begin
     20..23: begin player.WalkTo("wild24") end;
     else begin WritelnEx('mucha diff') end;
   end;
-
+  
+  reinitializeReflection;
   setBotWebMessage(player.Name, 'arrived at wild level', player.CombatLevel);
 
   writelnEx("Waiting for Mule to arrive at wild level");
