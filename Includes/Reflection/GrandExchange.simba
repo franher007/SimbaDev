@@ -15,7 +15,7 @@ type
 
 Function R_GrandExchangeScreen: Boolean;
 begin
-  Result := RSWidget.IsValid(R_INTERFACE_GRAND_EXCHANGE);
+  Result := RSWidget.IsValid(R_GRAND_EXCHANGE_CONTAINER.Group, R_GRAND_EXCHANGE_CONTAINER.Child);
 end;
 
 Function R_GrandExchange_Back: Boolean;

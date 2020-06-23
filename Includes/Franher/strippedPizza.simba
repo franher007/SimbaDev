@@ -1020,12 +1020,12 @@ end;
 
 Function R_ChooseDisplayNameScreen: Boolean;
 begin
-  Result := RSWidget.IsValid(R_INTERFACE_TUTORIAL);
+  Result := RSWidget.IsValid(R_TUTORIAL_CONTAINER.Group, R_TUTORIAL_CONTAINER.Child);
 end;
 
 Function R_ChooseCharacterScreen: Boolean;
 begin
-  Result := RSWidget.IsValid(R_INTERFACE_CHARACTER);
+  Result := RSWidget.IsValid(R_TUTORIAL_CHOOSE_ACCEPT_RES.Group, R_TUTORIAL_CHOOSE_ACCEPT_RES.Child);
 end;
 
 Function R_GetTutorialProgress: int32;
