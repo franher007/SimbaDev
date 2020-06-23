@@ -3562,8 +3562,10 @@ end;
 procedure grandExchange(buyGrains, sellPizzas: boolean);
 begin
   if not player.inGE then Exit;
-  withdrawGrandExchangeItems(buyGrains, sellPizzas);
-  reinitializeReflection;
+  withdrawGrandExchangeItems(buyGrains, sellPizzas);   
+  sleep(20);
+  reinitializeReflection(true);
+  sleep(20);
   if not openClosestExchange then Exit;
   if sellPizzas then sellCancelAndCollect("Pizza base", notedPizzaBaseID, currentPizzaPrice);
   if buyGrains then buyCancelAndCollect("Grain", 500, currentGrainPrice);
