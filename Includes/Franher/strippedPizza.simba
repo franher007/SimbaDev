@@ -123,10 +123,10 @@ begin
   if forced or (currentBaseX <> RSCLient.BaseX) or (currentBaseY <> RSCLient.Basey) or (currentPlane <> RSCLient.plane) then
   begin
     WriteLnEx("Reinitialized reflection", true);
-    //RInitializeTileSettings;
-    //RInitializeTileHeights;
+    RInitializeTileSettings;
+    RInitializeTileHeights;
 
-    UpdateRegionCache(RSClient.BaseX, RSClient.BaseY);
+    UpdateRegionCache(RSClient.BaseX, RSClient.BaseY, true);
     currentBaseX := RSCLient.BaseX;
     currentBaseY := RSCLient.basey;
     currentPlane := RSCLient.Plane;

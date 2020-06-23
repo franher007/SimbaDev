@@ -122,7 +122,7 @@ begin
 end;
 {$ENDIF}
 
-Procedure UpdateRegionCache(X, Y: Int32);
+Procedure UpdateRegionCache(X, Y: Int32; forced: Boolean = False);
   Function FindRegion(ID: Int32; Instanced: Boolean): Int32;
   var
     I: Int32;
@@ -142,7 +142,7 @@ begin
   RegionID := (Sar(X, 6) shl 8) or Sar(Y, 6);
 
   NodeIndex := FindRegion(RegionID, False);
-  if NodeIndex = -1 then
+  if (NodeIndex = -1) or forced then
   begin
     RInitializeTileSettings;
     RInitializeTileHeights;
