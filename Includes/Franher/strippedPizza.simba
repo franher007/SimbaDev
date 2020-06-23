@@ -790,9 +790,11 @@ begin
     "wild24": begin choosenTile := wild24 end;
    end;
 
+  reinitializeReflection;
   self.WalkPathMM(choosenTile, 0, 1, False);
   writelnex("endwalk " + destination);
   sleep(random(1200, 1600));
+  reinitializeReflection;
   if not precise then Exit(True);
   tries := 0;
   while (self.Tile <> choosenTile[high(choosenTile)]) and (tries < 5) do
@@ -802,6 +804,7 @@ begin
     Sleep(RandomRange(2000, 2500));
     inc(tries);
   end;
+  reinitializeReflection;
   Result:=True;
 end;
 
