@@ -125,6 +125,8 @@ begin
     WriteLnEx("Reinitialized reflection", true);
     RInitializeTileSettings;
     RInitializeTileHeights;
+
+    UpdateRegionCache(RSClient.BaseX, RSClient.BaseY);
     currentBaseX := RSCLient.BaseX;
     currentBaseY := RSCLient.basey;
     currentPlane := RSCLient.Plane;
