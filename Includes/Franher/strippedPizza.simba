@@ -790,7 +790,7 @@ begin
     "wild24": begin choosenTile := wild24 end;
    end;
 
-  reinitializeReflection(true);
+  reinitializeReflection;
   self.WalkPathMM(choosenTile, 0, 1, False);
   writelnex("endwalk " + destination);
   sleep(random(1200, 1600));
@@ -3562,7 +3562,8 @@ end;
 procedure grandExchange(buyGrains, sellPizzas: boolean);
 begin
   if not player.inGE then Exit;
-  withdrawGrandExchangeItems(buyGrains, sellPizzas);   
+  withdrawGrandExchangeItems(buyGrains, sellPizzas);
+  reinitializeReflection;
   if not openClosestExchange then Exit;
   if sellPizzas then sellCancelAndCollect("Pizza base", notedPizzaBaseID, currentPizzaPrice);
   if buyGrains then buyCancelAndCollect("Grain", 500, currentGrainPrice);
