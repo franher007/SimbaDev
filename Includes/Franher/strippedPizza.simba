@@ -118,9 +118,9 @@ begin
   end;
 end;
 
-procedure reinitializeReflection;
+procedure reinitializeReflection(forced: Boolean = false);
 begin
-  if (currentBaseX <> RSCLient.BaseX) or (currentBaseY <> RSCLient.Basey) or (currentPlane <> RSCLient.plane) then
+  if forced or (currentBaseX <> RSCLient.BaseX) or (currentBaseY <> RSCLient.Basey) or (currentPlane <> RSCLient.plane) then
   begin
     WriteLnEx("Reinitialized reflection", true);
     RInitializeTileSettings;
@@ -790,11 +790,11 @@ begin
     "wild24": begin choosenTile := wild24 end;
    end;
 
-  reinitializeReflection;
+  reinitializeReflection(true);
   self.WalkPathMM(choosenTile, 0, 1, False);
   writelnex("endwalk " + destination);
   sleep(random(1200, 1600));
-  reinitializeReflection;
+  reinitializeReflection(true);
   if not precise then Exit(True);
   tries := 0;
   while (self.Tile <> choosenTile[high(choosenTile)]) and (tries < 5) do
@@ -804,7 +804,7 @@ begin
     Sleep(RandomRange(2000, 2500));
     inc(tries);
   end;
-  reinitializeReflection;
+  reinitializeReflection(true);
   Result:=True;
 end;
 
