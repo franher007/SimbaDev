@@ -5,7 +5,7 @@
 {$include_once RSSceneTile.simba}
 {$include_once RSObjectDefinition.simba}
 
-Function RSObject.Get(ObjectType: RSObjectType; X, Y: Int32): RSObject; static;
+Function RSObject.GetOld(ObjectType: RSObjectType; X, Y: Int32): RSObject; static;
 var
   BaseX, BaseY: Int32;
   Region: RSRegion;
@@ -30,6 +30,35 @@ begin
     end;
 
     //Tile.Free;
+  end;
+
+  Region.Free;
+end;
+
+Function RSObject.Get(ObjectType: RSObjectType; X, Y: Int32): RSObject; static;
+var
+  BaseX, BaseY: Int32;
+  Region: RSRegion;
+  Tile: RSSceneTile;
+begin
+  Region := RSClient.Region;
+  if Region.ref = nil then
+    Exit;
+
+  BaseX := RSClient.BaseX;
+  BaseY := RSClient.BaseY;
+
+  Tile := Region.SceneTile(RSClient.Plane, X - BaseX, Y - BaseY);
+  if Tile.ref <> nil then
+  begin
+    case ObjectType of
+      GAME_OBJECT: Result := Tile.GameObject;
+      WALL_DECORATION: Result := Tile.WallDecoration;
+      BOUNDARY_OBJECT: Result := Tile.BoundaryObject;
+      FLOOR_DECORATION: Result := Tile.GroundDecoration;
+    end;
+
+    Tile.Free;
   end;
 
   Region.Free;
