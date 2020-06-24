@@ -123,8 +123,8 @@ begin
   if forced or (currentBaseX <> RSCLient.BaseX) or (currentBaseY <> RSCLient.Basey) or (currentPlane <> RSCLient.plane) then
   begin
     WriteLnEx("Reinitialized reflection", true);
-    //RInitializeTileSettings;
-    //RInitializeTileHeights;
+    RInitializeTileSettings;
+    RInitializeTileHeights;
 
     //UpdateRegionCache(RSClient.BaseX, RSClient.BaseY, true);
     currentBaseX := RSCLient.BaseX;
@@ -541,7 +541,7 @@ begin
 
   bankToGETiles   := [Point(3184, 3444), Point(3178, 3459),
                       Point(3166, 3460), Point(3166, 3468),
-                      Point(3164, 3481), Point(3164, 3484)];
+                      Point(3164, 3481), Point(3164, 3487)];
 
   cookWaterSpot   := [Point(3139, 3449)];
 
