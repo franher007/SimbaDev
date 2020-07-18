@@ -1043,6 +1043,11 @@ begin
   Result := RSPlayer.me.Tile.InBox(Box(3050, 3050, 3200, 3135)) or RSPlayer.me.Tile.InBox(Box(3050, 8800, 3114, 9704));
 end;
 
+Function R_InNewTutorialIsland: Boolean;
+begin
+  Result := RSPlayer.me.Tile.InBox(Box(3050, 3050, 3200, 3135)) or RSPlayer.me.Tile.InBox(Box(3050, 8800, 3114, 9704));
+end;
+
 Function RT_InGielinorGuide: Boolean;
 begin
   Result := RSPlayer.me.Tile.InBox(Box(3087, 3100, 3097, 3112));
@@ -1703,13 +1708,15 @@ Begin
 
   while (RT_InGielinorGuide) do
   begin
+    writeln('1');
     while (TutorialState = 2) do
     begin
+      writeln('2');
       clickNPCuntilTalk(3308, "Gielinor Guide");
       talkToNPC("2");
       sleep(300);
     end;
-
+    writeln('3');
     //Click llave inglesa
     while (TutorialState = 3) do
     begin
@@ -1767,6 +1774,7 @@ Begin
     reinitializeReflection;
     while (TutorialState = 10) do
     begin
+      writeln('4');
       genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3098, 3107);
       player.WalkToTileMM(genericObject.Tile, 0, 0);
       sleep(3000 + random(100, 200));

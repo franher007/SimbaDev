@@ -357,8 +357,11 @@ var
   i: Integer;
 begin
   allNpcs := RSNPC.AllNPCs;
+  writeln('a');
+  writeln(allNpcs);
   for I := 0 to High(allNpcs) do
   begin
+    writeln(allNpcs[i].Definition.ID);
     if allNpcs[i].Definition.ID = id then
     begin
       Result := allNpcs[I];
