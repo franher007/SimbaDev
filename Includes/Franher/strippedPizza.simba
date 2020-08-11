@@ -4367,6 +4367,13 @@ begin
   begin
     writelnex("Getting that cooking up");    
     AntibanAndBreak;
+    if player.inEastBank then
+    begin
+      checkCurrentResources("Bank booth", "Bank Bank");
+      if (cShrimps > 2) or (cTrouts > 2) or (cSalmons > 2) then
+        cookingprocedure;
+    end;
+
     if player.inWestBank then
     begin
       if tradeMode then
