@@ -1722,7 +1722,7 @@ Begin
     begin
       if RSClient.IsResizeable then
       begin
-        widget := RSWidget.Get(R_TUTORIAL_RESIZEABLE_SETTINGS_SLOT.Group, R_TUTORIAL_RESIZEABLE_SETTINGS_SLOT.Child);
+        widget := RSWidget.Get(R_GAMETAB_RESIZEABLE_SETTINGS.Group, R_GAMETAB_RESIZEABLE_SETTINGS.Child);
         Mouse.Click(widget.Bounds.Middle, 3, MOUSE_LEFT);
         sleep(1000 + random(100,300));
         widget := RSWidget.Get(R_TUTORIAL_RESIZEABLE_SETTINGS_FIXED.Group, R_TUTORIAL_RESIZEABLE_SETTINGS_FIXED.Child, R_TUTORIAL_RESIZEABLE_SETTINGS_FIXED.Index);
