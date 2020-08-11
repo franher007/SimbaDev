@@ -4287,29 +4287,32 @@ end;
 
 procedure cookingProcedure;
 begin
-  rangeDoor(False);
-  AntibanAndBreak;
-  sleep(random(700, 1000));
-  player.walkTo("bankToEast");
-  sleep(random(700, 1000));
-  player.walkTo("houseToEast");
-  sleep(random(700, 1000));
-  withdrawCookingItems;
-  progressReport;
-  AntibanAndBreak;
-  sleep(random(700, 1000));
-  player.walkTo("eastToHouse");
-  sleep(random(700, 1000));
-  rangeDoor(True);
-  sleep(random(700, 1000));
-  cookFish;
-  if player.me.SkillLevel(7) >= 32 then
+  while (player.me.SkillLevel(7) < 32) do
   begin
-    writelnex("Already at 32 cooking, bye");
-    progressReport;
     rangeDoor(False);
-    player.WalkTo("eastToBank");
-    Exit;
+    AntibanAndBreak;
+    sleep(random(700, 1000));
+    player.walkTo("bankToEast");
+    sleep(random(700, 1000));
+    player.walkTo("houseToEast");
+    sleep(random(700, 1000));
+    withdrawCookingItems;
+    progressReport;
+    AntibanAndBreak;
+    sleep(random(700, 1000));
+    player.walkTo("eastToHouse");
+    sleep(random(700, 1000));
+    rangeDoor(True);
+    sleep(random(700, 1000));
+    cookFish;
+    if player.me.SkillLevel(7) >= 32 then
+    begin
+      writelnex("Already at 32 cooking, bye");
+      progressReport;
+      rangeDoor(False);
+      player.WalkTo("eastToBank");
+      Exit;
+    end;
   end;
 end;
 
