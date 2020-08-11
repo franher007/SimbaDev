@@ -4397,10 +4397,10 @@ begin
             sleep(random(1000,1500));
             R_BankScreen_Close;
           end;
-        end;
+        end else
+          cookingProcedure;
       end;
     end;
-    cookingProcedure;
   end else
   begin
    flourToPizzaProcedure;
