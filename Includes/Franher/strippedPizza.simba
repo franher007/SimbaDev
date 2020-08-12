@@ -812,7 +812,7 @@ end;
 
 procedure SetPlayerOnline(name: String);
 begin
-  GetPage(actionWeb + "/enviar.php?setonlinebyname=" + name + "&coins=" + totalCoins + "&pizzasinbank=" + totalPizzas + "&pizzasinge=" + pizzasInGE);
+  GetPage(actionWeb + "/enviar.php?setonlinebyname=" + name + "&coins=" + intToStr(totalCoins) + "&pizzasinbank=" + intToStr(totalPizzas) + "&pizzasinge=" + intToStr(pizzasInGE);
 end;
 
 procedure SetPlayerUsername(name, email: String);
