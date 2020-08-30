@@ -2544,13 +2544,13 @@ begin
   sleep(milis mod 1000);
 end;
 
-procedure AntibanAndBreak;
+procedure AntibanAndBreak(break:boolean = true);
 var
   i, breakTotalMinutes, breakTotalSeconds, Chance, x, y: Integer;
 begin
   if not LoginPlayer then Exit;
 
-  if shouldSleep(accountPlayBeforeBreakMinutes + Random(-randomAccountPlayBeforeBreakMinutes, randomAccountPlayBeforeBreakMinutes)) then
+  if break and shouldSleep(accountPlayBeforeBreakMinutes + Random(-randomAccountPlayBeforeBreakMinutes, randomAccountPlayBeforeBreakMinutes)) then
   begin
     breakTotalMinutes := breakMinutes + Random(-randomBreakMinutes, randomBreakMinutes);
     breakTotalSeconds := breakTotalMinutes * 60;
@@ -2845,7 +2845,7 @@ begin
 
   while (R_CountInventoryItem(currentFishID) > 0) do
   begin
-    AntibanAndBreak;
+    AntibanAndBreak(false);
     writelnex('Using range');
     Mouse.Click(julietRange.MidPoint, MOUSE_LEFT);
     timer.Start;
@@ -2860,7 +2860,7 @@ begin
     writelnex("Choosing Option");
     R_ChatSkillChooseOptions(1);
     sleep(random(1000,1100));
-    AntibanAndBreak;
+    AntibanAndBreak(false);
     timer.Start;
     while (player.isAnimating) do
     begin
@@ -2869,7 +2869,7 @@ begin
       Wait(50 + Random(50));
     end;
     timer.Reset;  
-    AntibanAndBreak;
+    AntibanAndBreak(false);
   end;
   julietRange.Free;
 
