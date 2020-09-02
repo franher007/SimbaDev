@@ -810,19 +810,38 @@ begin
   Result:=True;
 end;
 
+Function GetPageEx(page: String): String;
+var
+  response: String;
+  tries: Integer;
+begin
+  response := "";
+  tries := 0;
+  while (response = "") and (tries < 10) do
+  begin
+    try
+      tries := tries + 1;
+      response := GetPage(page);
+    Except
+      WriteLnEx("Error getting page: " + page + ", retrying: " + inttostr(tries));
+    End;
+  end;
+  Result := response;
+end;
+
 procedure SetPlayerOnline(name: String);
 begin
-  GetPage(actionWeb + "/enviar.php?setonlinebyname=" + name + "&coins=" + intToStr(totalCoins) + "&pizzasinbank=" + intToStr(totalPizzas) + "&pizzasinge=" + intToStr(pizzasInGE));
+  GetPageEx(actionWeb + "/enviar.php?setonlinebyname=" + name + "&coins=" + intToStr(totalCoins) + "&pizzasinbank=" + intToStr(totalPizzas) + "&pizzasinge=" + intToStr(pizzasInGE));
 end;
 
 procedure SetPlayerUsername(name, email: String);
 begin
-  GetPage(actionWeb + "/enviar.php?setusername=" + name + "&email=" + email);
+  GetPageEx(actionWeb + "/enviar.php?setusername=" + name + "&email=" + email);
 end;
 
 procedure SetPlayerBanned(email: String);
 begin
-  GetPage(actionWeb + "/enviar.php?setbanned=" + email);
+  GetPageEx(actionWeb + "/enviar.php?setbanned=" + email);
 end;
 
 procedure SetBotWebMessage(name, message: String; combat: integer);
@@ -4474,7 +4493,7 @@ var
   response: String;
 begin
   if scriptID[currentSet] = "" then Exit;
-  response := GetPage(actionWeb + "/enviar.php?getuserfromscript=" + scriptID[currentSet]);
+  response := GetPageEx(actionWeb + "/enviar.php?getuserfromscript=" + scriptID[currentSet]);
   if response <> "" then
   begin
     Result.email := substring(response, "email:'.", ".':email");
@@ -4492,7 +4511,7 @@ var
   response: String;
 begin
   if scriptID[currentSet] = "" then Exit;
-  response := GetPage(actionWeb + "/" + scriptID[currentSet] + ".txt");
+  response := GetPageEx(actionWeb + "/" + scriptID[currentSet] + ".txt");
   if response <> "" then
   begin
     Result.ID           := strtoint(scriptID[currentSet]);
