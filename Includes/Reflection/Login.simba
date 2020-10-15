@@ -1,0 +1,107 @@
+
+Function LoginPlayer:Boolean;
+var
+  tries: Integer;
+  timer: Timer;
+begin
+  if (RSCLient.LoginState = 2) and (RSClient.GameState > 10) then
+  begin
+    SetPlayerOnline(RSPlayer.me.Name);
+    Exit(True);
+  end;
+  writelnEx("["+CurrentUser+"]Logging in: " + CurrentUser);
+  tries := 0;
+  while (RSClient.LoginState = 24) and (tries < 10) do
+  begin
+    Mouse.Click(400 + random(10), 310 + random(10), MOUSE_LEFT);
+    wait(500 + random(100,200));
+    inc(tries);
+  end;
+
+  tries := 0;
+  while (RSClient.LoginState = 12) and (tries < 10) do
+  begin
+    Mouse.Click(380 + random(10), 320 + random(10), MOUSE_LEFT);
+    wait(500 + random(100,200));
+    inc(tries);
+  end;
+
+  tries := 0;
+  while (RSClient.GameState > 10) or (RSClient.LoginState > 0) do
+  begin
+    PressKey(VK_ESCAPE);
+    wait(500);                       //0,10 - 2,10 - 2,30 -
+  end;
+  if RSClient.LoginState = 0 then
+  begin
+    PressKey(13);
+    wait(500 + random(100,200));
+  end;
+  if RSClient.LoginState = 2 then
+  begin
+    wait(500 + random(100,200));
+    //for i:= 0 to 29 do
+    //  PressKey(VK_BACK);
+    SendKeys(CurrentUser, 0, 0);
+    wait(200 + random(100,200));
+    PressKey(13);
+    //for i:= 0 to 29 do
+    //  PressKey(VK_BACK);
+    SendKeys(CurrentPassword, 0, 0);
+    wait(100 + random(100,200));
+    PressKey(13);
+    wait(500 + random(100,200));
+    timer.Start;
+    while RSClient.GameState < 30 do
+    begin
+      if RSClient.LoginState = 12 then
+      begin
+        Mouse.Click(380, 320, MOUSE_LEFT);
+        wait(500 + random(100,200));
+        SetPlayerBanned(currentUser);
+        Exit(false);
+      end;
+      if timer.ElapsedTime >= 20000 + lag then
+        Exit(false);
+      wait(300);
+    end;
+    timer.Reset;
+
+    wait(1500 + random(200,500));
+    Mouse.Click(400, 340, MOUSE_LEFT);
+    wait(1500 + random(200,500));
+    KeyDown(VK_UP);
+    sleep(3000);
+    KeyUp(VK_UP);
+    reinitializeReflection;
+    player := RSPlayer.Me;
+    SetPlayerUsername(RSPlayer.me.Name, currentUser);
+    sleep(500);
+    SetPlayerOnline(RSPlayer.me.Name);
+    Exit(True);
+  end;
+end;
+
+Function LogoutPlayer: Boolean;
+var
+  widget: RSWidget;
+begin
+  writelnEx("["+CurrentUser+"]Logging out: " + CurrentUser);
+  if not ((RSCLient.LoginState = 2) and (RSClient.GameState > 10)) then
+    Exit(True);
+
+  Mouse.Click(R_GameTabBounds(10), MOUSE_LEFT);
+  sleep(random(500, 800));
+  widget := RSWidget.Get(R_LOGOUT_BUTTON.Group, R_LOGOUT_BUTTON.Child);
+  if widget.ref = nil then
+    widget := RSWidget.Get(R_WORLD_SWITCHER_LOGOUT.Group, R_WORLD_SWITCHER_LOGOUT.Child);
+  if widget.ref = nil then
+    Exit(False);
+  Mouse.Click(widget.bounds, MOUSE_LEFT);
+  widget.Free;
+  sleep(random(3000, 5000));
+  if not ((RSCLient.LoginState = 2) and (RSClient.GameState > 10)) then
+    Exit(True);
+  Exit(False);
+end;
+

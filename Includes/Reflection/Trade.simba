@@ -1,0 +1,149 @@
+procedure acceptTrade;
+var
+  i, j, tries: integer;
+  Messages: Array of TRSChatMessage;
+  widget: RSWidget;
+begin
+  for i := 0 to 30 do
+  begin
+    Messages := R_ChatMessages(0);
+    For j := 0 to high(Messages) do
+    begin
+      if pos("wishes to trade", Messages[j].Message) > 0 then
+      begin
+        R_ClickChatMessage(Messages[j].LineNumber);
+        sleep(Random(3000,5000));
+        tries := 0;
+        while tries < 10 do
+        begin
+          widget := RSWidget.Get(R_TRADE_FIRST_ACCEPT.Group, R_TRADE_FIRST_ACCEPT.Child);
+          if widget.ref <> nil then
+          begin
+            Mouse.Click(widget.Bounds.Middle, 5, MOUSE_LEFT);
+            widget.Free;
+          end;
+
+          sleep(random(800,1200));
+          widget := RSWidget.Get(R_TRADE_SECOND_ACCEPT.Group, R_TRADE_SECOND_ACCEPT.Child);
+          if widget.ref <> nil then
+          begin
+            Mouse.Click(widget.Bounds.Middle, 5, MOUSE_LEFT);
+            widget.Free;
+            sleep(random(4000,5200));
+            widget := RSWidget.Get(R_TRADE_SECOND_ACCEPT.Group, R_TRADE_SECOND_ACCEPT.Child);
+            if widget.ref = nil then
+            begin
+              tradeMode := false;
+              exit;
+            end;
+            widget.Free;
+          end;
+          sleep(random(800,1200));
+          inc(tries);
+        end;
+      end;
+    end;
+    sleep(random(5000,6000));
+  end;
+end;
+
+
+Function CrossDitch(north: Boolean): Boolean;
+var
+  obj: RSObject;
+  widget: RSWidget;
+  tries: Integer;
+begin
+  tries := 0;
+  while (tries < 15) do
+  begin
+    if north and (player.Tile.y > 3522) then
+      Exit(True);
+    if (not north) and (player.Tile.y < 3521) then
+      Exit(True);
+    obj := R_GetClosestObjectByName("Wilderness Ditch", 5);
+    if obj.ref = nil then
+    begin
+      WritelnEx('Couldnt get ditch');
+      setBotWebMessage(player.Name, 'cancel', player.CombatLevel);
+      player.WalkTo("wildToBank");
+      Exit;
+    end;
+
+    Mouse.Click(obj.midpoint, "Cross", 5, MOUSE_LEFT);
+    sleep(Random(2500, 3500));
+    widget := RSWidget.Get(R_WILDERNESS_WARNING_ENTER.group, R_WILDERNESS_WARNING_ENTER.child);
+    if widget.ref <> nil then
+    begin
+      Mouse.Click(widget.Bounds.Middle, 5, MOUSE_LEFT);
+      widget.Free;
+      sleep(Random(2000,3000));
+    end;
+    sleep(Random(2000,3000));
+    inc(tries);
+  end;
+  Exit(False);
+end;
+
+Function attackPlayer(name: String): Boolean;
+var
+  enemy: RSPlayer;
+  players: Array of RSPlayer;
+  i, tries: integer;
+begin
+  players := RSPlayer.AllPlayers;
+  for i := 0 to High(players) do
+  begin
+    writeln(players[i].Name);
+    if players[i].Name = name then
+    begin
+      enemy := players[i];
+      break;
+    end;
+  end;
+
+  if enemy.ref = nil then
+    Exit(False);
+  for tries := 0 to 3 do
+  begin
+    Mouse.Move(0, 0);
+    sleep(random(100,200));
+    Mouse.Click(enemy.MidPoint, name, 5, MOUSE_RIGHT);
+    sleep(Random(100,200));
+    if R_ChooseOptions(['ttack ' + name]) then
+    begin
+      sleep(Random(300,500));
+      Exit(True);
+    end;
+  end;
+  Exit(False);
+end;
+
+Function isPlayerVisible(name: String): Boolean;
+var
+  enemy: RSPlayer;
+  players: Array of RSPlayer;
+  i: integer;
+begin
+  players := RSPlayer.AllPlayers;
+  for i := 0 to High(players) do
+  begin
+    writeln(players[i].Name);
+    if players[i].Name = name then
+    begin
+      enemy := players[i];
+      break;
+    end;
+  end;
+
+  if enemy.ref = nil then
+    Exit(False);
+  if enemy.IsVisible then
+  begin
+    enemy.Free;
+    RSTypeARray(players).Free;
+    Exit(True);
+  end;
+end;
+
+

@@ -1,0 +1,124 @@
+procedure AntibanAndBreak(break:boolean = true);
+var
+  i, breakTotalMinutes, breakTotalSeconds, Chance, x, y: Integer;
+begin
+  if not LoginPlayer then Exit;
+
+  if break and shouldSleep(accountPlayBeforeBreakMinutes + Random(-randomAccountPlayBeforeBreakMinutes, randomAccountPlayBeforeBreakMinutes)) then
+  begin
+    breakTotalMinutes := breakMinutes + Random(-randomBreakMinutes, randomBreakMinutes);
+    breakTotalSeconds := breakTotalMinutes * 60;
+    writelnEx('Been running for ' + IntToStr(CurrentSprintTimer.ElapsedTime div 1000 div 60) + ' minutes, taking a ' + IntToStr(breakTotalMinutes) + ' mins sleep');
+    LogoutPlayer;
+    sleepAndPrintProgressReport(breakTotalMinutes * 60 * 1000);
+    LoginPlayer;
+    currentSprintTimer.Reset;
+    currentSprintTimer.Start;
+  end;
+  if (antiBanMark.ElapsedTime < (60000 + Random(30000))) then Exit;
+  Chance := Random(40) + 1;
+  WritelnEx('Antiban chance: ' + inttostr(Chance));
+  case (Chance) of
+    1:  begin
+          WriteLnEx('Antiban 1');
+          GetClientDimensions(x, y);
+          Mouse.Move(Random(x), Random(y));
+          Wait(200 + random(100));
+          if (R_IsUpText(['ption'])) then
+          begin
+            Mouse.Click(MOUSE_RIGHT);
+            Wait(200 + random(100));
+            R_ChooseOptions(['xamine']);
+          end;
+          Wait(1000 + Random(500));
+        end;
+    2:  begin
+          if (Random(5) = 1) then
+          begin
+            WriteLnEx('Antiban 2');
+            Mouse.Click(R_GameTabBounds(1), MOUSE_LEFT);
+            sleep(500 + random(100, 200));
+            Mouse.Move(Random(550, 730), Random(250, 500));
+            sleep(1000 + random(100, 200));
+            Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);
+            sleep(200 + random(100, 200));
+          end;
+        end;
+    3:  begin
+          if (Random(5) = 1) then
+          begin
+            WriteLnEx('Antiban 3');
+            Mouse.Click(R_GameTabBounds(1), MOUSE_LEFT);
+            sleep(500 + random(100, 200));
+            Mouse.Move(Random(670, 730), Random(347, 369));
+            sleep(1000 + random(100, 200));
+            Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);
+            sleep(200 + random(100, 200));
+          end;
+        end;
+    4:  begin
+          if (R_InventoryCount < 1) then Exit;
+          Mouse.Click(R_GetInventorySlotItem(Random(1,R_InventoryCount)-1).Bounds, MOUSE_RIGHT);
+          Wait(200 + random(100));
+          R_ChooseOptions(['xamine']);
+          Wait(1000 + Random(500));
+        end;
+    5:  begin
+          WriteLnEx('Antiban 5');
+          Mouse.Click(R_GameTabBounds(Random(13)), MOUSE_LEFT);
+          sleep(500 + random(100, 200));
+          Mouse.Move(Random(550, 730), Random(250, 500));
+          sleep(1000 + random(100, 200));
+          Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);
+          sleep(200 + random(100, 200));
+          Wait(500 + Random(500));
+        end;
+    6:  begin
+          WriteLnEx('Antiban 6');
+          GetClientDimensions(x, y);
+          Mouse.Move(Random(x), Random(y));
+          Wait(200 + random(100));
+        end;
+    7:  begin
+          GetMousePos(x, y);
+          Mouse.Move(x - Random(10), y - Random(10));
+          Wait(200 + random(100));
+        end;
+    8:  begin
+          WriteLnEx('Antiban 8');
+          GetMousePos(x, y);
+          Mouse.Move(x - Random(10), y - Random(10));
+          sleep(Random(500));
+          GetMousePos(x, y);
+          Mouse.Move(x - Random(10), y - Random(10));
+          sleep(Random(500));
+          GetMousePos(x, y);
+          Mouse.Move(x - Random(10), y - Random(10));
+          sleep(Random(500));
+        end;
+    9: begin
+          WriteLnEx('Antiban 9');
+          SleepAndPrintProgressReport(Random(3000, 15000));
+       end;
+    10: begin
+          if Random(3) <> 2 then Exit;
+          WriteLnEx('Antiban 10');
+          SleepAndPrintProgressReport(Random(6000, 30000));
+       end;
+    11: begin
+          if Random(6) <> 3 then Exit;
+          WriteLnEx('Antiban 11');
+          SleepAndPrintProgressReport(Random(10000, 60000));
+        end;
+    12: begin
+          player.ToggleRun(True);
+        end;
+    13: begin
+          player.ToggleRun(False);
+        end;
+
+    else Exit;
+  end;
+  antibanMark.Reset;
+  antibanMark.Start;
+end;

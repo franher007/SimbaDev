@@ -1,9 +1,11 @@
 {$include_once Internal/Reflection.simba}
+{$include_once Reflection.simba}
 {$include_once Constants.simba}
 {$include_once Menu.simba}
 {$include_once Inventory.simba}
 {$include_once Mouse.simba}
 {$include_once Timing.simba}
+{$include_once reflection/Helpers.simba}
 {$include_once franher/shared.simba}
 
 
@@ -636,5 +638,122 @@ begin
 
   Result := True; //TODO: Check if the mode actually changed by checking button spriteId..
 end;
+
+Function R_GetClosestObjectByName(Name: String; Offset: Integer = 10; upText: String = ""): RSObject;
+var
+  X, Y, i, j, otIndex, distance, distanceLeft: Int32;
+  Tiles, TilesLeft: Array of TPoint;
+  currentObject, currentObjectLeft: RSObject;
+  badUptext: Boolean;
+  objectTypes: Array of RSObjectType;
+begin
+  Y := RSPlayer.Me.Tile.Y;
+  X := RSPlayer.Me.Tile.X;
+  Tiles := getSpiralTiles(X, Y, Offset, True);
+  TilesLeft := getSpiralTiles(X, Y, Offset, False);
+  objectTypes := [RSObjectType.GAME_OBJECT, RSObjectType.BOUNDARY_OBJECT, RSObjectType.FLOOR_DECORATION, RSObjectType.WALL_DECORATION];
+  for otIndex := 0 to High(objectTypes) do
+  begin
+    for i := 0 to High(Tiles) do
+    begin
+      badUptext := False;
+      currentObject := RSObject.Get(objectTypes[otIndex], Tiles[i].X, Tiles[i].Y);
+      if currentObject.Definition.Name = Name then
+      begin
+        if upText <> "" then
+        begin
+          Mouse.Move(currentObject.MidPoint, 3);
+          sleep(100 + random(100, 200));
+          if not R_IsUpText([upText], false) then badUptext := True;
+        end;
+        if badUptext then Continue;
+        distance := abs(currentObject.Tile.X - X) + abs(currentObject.Tile.Y - Y);
+        for j := 0 to High(TilesLeft) do
+        begin
+          badUptext := False;
+          currentObjectLeft := RSObject.Get(objectTypes[otIndex], TilesLeft[j].X, TilesLeft[j].Y);
+          if currentObjectLeft.Definition.Name = Name then
+          begin
+            if upText <> "" then
+            begin
+              Mouse.Move(currentObjectLeft.MidPoint, 3);
+              sleep(100 + random(100, 200));
+              if not R_IsUpText([upText], false) then badUptext := True;
+            end;
+            if badUptext then Continue;
+            distanceLeft := abs(currentObjectLeft.Tile.X - X) + abs(currentObjectLeft.Tile.Y - Y);
+            break;
+          end;
+        end;
+        if distanceLeft > distance then
+        begin
+          Result := currentObject;
+          currentObjectLeft.Free;
+          Exit;
+        end else
+        begin
+          Result := currentObjectLeft;
+          currentObject.Free;
+          Exit;
+        end;
+        Break;
+      end;
+    end;
+  end;
+end;
+
+
+Function openClosestBank(name: String = "Bank booth"; offset: Integer = 10; upText: String = "Bank"): Boolean;
+var
+  bankBooth: RSObject;
+  tries: Integer;
+  bankHelp: RSWidget;
+begin
+  tries := 0;
+  while (not R_BankScreen) do
+  begin
+    inc(tries);
+    writelnex("Opening bank");
+    bankBooth := R_GetClosestObjectByName(name, offset, upText);
+    if (tries > 15) then
+    begin
+      writelnex("Bank not found");
+      bankBooth.Free;
+      Exit(False);
+    end;
+    if bankBooth.ref <> nil then
+    begin
+      Mouse.Click(bankBooth.MidPoint, 3, MOUSE_LEFT);
+      condWait(@R_BankScreen, 5000, true);
+    end;
+    bankbooth.Free;
+  end;
+  tries := 0;
+  sleep(300);
+  while R_BankHelp do
+  begin
+    if (tries > 15) then Exit;
+    writelnex("Closing Help");
+    bankHelp := RSWidget.Get(R_BANK_HELP_CLOSE.Group, R_BANK_HELP_CLOSE.Child);
+    if bankHelp.ref = nil then
+    begin
+      bankHelp.Free;
+      Exit;
+    end;
+    Mouse.Click(bankHelp.Bounds.Middle, 5, MOUSE_LEFT);
+    condWait(@R_BankHelp, 5000, false);
+    inc(tries);
+    bankHelp.Free;
+  end;
+  Result := True;
+  sleep(random(1500,1800));
+end;
+
+procedure withdrawCoins;
+begin
+  if not openClosestBank("Grand Exchange booth", 10, "Bank Grand") then Exit;
+  R_WithdrawItem(coinsID);
+end;
+
 
 

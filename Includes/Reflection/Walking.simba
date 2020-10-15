@@ -1,6 +1,7 @@
 {$include_once Internal/Reflection.simba}
 {$include_once Constants.simba}
-{$include_once franher/shared.simba}
+{$include_once franher/shared.simba}     
+{$include_once Debug.simba}
 
 Function R_TileToMM(Tile: TPoint): TPoint;
 begin
@@ -28,3 +29,223 @@ begin
   Result.Btm   := Rect.SE;
   Result.Left  := Rect.SW;
 end;
+
+//end repo
+
+function TileOnMM(Tile: RSTile; radius: integer = 0): Boolean;
+var
+  W, H, MMCX, MMCY: Int32;
+  Temp: TPointArray;
+begin
+  GetClientDimensions(W, H);
+  if RSClient.IsResizeable then
+  begin
+    MMCX := (W - 82);   //From RSTile.
+    MMCY := 84;
+  end else
+    begin
+      MMCX := (W - 122);
+      MMCY := 84;
+    end;
+
+  SetLength(Temp, 1);
+  Temp[0] := Tile.ToLocal.TileToMM;
+  FilterPointsPie(Temp, 0.0, 360.0, 0.0, 76.0 - radius, MMCX, MMCY);
+  Result := Length(Temp) = 1;
+end;
+
+{$IFNDEF CODEINSIGHT}
+    {*Credit JuKKa*}
+function WindPath(Xs, Ys, Xe, Ye, Gravity, Wind, MaxStep, TargetArea: Extended): TPointArray;
+var
+  VeloX, VeloY, WindX, WindY, VeloMag, Dist, RandomDist, LastDist: Extended;
+  Step, Sqrt2, Sqrt3, Sqrt5: Extended;
+  LastX, LastY: Integer;
+begin
+  Sqrt2:= Sqrt(2);
+  Sqrt3:= Sqrt(3);
+  Sqrt5:= Sqrt(5);
+  while Hypot(Xs - Xe, Ys - Ye) > 1 do
+  begin
+    Dist:= hypot(Xs - Xe, Ys - Ye);
+    Wind:= Min(Wind, Dist);
+    if Dist >= TargetArea then
+    begin
+      WindX:= WindX / Sqrt3 + (Random(Round(Wind) * 2 + 1) - Wind) / Sqrt5;
+      WindY:= WindY / Sqrt3 + (Random(Round(Wind) * 2 + 1) - Wind) / Sqrt5;
+    end else
+    begin
+      WindX:= WindX / Sqrt2;
+      WindY:= WindY / Sqrt2;
+      if (MaxStep < 3) then
+        MaxStep:= random(3) + 3.0
+      else
+        MaxStep:= MaxStep / Sqrt5;
+    end;
+    VeloX:= VeloX + WindX;
+    VeloY:= VeloY + WindY;
+    VeloX:= VeloX + Gravity * (Xe - Xs) / Dist;
+    VeloY:= VeloY + Gravity * (Ye - Ys) / Dist;
+    if Hypot(VeloX, VeloY) > MaxStep then
+    begin
+      RandomDist:= MaxStep / 2.0 + random(0, (round(MaxStep) div 2));
+      VeloMag:= sqrt(VeloX * VeloX + VeloY * VeloY);
+      VeloX:= (VeloX / VeloMag) * RandomDist;
+      VeloY:= (VeloY / VeloMag) * RandomDist;
+    end;
+    LastX:= Round(Xs);
+    LastY:= Round(Ys);
+    Xs:= Xs + VeloX;
+    Ys:= Ys + VeloY;
+    SetArrayLength(Result, GetArrayLength(Result) + 1);
+    Result[High(Result)] := Point(Round(Xs), Round(Ys));
+    Step:= Hypot(Xs - LastX, Ys - LastY);
+    LastDist:= Dist;
+  end;
+end;
+{$ENDIF}
+
+function RSPlayer.WalkToTileMM(Tile: RSTile; randomFrom: Integer = 0; randomTo: Integer = 0): Boolean;
+var
+  Point: TPoint;
+begin
+  Result := False;
+  if not TileOnMM(Tile) then
+  begin
+    Exit;
+  end;
+
+  Point := Tile.ToLocal.TileToMM;
+  Mouse.Move(Point.X + randomRange(randomFrom, randomTo), Point.Y + randomRange(randomFrom, randomTo));
+  Wait(RandomRange(150, 220));
+  Mouse.Click(MOUSE_LEFT);
+  Result := True;
+end;
+
+function RSPlayer.WalkToTileMS(Tile: RSTile): Boolean;
+var
+  Point: TPoint;
+begin
+  Result := False;
+
+  Point := Tile.ToLocal.TileToMS;
+  Mouse.Move(Point);
+  Wait(RandomRange(150, 220));
+  Mouse.Click(MOUSE_LEFT);
+  Result := True;
+end;
+
+function RSPlayer.FFlag(
+  TileDist: Integer = 0; Timeout: Integer = -1): Boolean;
+var
+  Timer, StuckTimer: Int64;
+  PrevTile, MyDest, MyTile : RSTile;
+begin
+  Timer := GetTickCount();
+  StuckTimer := GetTickCount();
+
+  MyTile := Self.Tile;
+  PrevTile := MyTile;
+  MyDest := Self.Destination;
+
+  while Distance(MyTile.X, MyTile.Y, MyDest.X, MyDest.Y) > TileDist do
+  begin
+    if (Timeout > 0) and ((GetTickCount() - Timer) > Timeout) then
+      Exit(False);
+
+    if (GetTickCount() - StuckTimer) > 800 then
+    begin
+      if (MyTile.X = PrevTile.X) and (MyTile.Y = PrevTile.Y) then
+        Exit(false);
+      StuckTimer := GetTickCount();
+      PrevTile := MyTile;
+    end;
+
+    Wait(RandomRange(200, 250));
+
+    MyTile := Self.Tile;
+    MyDest := Self.Destination;
+  end;
+
+  Exit(True);
+end;
+
+function Distance(const p1, p2: TPoint): Integer; overload;
+begin
+  Result := Distance(p1.x, p1.y, p2.x, p2.y);
+end;
+
+function RSPlayer.WalkPathMM(Path: array of RSTile; Randomness, FlagDist: Integer; Inverted: Boolean): Boolean;
+var
+  Index, Timer, Tries: Int64;
+begin
+  if Inverted then InvertTPA(Path);
+  while Distance(Path[High(Path)], self.Tile) > (FlagDist + Randomness + 1) do
+  begin
+    for Index := High(Path) downto 0 do
+      if TileOnMM(Path[Index]) then
+        Break;
+    if (Index = -1) then
+      Break;
+    Wait(800 + Random(100));
+    if WalkToTileMM(Path[Index]) then
+    begin
+      Timer := (GetTickCount() + 5000);
+      while Distance(Path[Index], self.Tile) > FlagDist do
+      begin
+        Wait(500 + Random(100));
+        if Distance(Path[High(Path)], self.Tile) <= (FlagDist + Randomness + 1) then Break;
+        if (GetTickCount() > Timer) or ((Index <> High(Path)) and (TileOnMM(Path[Index+1], 5))) then
+          Break;
+      end;
+      if (GetTickCount() > Timer) then Inc(Tries);
+
+      if (not (Distance(Path[Index], self.Tile) <= 5)) and ((Index <> High(Path)) and (not TileOnMM(Path[Index+1], 5))) then
+      begin
+        Inc(Tries);
+      end;
+    end else
+    begin
+      Inc(Tries);
+      writelnEx('Tries: '+ inttostr(tries));
+      wait(800+Random(600));
+    end;
+    if Tries >= 10 then Break;
+  end;
+  FFlag(FlagDist);
+  Result := Distance(Path[High(Path)], self.Tile) <= (FlagDist + Randomness + 1);
+end;
+
+function RSPlayer.WalkToTileMSold(Tile: RSTile): Boolean;
+begin
+  Tile := Point(0, 0);
+  {if not IsLoggedIn then
+    Exit;
+  Point := Reflect.Tiles.TileToMS(Tile);
+  if (Point.X = -1) or (Point.Y = -1) then
+    Exit;
+  Reflect.Mouse.Move(Point, 0, 0);
+  Wait(RandomRange(50, 100));
+  if Reflect.Text.IsUpText('Walk here', 50) then
+    Reflect.Mouse.Click(Mouse_Left)
+  else
+  begin
+    Reflect.Mouse.Click(Mouse_Right);
+    Wait(RandomRange(400, 500));
+    if not Reflect.Text.ChooseOption('Walk here') then
+      Reflect.Text.ChooseOption('Cancel')
+  end;
+  Timer.Start;
+  while not Self.IsMoving do
+  begin
+    if Timer.ElapsedTime > 2500 then
+      Break;
+    Wait(150);
+  end;
+  Timer.Restart;
+  while Self.IsMoving do
+    Wait(250);
+  Result := Timer.ElapsedTime < 30000; }
+  Result := False;
+end;
+

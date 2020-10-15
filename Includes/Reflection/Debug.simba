@@ -1,0 +1,75 @@
+{$include_once Internal/Reflection.simba}
+var
+  debugLines: TStringArray; 
+  w, h: Int32;
+  bmp: TMufasaBitmap;
+
+procedure setupDrawing;
+begin
+  debugLines := ['','','','','',''];
+  GetClientDimensions(W, H);
+  EIOS_SetGraphicsDebugging(R_EIOS, True);
+
+  Bmp.Init;
+  Bmp.SetPersistentMemory(PtrUInt(EIOS_GetDebugImageBuffer(R_EIOS)), w, h);
+
+  Bmp.Rectangle([0, 0, w - 1, h - 1], $00);
+  client.GetMBitmaps().AddBMP(bmp);
+end;
+
+procedure TMufasaBitmap.DrawText(txt: String; pt: TPoint; Color: TColor); overload;
+begin
+  Self.DrawText(txt, 'StatChars07', pt, False, Color);
+end;
+
+procedure writeStatus(text:string);
+var i, y: integer;
+begin
+  for i := 0 to high(debugLines)-1 do
+  begin
+    debugLines[i] := debugLines[i+1];
+  end;
+  debugLines[high(debugLines)] := text;
+
+  for i := 0 to high(debugLines) do
+  begin
+    y := (i * 14) + 340;
+    bmp.Rectangle([7, y, 494, y + 16], 9812684);
+    bmp.DrawText("[" + FormatDateTime('hh:nn',now) + "]" + debugLines[i], Point(7, y), $11);
+  end;
+end;
+
+Procedure writelnex(text: String; both: Boolean = False);
+begin
+  if both then writeln("["+tabID+"]" + text);
+  try
+    if useDebug then writeln("["+tabID+"]["+scriptID[currentSet]+"]["+RSPlayer.Me.name+"]: " + text) else writeStatus(text);
+  Except
+    if useDebug then writeln("["+tabID+"]["+scriptID[currentSet]+"]["+currentUser+"]: " + text) else writeStatus(text);
+  end;
+end;
+
+procedure writeDebug(strings: TStringArray);
+var
+  i, y: integer;
+begin
+  for i := 0 to high(strings) do
+  begin
+    y := (i * 10) + 20;
+    bmp.Rectangle([20, y, w - 1, y + 16], $00);
+    bmp.DrawText(strings[i], Point(20, y), $FFFFFF);
+  end;
+end;
+
+procedure SleepAndPrintProgressReport(milis:Uint32; report:Procedure);
+var
+  i: Integer;
+begin
+  for i := 0 to milis div 1000 do
+  begin
+    report;
+    sleep(1000);
+  end;
+  report;
+  sleep(milis mod 1000);
+end;

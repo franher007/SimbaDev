@@ -1,0 +1,247 @@
+{$include_once reflection/Debug.simba}
+{$include_once reflection/Helpers.simba}
+
+type
+  TWebPlayer = record
+  email, password, user, action, scriptId: String;
+  active, online: Boolean;
+  end;
+
+type
+  TWebScript = record
+  action: String;
+  ID, pizzaPrice, grainPrice, shrimpPrice, troutPrice, salmonPrice, hatPrice, potPrice, bucketPrice: Integer;
+  end;
+
+type
+  TWebMessage = record
+  name, message, target: String;
+  combat: Integer;
+  end;
+
+Function GetPageEx(page: String): String;
+var
+  response: String;
+  tries: Integer;
+begin
+  response := "";
+  tries := 0;
+  while (response = "") and (tries < 10) do
+  begin
+    try
+      tries := tries + 1;
+      response := GetPage(page);
+    Except
+      WriteLnEx("Error getting page: " + page + ", retrying: " + inttostr(tries));
+    End;
+  end;
+  Result := response;
+end;
+
+Function getWebPlayer(currentSet:Integer): TWebPlayer;
+var
+  response: String;
+begin
+  if scriptID[currentSet] = "" then Exit;
+  response := GetPageEx(actionWeb + "/enviar.php?getuserfromscript=" + scriptID[currentSet]);
+  if response <> "" then
+  begin
+    Result.email := substring(response, "email:'.", ".':email");
+    Result.password := substring(response, "password:'.", ".':password");
+    Result.user := substring(response, "username:'.", ".':username");
+    Result.action := substring(response, "action:'.", ".':action");
+    Result.scriptId := substring(response, "scriptid:'.", ".':scriptid");
+    Result.active := StrToBool(substring(response, "active:'.", ".':active"));
+    Result.online := StrToBool(substring(response, "online:'.", ".':online"));
+  end;
+end;
+
+Function getWebScript: TWebScript;
+var
+  response: String;
+begin
+  if scriptID[currentSet] = "" then Exit;
+  response := GetPageEx(actionWeb + "/" + scriptID[currentSet] + ".txt");
+  if response <> "" then
+  begin
+    Result.ID           := strtoint(scriptID[currentSet]);
+    Result.action       := substring(response, "action:'.", ".':action");
+    Result.grainPrice   := strtoint(substring(response, "grainprice:'.", ".':grainprice"));
+    Result.pizzaPrice   := strtoint(substring(response, "pizzaprice:'.", ".':pizzaprice"));
+    Result.shrimpPrice  := strtoint(substring(response, "shrimpprice:'.", ".':shrimpprice"));
+    Result.troutPrice   := strtoint(substring(response, "troutprice:'.", ".':troutprice"));
+    Result.salmonPrice  := strtoint(substring(response, "salmonprice:'.", ".':salmonprice"));
+    Result.hatPrice     := strtoint(substring(response, "hatprice:'.", ".':hatprice"));
+    Result.potPrice     := strtoint(substring(response, "potprice:'.", ".':potprice"));
+    Result.bucketPrice  := strtoint(substring(response, "bucketprice:'.", ".':bucketprice"));
+  end;
+end;
+
+Function isWebActionValid(action: String): Boolean;
+var
+  i: Integer;
+  validActions: TStringArray;
+begin
+  validActions := ["hybrid", "doWild", "doBotMule", "doMule", "doTest", "walkToGe", "walkToBank", "walkToWild", "pause", "buyGrains", "buyResources", "sellPizzas", "withdrawWildItems"];
+  for i := 0 to high(validActions) do
+    if validActions[i] = action then Exit(true);
+end;
+
+procedure SetPlayerOnline(name: String);
+begin
+  GetPageEx(actionWeb + "/enviar.php?setonlinebyname=" + name + "&coins=" + intToStr(totalCoins) + "&pizzasinbank=" + intToStr(totalPizzas) + "&pizzasinge=" + intToStr(pizzasInGE));
+end;
+
+procedure SetPlayerUsername(name, email: String);
+begin
+  GetPageEx(actionWeb + "/enviar.php?setusername=" + name + "&email=" + email);
+end;
+
+procedure SetPlayerBanned(email: String);
+begin
+  GetPageEx(actionWeb + "/enviar.php?setbanned=" + email);
+end;
+
+procedure SetBotWebMessage(name, message: String; combat: integer);
+var
+  response: String;
+  tries: Integer;
+begin
+  response := GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+  while Pos('nakedpizza', response) < 1 do
+  begin
+    sleep(1000);
+    if tries > 10 then
+      Exit;
+    response := GetPage(actionWeb + Replace("/enviar.php?setbotmessage=true&name=" + name + "&message=" + message + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+    inc(tries);
+  end;
+end;
+
+procedure SetMuleWebMessage(name, message, target: String; combat: integer);
+var
+  response: String;
+  tries: Integer;
+begin
+  GetPage(actionWeb + Replace("/enviar.php?setmulemessage=true&name=" + name + "&message=" + message + "&target=" + target + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+  while Pos('nakedpizza', response) < 1 do
+  begin
+    if tries > 10 then
+      Exit;
+    response := GetPage(actionWeb + Replace("/enviar.php?setmulemessage=true&name=" + name + "&message=" + message + "&target=" + target + "&combat=" + IntToStr(combat), " ", "%20", [rfReplaceAll]));
+    inc(tries);
+  end;
+end;
+
+
+Function getBotWebMessage: TWebMessage;
+var
+  response: String;
+begin
+  response := GetPage(actionWeb + "/botmessage.txt");
+  if response <> "" then
+  begin
+    Result.name := substring(response, "name:'.", ".':name");
+    Result.message := substring(response, "message:'.", ".':message");
+    Result.target := "";
+    Result.combat := StrToInt(substring(response, "combat:'.", ".':combat"));
+  end;
+end;
+
+Function getMuleWebMessage: TWebMessage;
+var
+  response: String;
+begin
+  response := GetPage(actionWeb + "/mulemessage.txt");
+  if response <> "" then
+  begin
+    Result.name := substring(response, "name:'.", ".':name");
+    Result.message := substring(response, "message:'.", ".':message");
+    Result.target := substring(response, "target:'.", ".':target");
+    Result.combat := StrToInt(substring(response, "combat:'.", ".':combat"));
+  end;
+end;
+
+Function isMuleMessage(message: String; tries: Integer; target: String): boolean;
+var
+  i: integer;
+  wm: TWebMessage;
+begin
+  i := 0;
+  while (i < tries) do
+  begin
+    wm := getMuleWebMessage;
+    if (wm.message = message) and (wm.target = target) then
+    begin
+      Exit(True);
+    end;
+    sleepAndPrintProgressReport(500);
+    inc(i);
+  end;
+  Result := False;
+end;
+
+Function isMuleMessage(messages: Array of String; tries: Integer; target: String): boolean; overload;
+var
+  i, j: integer;
+  wm: TWebMessage;
+begin
+  i := 0;
+  while (i < tries) do
+  begin
+    wm := getMuleWebMessage;
+    for j := 0 to high(messages) do
+    begin
+      if (wm.message = messages[j]) and (wm.target = target) then
+      begin
+        Exit(True);
+      end;
+    end;
+    sleepAndPrintProgressReport(500);
+    inc(i);
+  end;
+  Result := False;
+end;
+
+Function isBotMessage(message: String; tries: Integer): boolean;
+var
+  i: integer;
+  wm: TWebMessage;
+begin
+  i := 0;
+  while (i < tries) do
+  begin
+    wm := getBotWebMessage;
+    if wm.message = message then
+    begin
+      Exit(True);
+    end;
+    sleepAndPrintProgressReport(500);
+    inc(i);
+  end;
+  Result := False;
+end;
+
+Function isBotMessage(messages: Array of String; tries: Integer): boolean; overload;
+var
+  i, j: integer;
+  wm: TWebMessage;
+begin
+  i := 0;
+  while (i < tries) do
+  begin
+    wm := getBotWebMessage;
+    for j := 0 to high(messages) do
+    begin
+      if wm.message = messages[j] then
+      begin
+        Exit(True);
+      end;
+    end;
+    sleepAndPrintProgressReport(500);
+    inc(i);
+  end;
+  Result := False;
+end;
+
+

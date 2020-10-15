@@ -1,6 +1,6 @@
 {$include_once Internal/Reflection.simba}
 {$include_once Constants.simba}
-{$include_once srl/shared.simba}
+{$include_once franher/shared.simba}
 
 type
   TRSPlayer = record
@@ -83,3 +83,62 @@ begin
   Result := Me.Destination;
   Me.Free;
 end;
+
+//end repo
+
+Function RSPlayer.ToggleRun(run: boolean): Boolean;
+var
+  widget: RSWidget;
+begin
+  if run then
+  begin
+    if RSVarps.VarpMain(173) = 1 then Exit(True);
+    widget := RSWidget.Get(R_INTERFACE_MINIMAP_ORB_RUN_ICON.Group, R_INTERFACE_MINIMAP_ORB_RUN_ICON.Child);
+    Mouse.Click(widget.bounds, MOUSE_LEFT);
+    widget.Free;
+    Exit(True);
+  end else
+  begin
+    if RSVarps.VarpMain(173) = 0 then Exit(True);
+    widget := RSWidget.Get(R_INTERFACE_MINIMAP_ORB_RUN_ICON.Group, R_INTERFACE_MINIMAP_ORB_RUN_ICON.Child);
+    Mouse.Click(widget.bounds, MOUSE_LEFT);
+    widget.Free;
+    Exit(True);
+  end;
+end;
+
+Function RSPlayer.inGE: boolean;
+begin
+  Result := self.Tile.InBox(Box(3155, 3470, 3176, 3494));
+end;
+
+Function RSPlayer.inGrains: boolean;
+begin
+  Result := self.Tile.InBox(Box(3138, 3458, 3144, 3464));
+end;
+
+Function RSPlayer.inGuild: boolean;
+begin
+  Result := self.Tile.InBox(Box(3138, 3444, 3147, 3453));
+end;
+
+Function RSPlayer.inLumby: boolean;
+begin
+  Result := self.Tile.InBox(Box(3212, 3206, 3252, 3261));
+end;
+
+Function RSPlayer.inWestBank: boolean;
+begin
+  Result := self.Tile.InBox(Box(3180, 3433, 3190, 3447));
+end;
+
+Function RSPlayer.inEastBank: boolean;
+begin
+  Result := self.Tile.InBox(Box(3250, 3418, 3257, 3424));
+end;
+
+Function RSPlayer.inWildDitch: boolean;
+begin
+  Result := self.Tile.InBox(Box(3316, 3516, 3331, 3527));
+end;
+

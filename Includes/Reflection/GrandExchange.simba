@@ -1,7 +1,8 @@
 {$include_once Internal/Reflection.simba}
 {$include_once Constants.simba}
 {$include_once Menu.simba}
-{$include_once Inventory.simba}
+{$include_once Inventory.simba}     
+{$include_once franher/shared.simba}
 
 const
   VARBIT_CURRENT_SLOT = 4439;
@@ -502,3 +503,69 @@ begin
   //RSTypeArray(buyVars).Free;
   //RSTypeArray(spriteVars).Free;
 end;
+
+
+Function openClosestExchange: Boolean;
+var
+  exchangeBooth: RSObject;
+  tries: Integer;
+begin
+  tries := 0;
+  while not R_GrandExchangeScreen do
+  begin
+    inc(tries);
+    writelnex("Opening GE");
+    exchangeBooth := R_GetClosestObjectByName("Grand Exchange booth", 10, "Exchange Grand");
+    if (tries > 15) then
+    begin
+      writelnex("GE not found");
+      exchangeBooth.Free;
+      Exit(False);
+    end;
+    if exchangeBooth.ref <> nil then
+    begin
+      Mouse.Click(exchangeBooth.MidPoint, 3, MOUSE_LEFT);
+      condWait(@R_GrandExchangeScreen, 5000, true);
+    end;
+    exchangeBooth.Free;
+  end;
+  Result := True;
+  sleep(random(1500,1800));
+end;
+
+procedure sellCancelAndCollect(itemName: String;itemID, price:Integer);
+begin
+  writelnex('Selling ' + itemName + ' for ' + inttostr(price));
+  if not openClosestExchange then Exit;
+  //cancel current offer and collect
+  if R_GrandExchange_EmptyItem(itemName) then sleep(random(1200,1400));;
+  if R_GrandExchangeCollectAll then sleep(random(1200,1400));
+
+  //SELL STUFF
+  R_GrandExchange_Sell(itemID, TRSOfferQuantity.ALL, 1, TRSOfferPrice.X, price);
+  sleep(random(1200,1400));
+  if R_GrandExchangeCollectAll then sleep(random(700,1000));
+end;
+
+procedure buyCancelAndCollect(itemName: String;quantity, price:Integer);
+begin
+  writelnex('Buying ' + inttostr(quantity) + " " + itemName + ' for ' + inttostr(price));
+  if not openClosestExchange then Exit;
+  //cancel current offer and collect
+  if R_GrandExchangeCollectAll then sleep(random(1200,1400));
+  if R_GrandExchange_EmptyItem(itemName) then sleep(random(1200,1400));
+  if R_GrandExchangeCollectAll then sleep(random(1200,1400));
+
+  //BUY STUFF
+  R_GrandExchange_Buy(itemName, TRSOfferQuantity.X, quantity, TRSOfferPrice.X, price);
+  sleep(random(1200,1400));
+  if R_GrandExchangeCollectAll then sleep(random(700,1000));
+end;
+
+procedure countGrandExchangeItems;
+begin
+  if not openClosestExchange then Exit;
+  pizzasInGE := R_GrandExchange_CountItem("Pizza base");
+  grainsInGe := R_GrandExchange_CountItem("Grain");
+end;
+

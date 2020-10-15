@@ -1,5 +1,3 @@
-{$i reflection/reflection.simba}
-
 // SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
 const
   userAction    = "hybrid"; //hybrid, doWild, keepAlive
@@ -7,7 +5,7 @@ const
   useGE         = True;   //Buy/Sell in Grand Exchange?
   GEonFirstRun  = True;   //Go to GE on first run?
 
-  scriptID                            = ["5"]; //your sets here entre comillas ["1","2","24"]
+  scriptID                            = ["14"]; //your sets here entre comillas ["1","2","24"]
   tabID                               = "1";
 
   setMinutes                          = 240; //how many minutes for each set
@@ -57,7 +55,44 @@ const
   notedPizzaBaseID = 2284;
   notedGrainID = 1948;
 
+var
+  pizzasDone, runs, floursDone, fishesDone, geVisits              : Integer;
+  cShrimps, cTrouts, cSalmons, cPots, cBuckets, cHats, cCoins     : Integer;
+  totalCoins, totalPizzas, totalGrains, pizzasInGE, grainsInGE : Integer;
+  CurrentSet                        : Integer;
+  startTime                         : TDateTime;
+  isMillEmpty                       : Boolean;
+  startPos                          : TPoint;
+  pickWheat                         : Boolean;
+  sellPizzas                        : Boolean;
+  action                            : String;
+  currentUser                       : String;
+  currentPassword                   : String;
+  currentGrainPrice                 : Integer;
+  currentPizzaPrice                 : Integer;
+  currentShrimpPrice                : Integer;
+  currentTroutPrice                 : Integer;
+  currentSalmonPrice                : Integer;
+  currentHatPrice                   : Integer;
+  currentPotPrice                   : Integer;
+  currentBucketPrice                : Integer;
+  grainsInBank                      : Integer;
+  shouldRunOneOff                   : Boolean;
+  tradeMode                         : Boolean;
+  currentPlane, currentBaseX, currentBaseY : Integer;
 
+{$include_once franher/Web.simba}
+var
+  player                            : RSPlayer;
+  webPlayer                         : TWebPlayer;
+  webScript                         : TWebScript;
+  timerTrack                        : Timer;
+  timeSinceLastGeVisit              : Timer;
+  CurrentSetTimer                   : Timer;
+  CurrentAccountTimer               : Timer;
+  CurrentSprintTimer                : Timer; 
+  antibanMark                       : Timer;
+{$i reflection/reflection.simba}
 {$i franher/strippedPizza.simba}
 
 begin

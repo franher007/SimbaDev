@@ -15,3 +15,964 @@ Function R_InTutorialIsland: Boolean;
 begin
   Result := RSPlayer.me.Tile.InBox(Box(3050, 3100, 3114, 3123));
 end;
+
+
+Function RT_inLumby: boolean;
+begin
+  Result := RSPlayer.Me.Tile.InBox(Box(3212, 3206, 3252, 3261));
+end;
+
+Function R_ChooseDisplayNameScreen: Boolean;
+begin
+  Result := RSWidget.IsValid(R_TUTORIAL_CONTAINER.Group, R_TUTORIAL_CONTAINER.Child);
+end;
+
+Function R_ChooseCharacterScreen: Boolean;
+begin
+  Result := RSWidget.IsValid(R_TUTORIAL_CHOOSE_ACCEPT_RES.Group, R_TUTORIAL_CHOOSE_ACCEPT_RES.Child);
+end;
+
+Function R_GetTutorialProgress: int32;
+begin
+  result := RSWidget.Get(R_TUTORIAL_PROGRESS.Group, R_TUTORIAL_PROGRESS.Child).Width;
+end;
+
+Function R_InTutorialIsland: Boolean;
+begin
+  Result := RSPlayer.me.Tile.InBox(Box(3050, 3050, 3200, 3135)) or RSPlayer.me.Tile.InBox(Box(3050, 8800, 3114, 9704));
+end;
+
+Function R_InNewTutorialIsland: Boolean;
+begin
+  Result := RSPlayer.me.Tile.InBox(Box(3050, 3050, 3200, 3135)) or RSPlayer.me.Tile.InBox(Box(3050, 8800, 3114, 9704));
+end;
+
+Function RT_InGielinorGuide: Boolean;
+begin
+  Result := RSPlayer.me.Tile.InBox(Box(3087, 3100, 3097, 3112));
+end;
+
+Function RT_InChef: Boolean;
+begin
+  Result := (RSPlayer.me.Tile.InBox(Box(3073, 3083, 3078, 3086))) or (RSPlayer.me.Tile.InBox(Box(3073, 3083, 3075, 3091))) or (RSPlayer.me.Tile.InBox(Box(3075, 3081, 3076, 3082)));
+end;
+
+Function RT_InQuest: Boolean;
+begin
+  Result := RSPlayer.me.Tile.InBox(Box(3082, 3119, 3089, 3125));
+end;
+
+
+Function isSuggestedNameHiddenn: Boolean;
+begin
+  Result := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_SUGGESTED.Group, R_TUTORIAL_CHOOSE_NAME_SUGGESTED.Child).IsHidden;
+end;
+
+function isNameAvailable: Boolean;
+begin
+  Result := TextContains("reat", RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_AVAILABLE.Group, R_TUTORIAL_CHOOSE_NAME_AVAILABLE.Child).Text);
+end;
+
+
+Function TutorialState: int32;
+begin
+  Result := RSVarps.VarpMain(281);
+end;
+
+Function R_TutorialIsland(name: String = ""): Boolean;
+var
+  widget: RSWidget;
+  genericObject: RSObject;
+  i, j, tries: Integer;
+  attributes: array of RWidget;
+Begin
+  if not R_InTutorialIsland then Exit(False);
+  //if not R_ChooseDisplaypizzasInGENameScreen then Exit(False);
+
+  reinitializeReflection;
+
+  while R_ChooseDisplayNameScreen do
+  begin
+    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_FIELD.Group, R_TUTORIAL_CHOOSE_NAME_FIELD.Child);
+    if widget.ref <> nil then
+    begin
+      //ResMouseClick(widget.Bounds.Middle.x + 10, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+      Mouse.Click(widget.Bounds.Middle, 3, MOUSE_LEFT);
+      widget.Free;
+      sleep(500 + random(500,700));
+      if name <> "" then
+      begin
+        SendKeys(Copy(name, 0, pos("@", name))+"rsacc", 0, 0);
+        wait(100 + random(100,200));
+        PressKey(13);
+
+        //sleep(3500 + random(500,700));
+      end else
+      begin
+        SendKeys("a",0,0);
+        PressKey(13);
+        widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_SUGGESTED.Group, R_TUTORIAL_CHOOSE_NAME_SUGGESTED.Child);
+        if not isSuggestedNameHiddenn then
+          sleep(1500);
+        condWait(@isSuggestedNameHiddenn, 10000, false);
+        //ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+        Mouse.Click(widget.Bounds.Middle, 7, MOUSE_LEFT);
+      end;
+      condWait(@isNameAvailable, 10000, true);
+      widget := RSWidget.Get(R_TUTORIAL_CHOOSE_NAME_SET.Group, R_TUTORIAL_CHOOSE_NAME_SET.Child);
+      //ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+      Mouse.Click(widget.Bounds.Middle, 3, MOUSE_LEFT);
+      sleep(50+random(60,100));
+      condWait(@R_ChooseDisplayNameScreen, 10000, false);
+      widget.Free;
+    end;
+  end;
+
+  SetPlayerUsername(RSPlayer.me.Name, currentUser);
+  SetPlayerOnline(RSPlayer.me.Name);
+
+  //PICK CHAR
+  while R_ChooseCharacterScreen do
+  begin
+
+    attributes := [R_TUTORIAL_CHOOSE_HAIR, R_TUTORIAL_CHOOSE_HEAD,
+                 R_TUTORIAL_CHOOSE_JAW, R_TUTORIAL_CHOOSE_TORSO,
+                 R_TUTORIAL_CHOOSE_ARMS, R_TUTORIAL_CHOOSE_HANDS,
+                 R_TUTORIAL_CHOOSE_LEGS, R_TUTORIAL_CHOOSE_FEET,
+                 R_TUTORIAL_CHOOSE_LEGS_COLOR, R_TUTORIAL_CHOOSE_TORSO_COLOR,
+                 R_TUTORIAL_CHOOSE_FEET_COLOR, R_TUTORIAL_CHOOSE_SKIN_COLOR];
+    if random(0,1) = 1 then
+      widget := RSWidget.Get(R_TUTORIAL_CHOOSE_MALE.Group, R_TUTORIAL_CHOOSE_MALE.Child)
+    else
+      widget := RSWidget.Get(R_TUTORIAL_CHOOSE_FEMALE.Group, R_TUTORIAL_CHOOSE_FEMALE.Child);
+    //ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+    Mouse.Click(widget.Bounds.Middle, 3, MOUSE_LEFT);
+
+    //sleep(2500 + random(500,700));
+    for i := 0 to High(attributes) do
+    begin
+      widget := RSWidget.Get(attributes[i].Group, attributes[i].Child);
+      for j := 0 to random(4) do
+      begin
+        //ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+        Mouse.Click(widget.Bounds.Middle, 3, MOUSE_LEFT);
+        //sleep(100);
+      end;
+    end;
+
+
+    widget := RSWidget.Get(R_TUTORIAL_CHOOSE_ACCEPT_RES.Group, R_TUTORIAL_CHOOSE_ACCEPT_RES.Child);
+    //ResMouseClick(widget.Bounds.Middle.x + 5, widget.Bounds.Middle.y, 3, MOUSE_LEFT);
+    Mouse.Click(widget.Bounds.Middle, 3, MOUSE_LEFT);
+    widget.free;
+    condWait(@R_ChooseCharacterScreen, 10000, false);
+  end;
+
+
+  //Talk to Guide  3308
+  writeln('varp');
+  writeln(RSVarps.VarpMain(281));
+
+  while (RT_InGielinorGuide) do
+  begin
+    writeln('1');
+    while (TutorialState = 2) do
+    begin
+      writeln('2');
+      clickNPCuntilTalk(3308, "Gielinor Guide");
+      talkToNPC("2");
+      sleep(300);
+    end;
+    writeln('3');
+    //Click llave inglesa
+    while (TutorialState = 3) do
+    begin
+      if RSClient.IsResizeable then
+      begin
+        widget := RSWidget.Get(R_GAMETAB_RESIZEABLE_SETTINGS.Group, R_GAMETAB_RESIZEABLE_SETTINGS.Child);
+        Mouse.Click(widget.Bounds.Middle, 3, MOUSE_LEFT);
+        sleep(1000 + random(100,300));
+        widget := RSWidget.Get(R_TUTORIAL_RESIZEABLE_SETTINGS_FIXED.Group, R_TUTORIAL_RESIZEABLE_SETTINGS_FIXED.Child, R_TUTORIAL_RESIZEABLE_SETTINGS_FIXED.Index);
+        Mouse.Click(widget.Bounds.Middle, 3, MOUSE_LEFT);
+        widget.free;
+        condWait(@RSClient.IsResizeable, 5000, false);
+        sleep(300 + random(100, 200));
+        bmp.Free;
+
+        GetClientDimensions(W, H);
+        EIOS_SetGraphicsDebugging(R_EIOS, True);
+
+        Bmp.Init;
+        Bmp.SetPersistentMemory(PtrUInt(EIOS_GetDebugImageBuffer(R_EIOS)), w, h);
+
+        Bmp.Rectangle([0, 0, w - 1, h - 1], $00);
+        client.GetMBitmaps().AddBMP(bmp);
+      end else
+      Mouse.Click(R_GameTabBounds(11), MOUSE_LEFT);  //open settings tab
+
+
+      //SET ROOFS AND BRIGHTNESS
+      //Mouse.Click(660, 400, MOUSE_LEFT);
+      //sleep(2000 + random(100, 200));
+      //Mouse.Click(190, 155, MOUSE_LEFT);
+      sleep(100 + random(100, 200));
+      Mouse.Click(705, 305, MOUSE_LEFT);
+      sleep(100 + random(100, 200));
+      //mute Music
+      Mouse.Click(620, 220, MOUSE_LEFT);
+      sleep(100 + random(100, 200));
+      Mouse.Click(603, 275, MOUSE_LEFT);
+      sleep(100 + random(100, 200));
+      Mouse.Click(603, 320, MOUSE_LEFT);
+      sleep(100 + random(100, 200));
+      Mouse.Click(603, 370, MOUSE_LEFT);
+      sleep(300);
+    end;
+
+    while (TutorialState = 7) do
+    begin
+      clickNPCuntilTalk(3308, "Gielinor Guide");
+      talkToNPC("2");
+      sleep(300);
+    end;
+
+    //getOutOfGuide
+
+    reinitializeReflection;
+    while (TutorialState = 10) do
+    begin
+      writeln('4');
+      genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3098, 3107);
+      player.WalkToTileMM(genericObject.Tile, 0, 0);
+      sleep(3000 + random(100, 200));
+      while RT_InGielinorGuide do
+      begin
+        Mouse.Click(genericObject.MidPoint, "Door" , 5, MOUSE_LEFT);
+        sleep(1000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+      genericObject.Free;
+      sleep(100);
+    end;
+  end;
+
+
+  //GO FISH
+  while (R_GetTutorialProgress = 31) do
+  begin
+    while (TutorialState = 20) do
+    begin
+      player.WalkTo("tToFish");
+      sleep(1500+random(200,300));
+      clickNPCuntilTalk(8503, "Survival Expert");
+      clickNPC(3317, "Fishing spot");
+      sleep(100);
+    end;
+
+    while (TutorialState = 30) do
+    begin
+      Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);
+      sleep(100 + random(100, 200));
+    end;
+
+    //FISH
+    while (TutorialState = 40) do
+    begin
+      clickNPC(3317, "Fishing spot", false);
+      while R_CountInventoryItem(2514) < 1 do Sleep(100);
+    end;
+
+    while (TutorialState = 50) do
+    begin
+      Mouse.Click(R_GameTabBounds(1), MOUSE_LEFT);
+      sleep(100 + random(100, 200));
+    end;
+
+    //Talk to Survival Expert
+    while (TutorialState = 60) do
+    begin
+      clickNPCuntilTalk(8503, "Survival Expert");
+      talkToNPC("2");
+      sleep(100);
+    end;
+  end;
+
+  //GO WC
+  while (R_GetTutorialProgress = 47) do
+  begin
+    //Woodcut
+    while (TutorialState = 70) do
+    begin
+      while R_CountInventoryItem(2511) < 1 do
+      begin
+        genericObject := RSObject.Get(RSObjectType.GAME_OBJECT, 3099, 3095);
+        Mouse.Click(genericObject.MidPoint, "Tree", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(1000);
+        while player.IsAnimating do sleep(100);
+      end;
+      sleep(100);
+    end;
+    //Fire
+    while (TutorialState = 80) do
+    begin
+      player.WalkTo("tToFishGate", true);
+      sleep(1500 + random(100, 200));
+      player.walkToTileMM(player.Tile, -2, 2);
+      Mouse.Click(R_GetInventoryItem(590)[0].Bounds, MOUSE_LEFT);
+      sleep(100);
+      Mouse.Click(R_GetInventoryItem(2511)[0].Bounds, MOUSE_LEFT);
+      sleep(1000);
+      while player.IsAnimating do sleep(100 + random(50,100));
+      sleep(1000);
+    end;
+
+    //CookFish
+    while (TutorialState = 90) do
+    begin
+      if R_CountInventoryItem(2514) > 0 then
+      begin
+        Mouse.Click(R_GetInventoryItem(2514)[0].Bounds, MOUSE_LEFT);
+        sleep(200);
+        genericObject := R_GetClosestObjectByName("Fire", 5);
+        Mouse.Click(genericObject.MidPoint, "Fire", 5 , MOUSE_LEFT);
+        //writeln(genericObject.Tile);
+        genericObject.Free;
+      end;
+      while R_CountInventoryItem(315) < 1 do sleep(100);
+    end;
+
+    //OpenGateAndGoToChef
+    while (TutorialState = 120) do
+    begin
+      while player.Tile.X > 3089 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3089, 3091);
+        Mouse.Click(genericObject.MidPoint, "Gate", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+  end;
+
+  //GoToChef
+  while (R_GetTutorialProgress = 63) do
+  begin
+    while (TutorialState = 130) do
+    begin
+      while not RT_InChef do
+      begin
+        player.WalkTo("tToChef");
+        sleep(1500);
+        while not RT_InChef do
+        begin
+          genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3079, 3084);
+          Mouse.Click(genericObject.MidPoint, "Door", 5, MOUSE_LEFT);
+          genericObject.Free;
+          sleep(2000 + random(100, 200));
+          while player.IsAnimating do sleep(100);
+        end;
+      end;
+      sleep(1000);
+    end;
+
+    //TalkToChef
+    while (TutorialState = 140) do
+    begin
+      ClickNPCUntilTalk(3305, "Master Chef");
+      while R_CountInventoryItem(2516) < 1 do
+      begin
+        SendKeys(" ", 0, 0);
+        if R_IsChatChooseOption then SendKeys("2", 0, 0);
+        sleep(1000 + random(100, 200));
+      end;
+      sleep(100);
+    end;
+
+    //Mix Flwater
+    while (TutorialState = 150) do
+    begin
+      Mouse.Click(R_GetInventoryItem(2516)[0].Bounds, MOUSE_LEFT);
+      sleep(100);
+      Mouse.Click(R_GetInventoryItem(1929)[0].Bounds, MOUSE_LEFT);
+      while R_CountInventoryItem(2307) < 1 do sleep(100);
+    end;
+
+    //cookBread
+    while (TutorialState = 160) do
+    begin
+      tries := 0;
+      while (R_CountInventoryItem(2309) < 1) and (tries < 5) do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3075, 3081);
+        if not PointInMS(genericObject.MidPoint) then
+        begin
+          player.WalkToTileMM(genericObject.Tile, 0, 0);
+          sleep(3000 + random(100, 200));
+        end;
+        Mouse.Click(genericObject.MidPoint, "Range", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(4000);
+        while player.IsAnimating do sleep(100);
+        inc(tries)
+      end;
+    end;
+  end;
+
+  //ExitChef
+  while (R_GetTutorialProgress = 80) do
+  begin
+    while (TutorialState = 170) do
+    begin
+      player.WalkTo("tExitChef");
+      sleep(500);
+      while player.IsAnimating do sleep(100);
+      genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3072, 3090);
+      while RT_InChef do
+      begin
+        Mouse.Click(genericObject.MidPoint, "Door", 5, MOUSE_LEFT);
+        sleep(2000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+      genericObject.Free;
+      //sleep(1500);
+    end;
+  end;
+
+  //WalkToQuest
+  while (R_GetTutorialProgress = 95) do
+  begin
+    while (TutorialState = 200) do
+    begin
+      player.WalkTo("tToQuest");
+      sleep(2000);
+      tries := 0;
+      while (not RT_InQuest) and (tries < 10) do
+      begin
+        inc(tries);
+        genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3086, 3126);
+        Mouse.Click(genericObject.MidPoint, "Door", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+  end;
+  sleep(1000);
+
+
+  //TalkToQuest
+  while (R_GetTutorialProgress = 111) do
+  begin
+    while (TutorialState = 220) do
+    begin
+      ClickNPCUntilTalk(3312, "Quest Guide");
+      talkToNpc(" ");
+      sleep(100);
+    end;
+
+    while (TutorialState = 230) do
+    begin
+      Mouse.Click(R_GameTabBounds(2), MOUSE_LEFT);  //open quests tab
+      sleep(100 + random(100, 200));
+    end;
+
+    while (TutorialState = 240) do
+    begin
+      ClickNPCUntilTalk(3312, "Quest Guide");
+      talkToNpc(" ");
+      //send one more spacebar
+      SendKeys(" ", 0, 0);
+      sleep(1000 + random(100, 200));
+      talkToNpc(" ");
+    end;
+
+    while (TutorialState = 250) do
+    begin
+      while player.Tile.Y < 9020 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3088, 3119);
+        player.WalkToTileMM(genericObject.Tile, 0, 0);
+        sleep(3000 + random(100, 200));
+        Mouse.Click(genericObject.MidPoint, "Ladder", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+  end;
+
+  reinitializeReflection;
+
+  //walkToMiningInstructor
+  while (R_GetTutorialProgress = 127) do
+  begin
+    while (TutorialState = 260) do
+    begin
+      player.WalkTo("tToMiningInstructor");
+      ClickNPCUntilTalk(3311, "Mining Instructor");
+      talkToNpc(" ");
+    end;
+
+    //MineTin
+    while (TutorialState = 270) or (TutorialState = 300) do
+    begin
+      while R_CountInventoryItem(438) < 1 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3077, 9504);
+        if not PointInMS(genericObject.MidPoint) then
+        begin
+          player.WalkToTileMM(genericObject.Tile, 0, 0);
+          sleep(3000 + random(100, 200));
+        end;
+        Mouse.Click(genericObject.MidPoint, "Rocks", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+
+    //mineCopper
+    while (TutorialState = 310) do
+    begin
+      while R_CountInventoryItem(436) < 1 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3083, 9501);
+        if not PointInMS(genericObject.MidPoint) then
+        begin
+          player.WalkToTileMM(genericObject.Tile, 0, 0);
+          sleep(3000 + random(100, 200));
+        end;
+        Mouse.Click(genericObject.MidPoint, "Rocks", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+  end;
+
+  //smeltItem
+  while (R_GetTutorialProgress = 143) do
+  begin
+    while (TutorialState = 320) do
+    begin
+      while R_CountInventoryItem(2349) < 1 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3078, 9495);
+        if not PointInMS(genericObject.MidPoint) then
+        begin
+          player.WalkToTileMM(genericObject.Tile, 0, 0);
+          sleep(3000 + random(100, 200));
+        end;
+        Mouse.Click(genericObject.MidPoint, "Furnace", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+
+    //walkToMiningInstructor
+    while (TutorialState = 330) do
+    begin
+      //player.WalkTo("tToMiningInstructor");
+      ClickNPCUntilTalk(3311, "Mining Instructor");
+      talkToNpc(" ");
+    end;
+
+    //clickAnvil
+    while (TutorialState = 340) do
+    begin
+      genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3083, 9499);
+      if not PointInMS(genericObject.MidPoint) then
+        begin
+          player.WalkToTileMM(genericObject.Tile, 0, 0);
+          sleep(4000 + random(100, 200));
+        end;
+      widget := RSWidget.Get(R_TUTORIAL_SMITHING_DAGGER.Group, R_TUTORIAL_SMITHING_DAGGER.Child, R_TUTORIAL_SMITHING_DAGGER.Index);
+      while widget.ref = nil do
+      begin
+        Mouse.Click(genericObject.MidPoint, "Anvil", 5, MOUSE_LEFT);
+        sleep(1500);
+        while player.IsAnimating do sleep(100);
+        widget := RSWidget.Get(R_TUTORIAL_SMITHING_DAGGER.Group, R_TUTORIAL_SMITHING_DAGGER.Child, R_TUTORIAL_SMITHING_DAGGER.Index);
+      end;
+    end;
+
+    while (TutorialState = 350) do
+    begin
+      Mouse.Click(widget.Bounds.Middle, 3, MOUSE_LEFT);
+      widget.Free;
+      genericObject.Free;
+      sleep(3000 + random(100, 200));
+      while player.IsAnimating do sleep(100);
+    end;
+
+    //GoToGate
+    while (TutorialState = 360) do
+    begin
+      player.WalkTo("tToMiningGate");
+      sleep(1000 + random(100, 200));
+      while player.Tile.X < 3095 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3094, 9502);
+        Mouse.Click(genericObject.MidPoint, "Gate", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(2000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+  end;
+
+  //goToCombat
+  while (R_GetTutorialProgress = 160) do
+  begin
+    while (TutorialState = 370) do
+    begin
+      ClickNPCUntilTalk(3307, "Combat Instructor");
+      talkToNpc(" ");
+    end;
+
+    while (TutorialState = 390) do
+    begin
+      Mouse.Click(R_GameTabBounds(4), MOUSE_LEFT);  //open equipment tab
+      sleep(300 + random(100, 200));
+    end;
+
+    while (TutorialState = 400) do
+    begin
+      Mouse.Click(580, 430, MOUSE_LEFT);
+      sleep(1000 + random(100, 200));
+    end;
+
+    while (TutorialState = 405) do
+    begin
+      player.WalkToTileMM(player.Tile, 3);
+      ClickNPCUntilTalk(3307, "Combat Instructor");
+      Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
+      sleep(1000 + random(100, 200));
+      Mouse.Click(R_GetInventoryItem(1205)[0].Bounds, MOUSE_LEFT);
+      sleep(1000 + random(100, 200));
+    end;
+
+    while (TutorialState = 410) do
+    begin
+      ClickNPCUntilTalk(3307, "Combat Instructor");
+      talkToNpc(" ");
+    end;
+
+    while (TutorialState = 420) do
+    begin
+      Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open INVENTORY tab
+      sleep(1000 + random(100, 200));
+      if High(R_GetInventoryItem(1277)) >= 0 then
+        Mouse.Click(R_GetInventoryItem(1277)[0].Bounds, MOUSE_LEFT);
+      sleep(100 + random(100, 200));
+      if High(R_GetInventoryItem(1171)) >= 0 then
+        Mouse.Click(R_GetInventoryItem(1171)[0].Bounds, MOUSE_LEFT);
+      sleep(1000 + random(100, 200));
+    end;
+
+    while (TutorialState = 430) do
+    begin
+      Mouse.Click(R_GameTabBounds(0), MOUSE_LEFT);  //open combat tab
+      sleep(1000 + random(100, 200));
+    end;
+  end;
+
+  //WalkToRats
+  while (R_GetTutorialProgress = 175) do
+  begin
+    while (TutorialState = 440) do
+    begin
+      player.WalkTo("tToRats");
+      while player.Tile.X > 3110 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3111, 9518);
+        Mouse.Click(genericObject.MidPoint, "Gate", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+      sleep(100);
+    end;
+
+    //killRat
+    while (TutorialState = 450) or (TutorialState = 460) do
+    begin
+      ClickClosestNPC(3313, "Rat");
+      tries := 0;
+      while (TutorialState <> 470) and (tries < 30) do
+      begin
+        sleep(1000+random(200,300));
+        inc(tries);
+      end;
+    end;
+
+    while (TutorialState = 470) do
+    begin
+      player.WalkTo("tToRats");
+      while player.Tile.X < 3111 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3111, 9518);
+        Mouse.Click(genericObject.MidPoint, "Gate", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+      ClickNPCUntilTalk(3307, "Combat Instructor");
+      talkToNpc(" ");
+    end;
+
+    while (TutorialState = 480) and (R_GetTutorialProgress = 175) do
+    begin
+      Mouse.Click(R_GameTabBounds(3), MOUSE_LEFT);  //open inventory tab
+      sleep(500+random(200,300));
+      Mouse.Click(R_GetInventoryItem(841)[0].Bounds, MOUSE_LEFT);
+      sleep(200 + random(100, 200));
+      Mouse.Click(R_GetInventoryItem(882)[0].Bounds, MOUSE_LEFT);
+      sleep(1000 + random(100, 200));
+    end;
+  end;
+
+  //killRat
+  while (R_GetTutorialProgress = 191) do
+  begin
+    while (TutorialState = 480) or (TutorialState = 490) do
+    begin
+      player.WalkTo("tToRats");
+      ClickClosestNPC(3313, "Rat", false);
+      tries := 0;
+      while (TutorialState <> 500) and (tries < 30) do
+      begin
+        sleep(1000+random(200,300));
+        inc(tries);
+      end;
+    end;
+
+    while (TutorialState = 500) do
+    begin
+      tries := 0;
+      while (player.Tile.Y > 9020) and (tries < 10) do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3111, 9526);
+        if not PointInMS(genericObject.MidPoint) then
+        begin
+          player.WalkToTileMM(genericObject.Tile, 0, 0);
+          sleep(2000 + random(100, 200));
+        end;
+        Mouse.Click(genericObject.MidPoint, "Ladder", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+        inc(tries);
+      end;
+    end;
+  end;
+
+  //goBank
+  reinitializeReflection;
+  while (R_GetTutorialProgress = 223) do
+  begin
+    while (TutorialState = 510) do
+    begin
+      player.WalkTo("tToBank");
+      while not R_BankScreen do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3122, 3124);
+        Mouse.Click(genericObject.MidPoint, "Bank", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(1000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+
+    while (TutorialState = 520) do
+    begin
+      while not R_IsClickToContinue do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.GAME_OBJECT, 3119, 3121);
+        //es el poll, hay que caminar bro
+        player.WalkToTileMM(genericObject.Tile, 0, 0);
+        sleep(3000 + random(100, 200));
+        Mouse.Click(genericObject.MidPoint, "Poll booth", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+      talkToNpc(" ");
+      SendKeys(" ", 0, 0);
+      sleep(800 + random(100,200));
+    end;
+
+    //openFirstBankDoor
+    while (TutorialState = 525) do
+    begin
+      while player.Tile.X < 3125 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3125, 3124);
+        //first bank creo que tmb hay que caminar
+        player.WalkToTileMM(genericObject.Tile, 0, 0);
+        sleep(3000 + random(100, 200));
+        Mouse.Click(genericObject.MidPoint, "Door", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(2000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+  end;
+
+  while (R_GetTutorialProgress = 240) do
+  begin
+    while (TutorialState = 530) do
+    begin
+      ClickNPCUntilTalk(3310, "Account Guide");
+      talkToNpc(" ");
+    end;
+
+    while (TutorialState = 531) do
+    begin
+      Mouse.Click(R_GameTabBounds(8), MOUSE_LEFT);  //open account tab
+      sleep(500+random(200,300));
+    end;
+
+    while (TutorialState = 532) do
+    begin
+      ClickNPCUntilTalk(3310, "Account Guide");
+      talkToNpc(" ");
+    end;
+
+    //openSecondBankDoor
+    while (TutorialState = 540) do
+    begin
+      while player.Tile.X < 3130 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3130, 3124);
+        if not PointInMS(genericObject.MidPoint) then
+        begin
+          player.WalkToTileMM(genericObject.Tile, 0, 0);
+          sleep(3000 + random(100, 200));
+        end;
+        Mouse.Click(genericObject.MidPoint, "Door", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+  end;
+
+  //goPRay
+  while (R_GetTutorialProgress = 255) do
+  begin
+    while (TutorialState = 550) do
+    begin
+      player.WalkTo("tToPrayer");
+      ClickNPCUntilTalk(3319, "Brother Brace");
+      talkToNpc(" ");
+    end;
+    while (TutorialState = 560) do
+    begin
+      Mouse.Click(R_GameTabBounds(5), MOUSE_LEFT);  //open prayer tab
+      sleep(500+random(200,300));
+    end;
+    while (TutorialState = 570) do
+    begin
+      ClickNPCUntilTalk(3319, "Brother Brace");
+      talkToNpc(" ");
+    end;
+    while (TutorialState = 580) do
+    begin
+      Mouse.Click(R_GameTabBounds(9), MOUSE_LEFT);  //open friends tab
+      sleep(500+random(200,300));
+    end;
+    while (TutorialState = 600) do
+    begin
+      ClickNPCUntilTalk(3319, "Brother Brace");
+      talkToNpc(" ");
+    end;
+  end;
+
+  //openPRayerDoor
+  while (R_GetTutorialProgress = 271) do
+  begin
+    while (TutorialState = 610) do
+    begin
+      while player.Tile.Y > 3102 do
+      begin
+        genericObject :=  RSObject.Get(RSObjectType.BOUNDARY_OBJECT, 3122, 3102);
+        if not PointInMS(genericObject.MidPoint) then
+        begin
+          player.WalkToTileMM(genericObject.Tile, 0, 0);
+          sleep(3000 + random(100, 200));
+        end;
+        Mouse.Click(genericObject.MidPoint, "Door", 5, MOUSE_LEFT);
+        genericObject.Free;
+        sleep(3000 + random(100, 200));
+        while player.IsAnimating do sleep(100);
+      end;
+    end;
+  end;
+
+  //goMagic
+  while (R_GetTutorialProgress = 287) do
+  begin
+    while (TutorialState = 620) do
+    begin
+      player.WalkTo("tToMagic");
+      reinitializeReflection;
+      ClickNPCUntilTalk(3309, "Magic Instructor");
+      talkToNpc(" ");
+    end;
+    while (TutorialState = 630) do
+    begin
+      Mouse.Click(R_GameTabBounds(6), MOUSE_LEFT);  //open magic tab
+      sleep(500+random(200,300));
+    end;
+    while (TutorialState = 640) do
+    begin
+      ClickNPCUntilTalk(3309, "Magic Instructor");
+      talkToNpc(" ");
+    end;
+  end;
+
+  //kill chickenlittle
+  while (R_GetTutorialProgress = 320) do
+  begin
+    while (TutorialState = 650) do
+    begin
+      player.WalkToTileMM(Point(3140, 3091), 0, 1);
+      sleep(3000 + random(100, 200));
+      tries := 0;
+      while not player.IsAnimating and (tries < 5) do
+      begin
+        Mouse.Click(615, 225, MOUSE_LEFT);
+        sleep(100 + random(100,200));
+        ClickClosestNPC(3316, "Chicken", false);
+        sleep(300 + random(100,200));
+        inc(tries);
+      end;
+    end;
+
+    while (TutorialState = 670) do
+    begin
+      ClickNPCUntilTalk(3309, "Magic Instructor");
+      SendKeys(" ", 0, 0);
+      sleep(2000+random(200,300));
+      SendKeys("1", 0, 0);
+      sleep(2000+random(200,300));
+      talkToNpc("3");
+      SendKeys(" ", 0, 0);
+      condWait(@RT_inLumby, 10000, true);
+    end;
+  end;
+  //SET ROOFS AND BRIGHTNESS
+  sleep(1500 + random(200,500));
+
+  talkToNpc(" ");
+  player.WalkToTileMM(Point(3234, 3220), 1, 8);
+  sleep(1000 + random(200,500));
+
+  SendKeys("::toggleroofs", 0, 0);
+  PressKey(13);
+end;
+
