@@ -1401,13 +1401,35 @@ begin
   gNPC.Free;
 end;
 
-Procedure tradeClosestNPC(id: Integer; action: String = ""; walk: Boolean = True);
+Function R_TradeNPC_Close: Boolean;
+var
+  Widget: RSWidget;
+begin
+
+  if not RSWidget.IsValid(R_TRADE_SHOP_ITEMS.Group, R_TRADE_SHOP_ITEMS.Child) then
+    Exit(True);
+
+  Widget := RSWidget.Get(R_TRADE_SHOP_CLOSE.Group, R_TRADE_SHOP_CLOSE.Child, R_TRADE_SHOP_CLOSE.Index);
+
+  if Widget.ref = nil then
+    Exit(False);
+
+  Mouse.Move(Widget.Bounds);
+  Wait(50 + RandomRange(0, 50));
+  Mouse.Click(MOUSE_LEFT);
+  Widget.Free;
+  Result := True;
+end;
+
+Procedure tradeNPC(id: Integer; action: String = ""; walk: Boolean = True);
 var
   gNPC: RSNPC;
   tries: integer;
+  widget: RSWidget;
 begin
-  gNPC := R_NPC_GetClosest(id, 20);
+  gNPC := R_NPC_GetFirst(id);
   writelnex("Trading NPC: " + gNPC.Definition.Name);
+  if (RSWidget.IsValid(R_TRADE_SHOP_ITEMS.Group, R_TRADE_SHOP_ITEMS.Child)) then Exit;
   if gNPC.ref = nil then Exit;
   if walk then
   begin

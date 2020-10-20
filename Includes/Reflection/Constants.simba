@@ -26,6 +26,9 @@ const  //Interfaces
   R_INTERFACE_TRADE = 335;
   R_INTERFACE_TRADE_CONFIRM = 334;
 
+  { TRADE_SHOP }
+  R_INTERFACE_TRADE_SHOP = 300;
+
   { CHAT }
   R_INTERFACE_CHAT = 162;
   R_INTERFACE_CHAT_PLAYER_DIALOG = 217;
@@ -486,6 +489,10 @@ const //Widgets
 
   R_TRADE_SECOND_ACCEPT: RWidget =                      [R_INTERFACE_TRADE_CONFIRM, 13];
   R_TRADE_SECOND_DECLINE: RWidget =                      [R_INTERFACE_TRADE_CONFIRM, 14];
+
+  { TRADE_SHOP }
+  R_TRADE_SHOP_CLOSE: RWidget =                      [R_INTERFACE_TRADE_SHOP, 1, 11];
+  R_TRADE_SHOP_ITEMS: RWidget =                      [R_INTERFACE_TRADE_SHOP, 16];
 
 
   { CHATBOX }
