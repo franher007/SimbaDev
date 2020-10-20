@@ -4439,43 +4439,9 @@ end;
 procedure testProcedure;
 var
   obj: RSObject;
-  groundItem: Array of RSTile;
-  allNpcs: Array of RSNPC;
-  widget: RSWidget;
-  testPoint: TPoint;
-  Messages: Array of TRSChatMessage;
-  j: Integer;
 begin
   writeln("testing");
-  //setMuleWebMessage('franehr007', 'cancel', 18);
-  while true do
-  begin
-    groundItem := R_GetMainscreenGroundItemByID(995);
-    if High(groundItem) > -1 then
-    begin
-      Mouse.Click(groundItem[0], 3, MOUSE_RIGHT);
-      sleep(Random(100,200));
-      if R_ChooseOptions(['ake Coin']) then
-      begin
-        sleep(Random(1000,1500));
-      end;
-      groundItem := R_GetMainscreenGroundItemByID(995);
-    end;
-    WritelnEx("No more coins");
-    sleep(3000);
-    cleardebug;
-  end;
   TerminateScript;
-  writeln(R_BankScreen);
-  writeln(R_BankHelp);
-  openClosestBank();
-  sleep(3000);
-  //writeln(RSClient.GetVarBit(281));
-  writeln(RSVarps.VarpMain(281));
-  //obj := R_GetClosestObjectByName("Bank chest");
-    //obj := RSObject.Get(GAME_OBJECT, 1948,4956);
-  //Mouse.Click(obj.MidPoint, 3, MOUSE_LEFT);
-  //terminatescript;
 end;
 
 Function isWebActionValid(action: String): Boolean;
