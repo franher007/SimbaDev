@@ -1421,6 +1421,27 @@ begin
   Result := True;
 end;
 
+Function buyShopItem(name: String; amount: Integer; minAmountOnShop: Integer): boolean;
+var
+  shopItems: Array of RSWidget;
+  i: integer;
+begin
+  shopItems := RSWidget.Get(R_TRADE_SHOP_ITEMS.Group, R_TRADE_SHOP_ITEMS.Child).Children;
+  for i := 0 to high(shopItems) do
+  begin
+    if (shopItems[i].Text = name) and (shopItems[i].ItemAmount >= minAmountOnShop) then
+    begin
+      Mouse.Click(shopItems[i].Bounds.Middle, 3, MOUSE_RIGHT);
+      sleep(random(200, 500));
+      if R_ChooseOptions([inttostr(amount)], false) then
+      begin
+        sleep(Random(300,500));
+        Exit(True);
+      end;
+    end;
+  end;
+end;
+
 Procedure tradeNPC(id: Integer; action: String = ""; walk: Boolean = True);
 var
   gNPC: RSNPC;
@@ -1448,6 +1469,7 @@ begin
       if R_ChooseOptions(['rade'], false) then
       begin
         sleep(Random(300,500));
+        Exit;
       end;
     end;
   end else
