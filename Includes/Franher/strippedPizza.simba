@@ -1429,6 +1429,7 @@ begin
   shopItems := RSWidget.Get(R_TRADE_SHOP_ITEMS.Group, R_TRADE_SHOP_ITEMS.Child).Children;
   for i := 0 to high(shopItems) do
   begin
+    writeln(shopItems[i].Text);
     if (shopItems[i].Text = name) and (shopItems[i].ItemAmount >= minAmountOnShop) then
     begin
       Mouse.Click(shopItems[i].Bounds.Middle, 3, MOUSE_RIGHT);
