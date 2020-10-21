@@ -1448,16 +1448,15 @@ begin
   end;
 end;
 
-Procedure tradeNPC(id: Integer; action: String = ""; walk: Boolean = True);
+Procedure actionNPC(id: Integer; action: String = ""; walk: Boolean = True);
 var
   gNPC: RSNPC;
   tries: integer;
   widget: RSWidget;
 begin
   gNPC := R_NPC_GetFirst(id);
-  writelnex("Trading NPC: " + gNPC.Definition.Name);
-  if (RSWidget.IsValid(R_TRADE_SHOP_ITEMS.Group, R_TRADE_SHOP_ITEMS.Child)) then Exit;
   if gNPC.ref = nil then Exit;
+  writelnex(action + " NPC: " + gNPC.Definition.Name);
   if walk then
   begin
     if not gNPC.inMS then
@@ -1474,13 +1473,12 @@ begin
       sleep(Random(100,200));
       if R_ChooseOptions(['rade'], false) then
       begin
-        sleep(Random(300,500));
+        sleep(Random(100,200));
+        gNPC.Free;
         Exit;
       end;
     end;
-  end else
-    Mouse.click(gNPC.MidPoint, MOUSE_LEFT);
-  sleep(1000 + random(100, 200));
+  end;
   gNPC.Free;
 end;
 
@@ -4525,7 +4523,7 @@ var
   obj: RSObject;
 begin
   writeln("testing");
-  tradeNPC(2891, "errant");
+  actionNPC(2891, "Trade Gerrant");
   sleep(4000);
   BuyShopItem("Feather", 10, 100);
   TerminateScript;
