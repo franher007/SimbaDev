@@ -1401,12 +1401,17 @@ begin
   gNPC.Free;
 end;
 
+Function R_TradeNPC_IsOpen: Boolean;
+begin
+  Result := (RSWidget.IsValid(R_TRADE_SHOP_ITEMS.Group, R_TRADE_SHOP_ITEMS.Child));
+end;
+
 Function R_TradeNPC_Close: Boolean;
 var
   Widget: RSWidget;
 begin
 
-  if not RSWidget.IsValid(R_TRADE_SHOP_ITEMS.Group, R_TRADE_SHOP_ITEMS.Child) then
+  if not R_TradeNPC_IsOpen then
     Exit(True);
 
   Widget := RSWidget.Get(R_TRADE_SHOP_CLOSE.Group, R_TRADE_SHOP_CLOSE.Child, R_TRADE_SHOP_CLOSE.Index);
@@ -1426,11 +1431,11 @@ var
   shopItems: Array of RSWidget;
   i: integer;
 begin
+  if not (R_TradeNPC_IsOpen) then Exit;
   shopItems := RSWidget.Get(R_TRADE_SHOP_ITEMS.Group, R_TRADE_SHOP_ITEMS.Child).Children;
   for i := 0 to high(shopItems) do
   begin
-    writeln(shopItems[i].Text);
-    if (shopItems[i].Text = name) and (shopItems[i].ItemAmount >= minAmountOnShop) then
+    if (shopItems[i].Name = name) and (shopItems[i].ItemAmount >= minAmountOnShop) then
     begin
       Mouse.Click(shopItems[i].Bounds.Middle, 3, MOUSE_RIGHT);
       sleep(random(200, 500));
@@ -4520,6 +4525,9 @@ var
   obj: RSObject;
 begin
   writeln("testing");
+  tradeNPC(2891, "errant");
+  sleep(4000);
+  BuyShopItem("Feather", 10, 100);
   TerminateScript;
 end;
 

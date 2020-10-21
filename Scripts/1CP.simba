@@ -7,7 +7,7 @@ const
   useGE         = True;   //Buy/Sell in Grand Exchange?
   GEonFirstRun  = True;   //Go to GE on first run?
 
-  scriptID                            = ["5"]; //your sets here entre comillas ["1","2","24"]
+  scriptID                            = ["5", "10", "11", "12", "13", "14"]; //your sets here entre comillas ["1","2","24"]
   tabID                               = "1";
 
   setMinutes                          = 240; //how many minutes for each set
