@@ -1,0 +1,65 @@
+{$i reflection/reflection.simba}
+
+// SET "REMEMBER USERNAME" TO FALSE!!!!!!!!!!!
+const
+  userAction    = "doTest"; //hybrid, doWild, keepAlive
+  actionWeb     = "http://franher.com/nakedpizza";
+  useGE         = True;   //Buy/Sell in Grand Exchange?
+  GEonFirstRun  = True;   //Go to GE on first run?
+
+  scriptID                            = [""]; //your sets here entre comillas ["1","2","24"]
+  tabID                               = "1";
+
+  setMinutes                          = 240; //how many minutes for each set
+  randomSetMinutes                    = 0;
+
+  accountMinutes                      = 240; //how many minutes for each account
+  randomAccountMinutes                = 10;
+
+  accountPlayBeforeBreakMinutes       = 30;  //how many minutes to play before taking a break
+  randomAccountPlayBeforeBreakMinutes = 3;
+
+  breakMinutes                        = 3;   //how many minutes to break for
+  randomBreakMinutes                  = 3;
+
+  lag           = 0;      //use 0 if you have faster cpu speeds, increase for shitty pc
+  useDebug      = False;  //write shit to the debug window?
+
+  P_USERNAME = "a";
+  P_PASSWORD = "a";
+
+  PIZZA_PRICE  = 350;
+  GRAIN_PRICE  = 35;
+  SHRIMP_PRICE = 70;
+  TROUT_PRICE  = 50;
+  SALMON_PRICE = 80;
+  HAT_PRICE    = 500;
+  POT_PRICE    = 20;
+  BUCKET_PRICE = 20;
+
+  flourPotID =  1933;
+  coinsID = 995;
+  waterBucketID = 1929;
+  potID = 1931;
+  bucketID = 1925;
+  pizzaBaseID = 2283;
+  grainID = 1947;
+  chefHatID = 1949;
+
+  rawShrimpID = 317;
+  rawTroutID = 335;
+  rawSalmonID = 331;
+
+  notedFlourPotID =  1934;
+  notedWaterBucketID = 1930;
+  notedPotID = 1932;
+  notedBucketID = 1926;
+  notedPizzaBaseID = 2284;
+  notedGrainID = 1948;
+
+
+{$i franher/strippedPizza.simba}
+
+begin
+  workBitch;
+end.
